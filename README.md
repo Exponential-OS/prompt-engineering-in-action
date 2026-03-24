@@ -17,32 +17,33 @@ It works. But it's step one.
 The viral posts rediscovered step one. **Co-Dialectic implements step two.**
 
 ---
-## [Install] — OneClick, 30 seconds. Any AI.
+## [Install] — Interactive, Cross-Platform. Any AI.
 
-### Option A: One command (Claude Code / terminal)
+### Option A: Interactive Installer (macOS/Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
 ```
 
-### Option B: Copy and paste
+### Option B: Interactive Installer (Windows)
 
-**Step 1:** Copy [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (click "Raw", then select all, copy).
+```powershell
+Invoke-RestMethod -Uri https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.ps1 | Invoke-Expression
+```
 
-**Step 2:** Paste into your AI's custom instructions.
+> **What does it do?**
+> The installer automatically detects local AI environments like **Antigravity, Cursor, Windsurf, and Claude Code** and asks where to install.
+>
+### Option C: The Zero-Friction Meta-Install (Copy & Paste)
 
-| Platform | Where to paste | Help |
-|----------|---------------|------|
-| **claude.ai** (web) | Projects → Create Project → Custom Instructions | [Docs](https://support.anthropic.com) |
-| **Claude Desktop — Chat tab** | Same as claude.ai — Projects → Custom Instructions | Same as web |
-| **Claude Desktop — Code tab** | `cp -r co-dialectic ~/.claude/skills/co-dialectic` then type `cod` | [Skills docs](https://docs.claude.com/en/docs/claude-code/skills) |
-| **ChatGPT** | Profile → Settings → Personalization → Custom Instructions | [Docs](https://help.openai.com). ⚠️ 1,500 char limit — use the [condensed version](co-dialectic/install-instructions.md#condensed-version-for-chatgpt-paste-this) |
-| **Gemini** | Profile → Personal Intelligence Instructions | [Docs](https://ai.google.dev/gemini-api/docs/system-instructions) |
-| **Any other AI** | Paste as your first message: "Use these instructions for our entire conversation:" | Works everywhere |
+If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings:
 
-**UIs change fast.** If the path doesn't match, ask your AI: *"Where do I paste custom instructions?"* — it knows its own settings.
+**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md).
+**Step 2.** Open your AI and paste this exact prompt (along with the copied text):
 
-**Step 3:** Start a conversation. The status line appears immediately.
+> "I want to use the included text as my persistent 'Custom Instructions' or 'System Prompt' so you remember it for all our future conversations. Please give me clear, step-by-step instructions on exactly where to paste this in your current user interface."
+
+The AI will give you perfect, up-to-date directions. Follow them and you're done!
 
 **No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
 
@@ -108,32 +109,33 @@ The first technique in this library. One file. Paste it into your AI. Five syste
 
 ---
 
-## [Install] — 30 seconds. Any AI.
+## [Install] — Interactive, Cross-Platform. Any AI.
 
-### Option A: One command (Claude Code / terminal)
+### Option A: Interactive Installer (macOS/Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
 ```
 
-### Option B: Copy and paste
+### Option B: Interactive Installer (Windows)
 
-**Step 1:** Copy [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (click "Raw", then select all, copy).
+```powershell
+Invoke-RestMethod -Uri https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.ps1 | Invoke-Expression
+```
 
-**Step 2:** Paste into your AI's custom instructions.
+> **What does it do?**
+> The installer automatically detects local AI environments like **Antigravity, Cursor, Windsurf, and Claude Code** and asks where to install.
+>
+### Option C: The Zero-Friction Meta-Install (Copy & Paste)
 
-| Platform | Where to paste | Help |
-|----------|---------------|------|
-| **claude.ai** (web) | Projects → Create Project → Custom Instructions | [Docs](https://support.anthropic.com) |
-| **Claude Desktop — Chat tab** | Same as claude.ai — Projects → Custom Instructions | Same as web |
-| **Claude Desktop — Code tab** | `cp -r co-dialectic ~/.claude/skills/co-dialectic` then type `cod` | [Skills docs](https://docs.claude.com/en/docs/claude-code/skills) |
-| **ChatGPT** | Profile → Settings → Personalization → Custom Instructions | [Docs](https://help.openai.com). ⚠️ 1,500 char limit — use the [condensed version](co-dialectic/install-instructions.md#condensed-version-for-chatgpt-paste-this) |
-| **Gemini** | Profile → Personal Intelligence Instructions | [Docs](https://ai.google.dev/gemini-api/docs/system-instructions) |
-| **Any other AI** | Paste as your first message: "Use these instructions for our entire conversation:" | Works everywhere |
+If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings:
 
-**UIs change fast.** If the path doesn't match, ask your AI: *"Where do I paste custom instructions?"* — it knows its own settings.
+**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md).
+**Step 2.** Open your AI and paste this exact prompt (along with the copied text):
 
-**Step 3:** Start a conversation. The status line appears immediately.
+> "I want to use the included text as my persistent 'Custom Instructions' or 'System Prompt' so you remember it for all our future conversations. Please give me clear, step-by-step instructions on exactly where to paste this in your current user interface."
+
+The AI will give you perfect, up-to-date directions. Follow them and you're done!
 
 **No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
 
