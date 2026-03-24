@@ -7,6 +7,36 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
 
 ---
+## [Install] — 30 seconds. Any AI.
+
+### Option A: One command (Claude Code / terminal)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
+```
+
+### Option B: Copy and paste
+
+**Step 1:** Copy [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (click "Raw", then select all, copy).
+
+**Step 2:** Paste into your AI's custom instructions.
+
+| Platform | Where to paste | Help |
+|----------|---------------|------|
+| **claude.ai** (web) | Projects → Create Project → Custom Instructions | [Docs](https://support.anthropic.com) |
+| **Claude Desktop — Chat tab** | Same as claude.ai — Projects → Custom Instructions | Same as web |
+| **Claude Desktop — Code tab** | `cp -r co-dialectic ~/.claude/skills/co-dialectic` then type `cod` | [Skills docs](https://docs.claude.com/en/docs/claude-code/skills) |
+| **ChatGPT** | Profile → Settings → Personalization → Custom Instructions | [Docs](https://help.openai.com). ⚠️ 1,500 char limit — use the [condensed version](co-dialectic/install-instructions.md#condensed-version-for-chatgpt-paste-this) |
+| **Gemini** | Profile → Personal Intelligence Instructions | [Docs](https://ai.google.dev/gemini-api/docs/system-instructions) |
+| **Any other AI** | Paste as your first message: "Use these instructions for our entire conversation:" | Works everywhere |
+
+**UIs change fast.** If the path doesn't match, ask your AI: *"Where do I paste custom instructions?"* — it knows its own settings.
+
+**Step 3:** Start a conversation. The status line appears immediately.
+
+**No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
+
+---
 
 ## [Why This Exists]
 
