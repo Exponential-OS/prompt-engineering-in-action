@@ -252,7 +252,7 @@ $Version | Set-Content -Path (Join-Path $ConfigDir "version.txt")
 # Apply Telemetry
 $ToolsStr = $InstalledTools -join ","
 if ($TrackOptIn) {
-    $TelemetryUrl = "https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62&version=$SelectedVerStr&tools=$ToolsStr&os=windows"
+    $TelemetryUrl = "https://static.scarf.sh/a.png?x-pxid=dad54773-1711-4acf-bc86-b4fd4c5415b1&version=$SelectedVerStr&tools=$ToolsStr&os=windows"
     try {
         Invoke-RestMethod -Uri $TelemetryUrl -TimeoutSec 3 | Out-Null
     } catch {}
