@@ -1,3 +1,4 @@
+### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
 **Version:** 2.1.0
@@ -205,3 +206,5 @@ The connection to **Dialectical Behavior Therapy (DBT)** is intentional. DBT tea
 Subscribe to TEP (Technology, Education & Policy): [thewhyman.blog](https://thewhyman.blog) · Connect: [LinkedIn](https://www.linkedin.com/in/thewhyman/)
 
 **Coming soon:** Deep Personalization · AI Career Coach — subscribe to get notified.
+
+### END CO-DIALECTIC ###

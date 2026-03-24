@@ -1,24 +1,43 @@
 <#
 .SYNOPSIS
 Co-Dialectic installer for Windows.
-
-.DESCRIPTION
-Downloads and installs the Co-Dialectic skill to supported environments like Claude Code, Antigravity, Cursor, Windsurf, or copies it to the clipboard.
 #>
-
 $ErrorActionPreference = "Stop"
 
 $RepoUrl = "https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
-$SkillUrl = "$RepoUrl/co-dialectic/SKILL.md"
 
 Write-Host "🧠 Co-Dialectic Installer" -ForegroundColor Cyan
 Write-Host "========================="
 Write-Host ""
 
-$Installed = $false
+function Ask-User {
+    param([string]$PromptText, [string]$DefaultValue)
+    $Choice = Read-Host "$PromptText"
+    if ([string]::IsNullOrWhiteSpace($Choice)) { $Choice = $DefaultValue }
+    if ($Choice -match "^[Yy]") { return $true }
+    return $false
+}
 
-# Download to temp string
-Write-Host "Downloading SKILL.md..."
+function Ask-Choice {
+    param([string]$PromptText, [string]$DefaultValue)
+    $Choice = Read-Host "$PromptText"
+    if ([string]::IsNullOrWhiteSpace($Choice)) { return $DefaultValue }
+    return $Choice
+}
+
+Write-Host "Which version do you want to install?"
+Write-Host " [1] Standard (Best for Pro/Paid AI users)"
+Write-Host " [2] Lite (Best for Free/Fast AI limits)"
+$VersionChoice = Ask-Choice "Select [1/2]" "1"
+
+if ($VersionChoice -eq "2") {
+    $SkillUrl = "$RepoUrl/co-dialectic/SKILL-lite.md"
+    Write-Host "⬇️  Downloading Lite version..." -ForegroundColor Yellow
+} else {
+    $SkillUrl = "$RepoUrl/co-dialectic/SKILL.md"
+    Write-Host "⬇️  Downloading Standard version..." -ForegroundColor Yellow
+}
+
 try {
     $SkillContent = Invoke-RestMethod -Uri $SkillUrl
 } catch {
@@ -26,67 +45,81 @@ try {
     exit 1
 }
 
+$Installed = $false
+
+function Append-Or-Replace {
+    param([string]$TargetFile, [string]$PromptMsg, [string]$DefaultAns)
+    
+    $HasBlock = $false
+    if (Test-Path $TargetFile) {
+        $HasBlock = (Select-String -Path $TargetFile -Pattern "### BEGIN CO-DIALECTIC ###" -Quiet)
+    }
+
+    if ($HasBlock) {
+        if (Ask-User "🔄 Co-Dialectic already in $TargetFile. Update it? (Overwrites manual edits in block) [Y/n]" "y") {
+            $Content = Get-Content $TargetFile -Raw
+            $Content = $Content -replace '(?s)### BEGIN CO-DIALECTIC ###.*?### END CO-DIALECTIC ###\s*', ''
+            Set-Content -Path $TargetFile -Value $Content -Encoding UTF8
+            Add-Content -Path $TargetFile -Value "`n$SkillContent" -Encoding UTF8
+            Write-Host "   ✅ Updated $TargetFile" -ForegroundColor Green
+            $script:Installed = $true
+        }
+    } else {
+        if (Ask-User $PromptMsg $DefaultAns) {
+            Add-Content -Path $TargetFile -Value "`n$SkillContent" -Encoding UTF8
+            Write-Host "   ✅ Added to $TargetFile" -ForegroundColor Green
+            $script:Installed = $true
+        }
+    }
+}
+
+Write-Host ""
 Write-Host "Scanning for AI environments..."
 Write-Host ""
-
-function Ask-User {
-    param([string]$PromptText, [string]$DefaultValue)
-    $Choice = Read-Host "$PromptText"
-    if ([string]::IsNullOrWhiteSpace($Choice)) {
-        $Choice = $DefaultValue
-    }
-    if ($Choice -match "^[Yy]") {
-        return $true
-    }
-    return $false
-}
 
 # 1. Antigravity Support
 $AntigravityPath = Join-Path $env:USERPROFILE ".gemini\antigravity\skills"
 if (Test-Path $AntigravityPath) {
-    if (Ask-User "✅ Detected Antigravity ($AntigravityPath). Install here? [Y/n]" "y") {
-        $DestDir = Join-Path $AntigravityPath "co-dialectic"
-        if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Force -Path $DestDir | Out-Null }
-        $SkillContent | Set-Content -Path (Join-Path $DestDir "SKILL.md") -Encoding UTF8
-        Write-Host "   Installed to: $DestDir\SKILL.md" -ForegroundColor Green
-        $Installed = $true
-    }
+    $Target = Join-Path $AntigravityPath "co-dialectic\SKILL.md"
+    if (-not (Test-Path (Split-Path $Target))) { New-Item -ItemType Directory -Force -Path (Split-Path $Target) | Out-Null }
+    Append-Or-Replace $Target "✅ Detected Antigravity ($AntigravityPath). Install here? [Y/n]" "y"
     Write-Host ""
 }
 
 # 2. Claude Code Support
 $ClaudePath = Join-Path $env:USERPROFILE ".claude"
 if (Test-Path $ClaudePath) {
-    if (Ask-User "✅ Detected Claude Code ($ClaudePath\skills). Install here? [Y/n]" "y") {
-        $DestDir = Join-Path $ClaudePath "skills\co-dialectic"
-        if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Force -Path $DestDir | Out-Null }
-        $SkillContent | Set-Content -Path (Join-Path $DestDir "SKILL.md") -Encoding UTF8
-        Write-Host "   Installed to: $DestDir\SKILL.md" -ForegroundColor Green
-        $Installed = $true
-    }
+    $Target = Join-Path $ClaudePath "skills\co-dialectic\SKILL.md"
+    if (-not (Test-Path (Split-Path $Target))) { New-Item -ItemType Directory -Force -Path (Split-Path $Target) | Out-Null }
+    Append-Or-Replace $Target "✅ Detected Claude Code ($ClaudePath\skills). Install here? [Y/n]" "y"
     Write-Host ""
 }
 
 # 3. Cursor Support
 if ((Test-Path ".cursor") -or (Test-Path ".cursorrules")) {
-    if (Ask-User "✅ Detected Cursor project. Add to .cursorrules? [Y/n]" "y") {
-        $SkillContent | Add-Content -Path ".cursorrules" -Encoding UTF8
-        Write-Host "   Appended Co-Dialectic to .cursorrules" -ForegroundColor Green
-        $Installed = $true
-    }
+    Append-Or-Replace ".cursorrules" "✅ Detected Cursor project. Add to .cursorrules? [Y/n]" "y"
     Write-Host ""
 }
 
 # 4. Windsurf Support
-if (Ask-User "❓ Are you in a Windsurf workspace? Add to .windsurfrules? [y/N]" "n") {
-    $SkillContent | Add-Content -Path ".windsurfrules" -Encoding UTF8
-    Write-Host "   Appended Co-Dialectic to .windsurfrules" -ForegroundColor Green
-    $Installed = $true
-    Write-Host ""
-}
+Append-Or-Replace ".windsurfrules" "❓ Are you in a Windsurf workspace? Add to .windsurfrules? [y/N]" "n"
+Write-Host ""
 
-# 5. Clipboard Integration
-if (Ask-User "📋 Copy instructions to clipboard for ChatGPT / Claude.ai / Gemini Web? [y/N]" "n") {
+# 5. Cline Support
+Append-Or-Replace ".clinerules" "❓ Add to Cline CLI (.clinerules)? [y/N]" "n"
+Write-Host ""
+
+# 6. Roo Code Support
+Append-Or-Replace ".roomodes" "❓ Add to Roo Code (.roomodes)? [y/N]" "n"
+Write-Host ""
+
+# 7. Aider Support
+Append-Or-Replace ".aider.conf.yml" "❓ Add to Aider (.aider.conf.yml)? [y/N]" "n"
+Write-Host ""
+
+
+# 8. Clipboard Integration
+if (Ask-User "📋 Copy instructions to clipboard for web/desktop apps? [y/N]" "n") {
     Set-Clipboard -Value $SkillContent
     Write-Host "   Copied to clipboard! You can now paste into your AI's custom instructions." -ForegroundColor Green
     $Installed = $true
@@ -102,5 +135,5 @@ if (-not $Installed) {
 
 Write-Host ""
 Write-Host "🎉 Done! Co-Dialectic is ready." -ForegroundColor Cyan
-Write-Host "   Updates: https://github.com/thewhyman/prompt-engineering-in-action"
+Write-Host "   Updates: run this script again anytime to update safely."
 Write-Host ""

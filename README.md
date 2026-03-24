@@ -6,6 +6,17 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
 
+### ✨ Try it instantly (No installation required)
+
+### ✨ Try it instantly (No installation required)
+
+Don't want to install it yet? Test the Co-Dialectic experience completely free before committing:
+
+<a href="#"><img src="https://img.shields.io/badge/Try_Co--Dialectic_in-ChatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" alt="Try in ChatGPT" /></a>  
+*(Note to repository author: Add your public Custom GPT link to the button above!)*
+
+**For Claude.ai or Gemini:** Since these platforms don't support public bots yet, just select everything in [SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
+
 ## [Why This Exists]
 
 Socratic prompting just went viral — "leaked" from Anthropic and OpenAI engineers. The internet is losing its mind over a 2,400-year-old idea: ask questions instead of giving commands.
@@ -15,6 +26,13 @@ It works. But it's step one.
 **Socrates** asked questions to reveal what the student already knew. One direction: teacher → student. His student **Plato** took it further — **dialectic**, where both sides refine each other's thinking through structured back-and-forth. Neither side "wins." Both sides learn. That was 2,400 years ago.
 
 The viral posts rediscovered step one. **Co-Dialectic implements step two.**
+
+---
+
+## Which Version? (Full vs Lite)
+During installation, you will be prompted to choose:
+1. **Full Version**: Best for Claude Pro, ChatGPT Plus, and local desktop use (Cursor/Windsurf). Includes Auto-Handoff memory management and back-teaching protocols.
+2. **Lite Version**: Best for Free Tiers or fast API calls. Includes the core Socratic coaching protocols but removes memory compression/teaching to severely reduce token usage.
 
 ---
 ## [Install] — Interactive, Cross-Platform. Any AI.
@@ -46,6 +64,14 @@ If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easies
 The AI will give you perfect, up-to-date directions. Follow them and you're done!
 
 **No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
+
+---
+
+## [Uninstall] — Easily remove it
+If Co-Dialectic isn't for you, removing it is completely safe and leaves no trace:
+* **Local IDEs:** Open your `.cursorrules`, `.windsurfrules`, `.clinerules`, or `.aider.conf.yml` file. Find the block starting with `### BEGIN CO-DIALECTIC ###` and delete it.
+* **Claude Code / Antigravity:** Delete the `co-dialectic` folder in your terminal: `rm -rf ~/.claude/skills/co-dialectic` or `rm -rf ~/.gemini/antigravity/skills/co-dialectic`.
+* **Web AIs:** Go to your Custom Instructions / System Prompts settings and delete the text.
 
 ---
 ---
