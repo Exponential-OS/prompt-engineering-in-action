@@ -6,6 +6,9 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
 
+*(Note: Create an account on Scarf.sh to act as your privacy-gateway and update this badge!)*
+![Downloads](https://img.shields.io/endpoint?url=https://packages.scarf.co/api/v1/badges/thewhyman/install.sh/downloads)
+
 ### ✨ Try it instantly (No installation required)
 
 ### ✨ Try it instantly (No installation required)
@@ -40,13 +43,13 @@ During installation, you will be prompted to choose:
 ### Option A: Interactive Installer (macOS/Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
+curl -fsSL https://packages.scarf.co/thewhyman/install.sh | bash
 ```
 
 ### Option B: Interactive Installer (Windows)
 
 ```powershell
-Invoke-RestMethod -Uri https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.ps1 | Invoke-Expression
+Invoke-RestMethod -Uri https://packages.scarf.co/thewhyman/install.ps1 | Invoke-Expression
 ```
 
 > **What does it do?**
@@ -54,14 +57,29 @@ Invoke-RestMethod -Uri https://raw.githubusercontent.com/thewhyman/prompt-engine
 >
 ### Option C: The Zero-Friction Meta-Install (Copy & Paste)
 
-If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings:
+If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings, just copy the prompt and hand it to the AI.
 
-**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md).
+<details>
+<summary>💻 Web/Desktop Users (Tap to expand)</summary>
+
+**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (or [co-dialectic/SKILL-lite.md](co-dialectic/SKILL-lite.md) if you are on a free tier).
 **Step 2.** Open your AI and paste this exact prompt (along with the copied text):
 
 > "I want to use the included text as my persistent 'Custom Instructions' or 'System Prompt' so you remember it for all our future conversations. Please give me clear, step-by-step instructions on exactly where to paste this in your current user interface."
 
 The AI will give you perfect, up-to-date directions. Follow them and you're done!
+</details>
+
+<details>
+<summary>📱 iOS / Android App Users (Tap to expand)</summary>
+
+You cannot run bash installers natively on your phone, but **Custom Instructions sync from the cloud.** 
+
+**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (or [co-dialectic/SKILL-lite.md](co-dialectic/SKILL-lite.md) if you are on a free tier) directly from your phone's browser.
+**Step 2.** Open your ChatGPT or Claude mobile app.
+**Step 3.** Ask the AI: *"I want to save this text as my System Prompt or Custom Instructions. Where is that setting in this mobile app? Tell me exactly where to tap."*
+**Step 4.** Paste the text into those settings. It will sync universally to your account across all platforms!
+</details>
 
 **No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
 
@@ -229,3 +247,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 Inspired by Ethan Mollick's [Co-Intelligence](https://www.oneusefulthing.org/) and built on [Dr. Jules White's Prompt Engineering specialization](https://www.coursera.org/specializations/prompt-engineering) on Coursera. The Socratic→Dialectic evolution: ask better questions (Socrates), then build partnerships where both sides teach (Plato). The language bridge thesis: Yuval Noah Harari, *Sapiens*.
 
 MIT License.
+
+<!-- Scarf View Telemetry -->
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62" />
