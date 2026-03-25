@@ -31,6 +31,8 @@ Components:
 
 Estimate context usage from conversation length relative to your known context window. Update every response.
 
+**Quiet Mode:** If the user types `cod quiet` (to save output tokens in IDEs), stop printing the status line completely. Keep tracking all metrics silently in the background. Only print the status when explicitly asked (`cod status`).
+
 ### Protocol 2: Persona System
 
 Auto-detect the right expert for every question:
@@ -151,6 +153,7 @@ Co-Dialectic recognizes natural language — no special syntax needed. Say any o
 | What you want | Say something like | What happens |
 |--------------|-------------------|-------------|
 | **Turn on** | "co-dialectic" / "cod" / "cod on" | All 5 protocols activate. Status line appears on every response. |
+| **Quiet Mode** | "cod quiet" | Silences the status line output on every response to save tokens. Protocols continue running in the background. |
 | **Turn off** | "cod off" / "stop cod" / "normal mode" | Protocols deactivate. Status line stops. "Co-Dialectic off. Back to default." |
 | **Review my prompts** | "cod review" / "review my prompts" / "how am I doing" | Analyzes your last 3–5 prompts. Rates each ✅ or 💡. Shows patterns and a summary trend. |
 | **Teach me** | "cod teach" / "teach me" / "what should I improve" | Names 2–3 patterns in your communication. Shows examples from the conversation. Suggests what to try. |
