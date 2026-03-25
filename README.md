@@ -2,7 +2,7 @@
 
 **Your AI coaches your prompts. You coach its answers. Both get smarter.**
 
-***This is a prompt and memory optimizer that helps you save tokens and save you from chat crashes***
+***This is an LLM prompt & context optimizer that helps you save tokens & save (recover gracicously) you from chat crashes***
 
 Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
