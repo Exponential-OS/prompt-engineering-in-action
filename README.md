@@ -6,43 +6,6 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
 
-![Downloads](https://api.scarf.sh/v2/packages/thewhyman/78cb3484-ea45-4cc8-b305-62d4c75cc3ec)
-### ✨ Try it instantly (No installation required)
-
-Don't want to install it yet? Test the Co-Dialectic experience completely free.
-
-**For ChatGPT, Claude.ai, or Gemini Desktop:** Since these platforms don't support dynamic scripts, just select everything in [co-dialectic/SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
-
-## What is Co-Dialectic?
-
-Socratic prompting just went viral. The internet is losing its mind over a 2,400-year-old idea: asking questions instead of giving commands.
-
-**But prompting is one-directional.** Co-Dialectic introduces bidirectional fluency. The human learns to speak more precisely (Socratic coaching). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward absolute fluency.
-
-*(Read the full story behind the 6,000-hour design thesis here: [PHILOSOPHY.md](PHILOSOPHY.md))*
-
----
-
-## Which Version? (Full vs Lite)
-During installation, you will be prompted to choose:
-1. **Full Version**: Best for Claude Pro, ChatGPT Plus, and local desktop use (Cursor/Windsurf). Includes Auto-Handoff memory management and back-teaching protocols.
-2. **Lite Version**: Best for Free Tiers or fast API calls. Includes the core Socratic coaching protocols but removes memory compression/teaching to severely reduce token usage.
-
----
-
-## ⚡️ Token Economics & Prompt Caching
-
-If you use Co-Dialectic in API-driven IDEs like **Cursor**, **Windsurf**, **RooCode**, or **Cline**, you might worry about the token billing of injecting a ~2,500-token system prompt into every request. 
-
-**Co-Dialectic is natively optimized for Prompt Caching.**
-Because the installer injects `SKILL.md` at the very top of your `.cursorrules` or `.clinerules` as a static block, it perfectly aligns with both Anthropic (Claude 3.5 Sonnet) and OpenAI (GPT-4o) native Prompt Caching algorithms. 
-
-- **First Request:** ~2,500 input tokens.
-- **Subsequent Requests:** ~250 input tokens (Cached at a 90% discount).
-- **Latency:** Because the prompt is cached server-side, Co-Dialectic introduces near-zero latency overhead to your fast codebase queries.
-
-You get an elite, Socratic-coaching AI without sacrificing your token budget or context window.
-
 ---
 ## [Install] — Interactive, Cross-Platform. Any AI.
 
@@ -87,7 +50,51 @@ You cannot run bash installers natively on your phone, but **Custom Instructions
 **Step 4.** Paste the text into those settings. It will sync universally to your account across all platforms!
 </details>
 
-**No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
+---
+## [Modify/Uninstall] — Interactive, Cross-Platform. Any AI.
+
+Just run the same command and select modify/uninstall. Cleans up everything! 
+
+---
+## [Try with NO Install] — Interactive, Cross-Platform. Any AI.
+
+### Option B: No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
+**For ChatGPT, Claude.ai, or Gemini Desktop:** Since these platforms don't support dynamic scripts, just select everything in [co-dialectic/SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
+
+### Option A: ### ✨ Try it instantly (No installation required) - COMING SOON
+
+Don't want to install it yet? Test the Co-Dialectic experience completely free.
+
+---
+## What is Co-Dialectic?
+
+Socratic prompting just went viral. The internet is losing its mind over a 2,400-year-old idea: asking questions instead of giving commands.
+
+**But prompting is one-directional.** Co-Dialectic introduces bidirectional fluency. The human learns to speak more precisely (Socratic coaching). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward absolute fluency.
+
+*(Read the full story behind the 6,000-hour design thesis here: [PHILOSOPHY.md](PHILOSOPHY.md))*
+
+---
+
+## Which Version? (Full vs Lite)
+During installation, you will be prompted to choose:
+1. **Full Version**: Best for Claude Pro, ChatGPT Plus, and local desktop use (Cursor/Windsurf). Includes Auto-Handoff memory management and back-teaching protocols.
+2. **Lite Version**: Best for Free Tiers or fast API calls. Includes the core Socratic coaching protocols but removes memory compression/teaching to severely reduce token usage.
+
+---
+
+## ⚡️ Token Economics & Prompt Caching
+
+If you use Co-Dialectic in API-driven IDEs like **Cursor**, **Windsurf**, **RooCode**, or **Cline**, you might worry about the token billing of injecting a ~2,500-token system prompt into every request. 
+
+**Co-Dialectic is natively optimized for Prompt Caching.**
+Because the installer injects `SKILL.md` at the very top of your `.cursorrules` or `.clinerules` as a static block, it perfectly aligns with both Anthropic (Claude 3.5 Sonnet) and OpenAI (GPT-4o) native Prompt Caching algorithms. 
+
+- **First Request:** ~2,500 input tokens.
+- **Subsequent Requests:** ~250 input tokens (Cached at a 90% discount).
+- **Latency:** Because the prompt is cached server-side, Co-Dialectic introduces near-zero latency overhead to your fast codebase queries.
+
+You get an elite, Socratic-coaching AI without sacrificing your token budget or context window.
 
 ---
 
