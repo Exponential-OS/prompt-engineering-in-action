@@ -147,37 +147,7 @@ The first technique in this library. One file. Paste it into your AI. Five syste
 
 ---
 
-## [Install] — Interactive, Cross-Platform. Any AI.
 
-### Option A: Interactive Installer (macOS/Linux)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
-```
-
-### Option B: Interactive Installer (Windows)
-
-```powershell
-Invoke-RestMethod -Uri https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.ps1 | Invoke-Expression
-```
-
-> **What does it do?**
-> The installer automatically detects local AI environments like **Antigravity, Cursor, Windsurf, and Claude Code** and asks where to install.
->
-### Option C: The Zero-Friction Meta-Install (Copy & Paste)
-
-If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings:
-
-**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md).
-**Step 2.** Open your AI and paste this exact prompt (along with the copied text):
-
-> "I want to use the included text as my persistent 'Custom Instructions' or 'System Prompt' so you remember it for all our future conversations. Please give me clear, step-by-step instructions on exactly where to paste this in your current user interface."
-
-The AI will give you perfect, up-to-date directions. Follow them and you're done!
-
-**No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
-
----
 
 ## [Make It Yours]
 
