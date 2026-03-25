@@ -6,29 +6,20 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
 
-*(Note: Create an account on Scarf.sh to act as your privacy-gateway and update this badge!)*
-![Downloads](https://img.shields.io/endpoint?url=https://packages.scarf.co/api/v1/badges/thewhyman/install.sh/downloads)
-
+![Downloads](https://api.scarf.sh/v2/packages/thewhyman/78cb3484-ea45-4cc8-b305-62d4c75cc3ec)
 ### ✨ Try it instantly (No installation required)
 
-### ✨ Try it instantly (No installation required)
+Don't want to install it yet? Test the Co-Dialectic experience completely free.
 
-Don't want to install it yet? Test the Co-Dialectic experience completely free before committing:
+**For ChatGPT, Claude.ai, or Gemini Desktop:** Since these platforms don't support dynamic scripts, just select everything in [co-dialectic/SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
 
-<a href="#"><img src="https://img.shields.io/badge/Try_Co--Dialectic_in-ChatGPT-74aa9c?style=for-the-badge&logo=openai&logoColor=white" alt="Try in ChatGPT" /></a>  
-*(Note to repository author: Add your public Custom GPT link to the button above!)*
+## What is Co-Dialectic?
 
-**For Claude.ai or Gemini:** Since these platforms don't support public bots yet, just select everything in [SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
+Socratic prompting just went viral. The internet is losing its mind over a 2,400-year-old idea: asking questions instead of giving commands.
 
-## [Why This Exists]
+**But prompting is one-directional.** Co-Dialectic introduces bidirectional fluency. The human learns to speak more precisely (Socratic coaching). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward absolute fluency.
 
-Socratic prompting just went viral — "leaked" from Anthropic and OpenAI engineers. The internet is losing its mind over a 2,400-year-old idea: ask questions instead of giving commands.
-
-It works. But it's step one.
-
-**Socrates** asked questions to reveal what the student already knew. One direction: teacher → student. His student **Plato** took it further — **dialectic**, where both sides refine each other's thinking through structured back-and-forth. Neither side "wins." Both sides learn. That was 2,400 years ago.
-
-The viral posts rediscovered step one. **Co-Dialectic implements step two.**
+*(Read the full story behind the 6,000-hour design thesis here: [PHILOSOPHY.md](PHILOSOPHY.md))*
 
 ---
 
@@ -92,19 +83,7 @@ If Co-Dialectic isn't for you, removing it is completely safe and leaves no trac
 * **Web AIs:** Go to your Custom Instructions / System Prompts settings and delete the text.
 
 ---
----
 
-## [The Language Bridge]
-
-Yuval Noah Harari (*Sapiens*) identified what made humans unstoppable: **language enabled strangers to cooperate at scale** by believing in shared stories — religion, nations, money. Every institution that scaled beyond a tribe was built on language.
-
-In the age of AI, a new language bridge is forming. "Prompt engineering" teaches humans to speak the language of machines. But that's one-directional — like learning a foreign tongue. The endgame is **bidirectional fluency**: machines must also learn to speak YOUR language — your style, values, vocabulary, reasoning patterns — until you stop noticing the translation.
-
-Co-Dialectic teaches both sides simultaneously. The human learns to speak more precisely (Socratic prompting, few-shot, chain-of-thought). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward fluency.
-
-**Your AI won't just make you faster. It'll remind you what only you can do.**
-
----
 
 ## Co-Dialectic
 
@@ -199,33 +178,14 @@ Tell your AI how you like to communicate — one sentence is enough:
 
 Your first personalization is your first flywheel turn. More presets: [customization-examples.md](co-dialectic/customization-examples.md)
 
----
 
-## [The Full Story]
-
-Read the philosophy behind Co-Dialectic — Harari's language bridge, the Socratic-to-Dialectic evolution, and a 6,000-hour journey from fear to partnership:
-
-**[The Language Bridge →](https://thewhyman.blog)** *(Subscribe for future techniques)*
-
----
-
-## Philosophy
-
-Prompt engineering is step one. Co-intelligence is the destination.
-
-The viral Socratic posts teach you to ask better questions. Co-Dialectic teaches the AI to ask better questions *back*. The people who thrive with AI won't be the best prompt engineers — they'll be the best partners. And partnership means knowing what to keep (your judgment, relationships, creativity) and what to delegate (pattern-matching, synthesis, formatting).
-
-**Prompting is a skill. Co-Dialectic is a relationship. And relationships compound.**
-
----
 
 ## [Coming Soon]
 
-**Deep Personalization** — Tell your AI your story. Your industry, your goals, your communication style. It customizes to you without leaking PII. Your data stays yours.
+1. **Deep Personalization System** — Customize the AI to your exact industry and goals without leaking PII. 
+2. **AI Career Coach** — Navigate the restructuring of your industry to maximize your upside with frontier AI.
 
-**AI Career Coach** — AI is reshaping every industry. This skill reads the landscape and helps you maximize career upside while protecting downside — which skills to learn, when to move, how to position yourself. The same framework that helped the author choose frontier AI companies over starting a startup.
-
-Subscribe at **[thewhyman.blog](https://thewhyman.blog)** to get notified when they launch.
+**Subscribe at [thewhyman.blog](https://thewhyman.blog) to get notified when they launch.**
 
 ---
 
