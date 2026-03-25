@@ -10,21 +10,34 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 ## [Install] — Interactive, Cross-Platform. Any AI.
 
 ### Option A: Interactive Installer (macOS/Linux)
+TIP: If you don't know how to run a shell command, just ask your AI/LLM on how to do that on your operating system
 
 ```bash
 curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash
 ```
 
 ### Option B: Interactive Installer (Windows)
+TIP: If you don't know how to run a shell command, just ask your AI/LLM on how to do that on your operating system
 
 ```powershell
 Invoke-RestMethod -Uri https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression
 ```
 
 > **What does it do?**
-> The installer automatically detects local AI environments like **Antigravity, Cursor, Windsurf, and Claude Code** and asks where to install.
->
-### Option C: The Zero-Friction Meta-Install (Copy & Paste)
+> The installer automatically detects local AI environments like **Antigravity, Cursor, Windsurf, and Claude Code** and asks you permissions for each of those. DONE.
+> 
+> If you ever want to install for more local AI environments or uninstall - just run the same command.
+
+---
+## [Instant Try] - No Install 
+
+### Option A: ### ✨ Try on Public ChatGPT or ChatGPT Store - COMING SOON
+
+Don't want to install it yet? 
+Test the Co-Dialectic experience completely free on web or as an extension/plugin/app in ChatGPT.
+COMING SOON
+
+### Option B: The Zero-Friction Meta-Install (Copy & Paste)
 
 If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easiest way to install is to let the AI do it for you. Platforms change their menus constantly, so instead of hunting for settings, just copy the prompt and hand it to the AI.
 
@@ -54,16 +67,6 @@ You cannot run bash installers natively on your phone, but **Custom Instructions
 ## [Modify/Uninstall] — Interactive, Cross-Platform. Any AI.
 
 Just run the same command and select modify/uninstall. Cleans up everything! 
-
----
-## [Try with NO Install] — Interactive, Cross-Platform. Any AI.
-
-### Option B: No install at all** — just read [SKILL.md](co-dialectic/SKILL.md) and use the techniques manually. The ideas work without any setup.
-**For ChatGPT, Claude.ai, or Gemini Desktop:** Since these platforms don't support dynamic scripts, just select everything in [co-dialectic/SKILL.md](co-dialectic/SKILL.md) and paste it as your first message in a new chat. If you don't like it, just delete the chat!
-
-### Option A: ### ✨ Try it instantly (No installation required) - COMING SOON
-
-Don't want to install it yet? Test the Co-Dialectic experience completely free.
 
 ---
 ## What is Co-Dialectic?
@@ -97,15 +100,6 @@ Because the installer injects `SKILL.md` at the very top of your `.cursorrules` 
 You get an elite, Socratic-coaching AI without sacrificing your token budget or context window.
 
 ---
-
-## [Uninstall] — Easily remove it
-If Co-Dialectic isn't for you, removing it is completely safe and leaves no trace:
-* **Local IDEs:** Open your `.cursorrules`, `.windsurfrules`, `.clinerules`, or `.aider.conf.yml` file. Find the block starting with `### BEGIN CO-DIALECTIC ###` and delete it.
-* **Claude Code / Antigravity:** Delete the `co-dialectic` folder in your terminal: `rm -rf ~/.claude/skills/co-dialectic` or `rm -rf ~/.gemini/antigravity/skills/co-dialectic`.
-* **Web AIs:** Go to your Custom Instructions / System Prompts settings and delete the text.
-
----
-
 
 ## Co-Dialectic
 
