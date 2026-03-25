@@ -2,6 +2,8 @@
 
 **Your AI coaches your prompts. You coach its answers. Both get smarter.**
 
+***This is a prompt and memory optimizer that helps you save tokens and save you from chat crashes***
+
 Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
