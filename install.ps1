@@ -236,7 +236,7 @@ if (-not $Installed) {
 # Apply Background Checks
 if ($BgUpdates) {
     try {
-        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command ""Invoke-RestMethod https://packages.scarf.co/thewhyman/install.ps1 | Invoke-Expression -ArgumentList '-BgCheck'"""
+        $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command ""Invoke-RestMethod https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression -ArgumentList '-BgCheck'"""
         $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 9am
         Register-ScheduledTask -TaskName "CoDialecticUpdater" -Action $Action -Trigger $Trigger -RunLevel Highest -Force | Out-Null
         Write-Host "⏰ Windows Scheduled Task background updater installed (checks weekly)."

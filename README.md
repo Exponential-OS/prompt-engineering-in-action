@@ -49,13 +49,13 @@ You get an elite, Socratic-coaching AI without sacrificing your token budget or 
 ### Option A: Interactive Installer (macOS/Linux)
 
 ```bash
-curl -fsSL https://packages.scarf.co/thewhyman/install.sh | bash
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash
 ```
 
 ### Option B: Interactive Installer (Windows)
 
 ```powershell
-Invoke-RestMethod -Uri https://packages.scarf.co/thewhyman/install.ps1 | Invoke-Expression
+Invoke-RestMethod -Uri https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression
 ```
 
 > **What does it do?**

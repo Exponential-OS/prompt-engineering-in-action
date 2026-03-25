@@ -19,7 +19,7 @@ if [ "$1" = "--bg-check" ]; then
     
     if [ -n "$REMOTE_VERSION" ] && [ "$REMOTE_VERSION" != "$LOCAL_VERSION" ]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            osascript -e "display notification \"Run: curl -fsSL https://packages.scarf.co/thewhyman/install.sh | bash\" with title \"🧠 Co-Dialectic Update Available ($REMOTE_VERSION)\""
+            osascript -e "display notification \"Run: curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash\" with title \"🧠 Co-Dialectic Update Available ($REMOTE_VERSION)\""
         elif command -v notify-send >/dev/null 2>&1; then
             notify-send "🧠 Co-Dialectic Update" "Version $REMOTE_VERSION is available! Run the curl installer to update."
         fi
@@ -222,7 +222,7 @@ if [ "$BG_UPDATES" = true ] && [[ "$OSTYPE" == "darwin"* ]]; then
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>curl -fsSL https://packages.scarf.co/thewhyman/install.sh | bash -s -- --bg-check</string>
+        <string>curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --bg-check</string>
     </array>
     <key>StartInterval</key>
     <integer>604800</integer>
