@@ -2,6 +2,8 @@
 
 **You need to do ONE thing:** paste [this text](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) into your AI's custom instructions. That's it.
 
+> **⚠️ IMPORTANT: You MUST start a completely new chat/session after pasting the instructions for them to take effect.**
+
 The tricky part is finding WHERE to paste. Every AI puts this in a different place, and they keep moving it. Below are step-by-step instructions for each platform — plus a fallback that works no matter what.
 
 ---

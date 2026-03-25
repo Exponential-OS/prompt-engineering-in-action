@@ -260,5 +260,6 @@ if ($TrackOptIn) {
 
 Write-Host ""
 Write-Host "🎉 Done! Co-Dialectic is ready." -ForegroundColor Cyan
+Write-Host "⚠️  IMPORTANT: You MUST start a completely new chat/session for the instructions to take effect." -ForegroundColor Yellow
 Write-Host "   Updates: run this script again anytime to update safely."
 Write-Host ""

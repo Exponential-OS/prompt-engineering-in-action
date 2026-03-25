@@ -249,3 +249,4 @@ fi
 rm -f "$TMP_SKILL"
 echo ""
 echo "🎉 Done! Co-Dialectic is ready."
+echo "⚠️  IMPORTANT: You MUST start a completely new chat/session for the instructions to take effect."

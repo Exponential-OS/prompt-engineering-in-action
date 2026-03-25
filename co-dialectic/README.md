@@ -144,6 +144,8 @@ Every AI response starts with a dashboard:
 
 **Step 3:** Start a conversation. The status line appears immediately.
 
+> **⚠️ IMPORTANT: You MUST start a completely new chat/session after pasting the instructions. They will not apply to existing conversations.**
+
 **UIs change fast.** If the path above doesn't match what you see, search your platform's help center or ask your AI: *"Where do I paste custom instructions?"* — it knows its own settings.
 
 **Full install guide with screenshots:** [install-instructions.md](../install-instructions.md)
