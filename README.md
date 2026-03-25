@@ -29,6 +29,21 @@ During installation, you will be prompted to choose:
 2. **Lite Version**: Best for Free Tiers or fast API calls. Includes the core Socratic coaching protocols but removes memory compression/teaching to severely reduce token usage.
 
 ---
+
+## ⚡️ Token Economics & Prompt Caching
+
+If you use Co-Dialectic in API-driven IDEs like **Cursor**, **Windsurf**, **RooCode**, or **Cline**, you might worry about the token billing of injecting a ~2,500-token system prompt into every request. 
+
+**Co-Dialectic is natively optimized for Prompt Caching.**
+Because the installer injects `SKILL.md` at the very top of your `.cursorrules` or `.clinerules` as a static block, it perfectly aligns with both Anthropic (Claude 3.5 Sonnet) and OpenAI (GPT-4o) native Prompt Caching algorithms. 
+
+- **First Request:** ~2,500 input tokens.
+- **Subsequent Requests:** ~250 input tokens (Cached at a 90% discount).
+- **Latency:** Because the prompt is cached server-side, Co-Dialectic introduces near-zero latency overhead to your fast codebase queries.
+
+You get an elite, Socratic-coaching AI without sacrificing your token budget or context window.
+
+---
 ## [Install] — Interactive, Cross-Platform. Any AI.
 
 ### Option A: Interactive Installer (macOS/Linux)
