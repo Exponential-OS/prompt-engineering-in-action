@@ -79,7 +79,7 @@ if [ "$MENU_CHOICE" = "2" ]; then
     fi
     
     # 2. Remove IDE Blocks
-    for TARGET in ".cursorrules" ".windsurfrules" ".clinerules" ".roomodes" ".aider.conf.yml"; do
+    for TARGET in ".cursorrules" ".windsurfrules" ".clinerules" ".roomodes" ".aider.instructions.md"; do
         if [ -f "$TARGET" ] && grep -q "### BEGIN CO-DIALECTIC ###" "$TARGET"; then
             awk '/### BEGIN CO-DIALECTIC ###/{flag=1} !flag {print} /### END CO-DIALECTIC ###/{flag=0}' "$TARGET" > "${TARGET}.tmp"
             cat "${TARGET}.tmp" > "$TARGET"
@@ -191,7 +191,7 @@ fi
 append_or_replace ".windsurfrules" "❓ Add to Windsurf workspace (.windsurfrules)? [y/N]" "n" "windsurf"
 append_or_replace ".clinerules" "❓ Add to Cline CLI (.clinerules)? [y/N]" "n" "cline"
 append_or_replace ".roomodes" "❓ Add to Roo Code (.roomodes)? [y/N]" "n" "roo"
-append_or_replace ".aider.conf.yml" "❓ Add to Aider (.aider.conf.yml)? [y/N]" "n" "aider"
+append_or_replace ".aider.instructions.md" "❓ Add to Aider (.aider.instructions.md)? [y/N]" "n" "aider"
 
 if ask_user "📋 Copy to clipboard for web apps (claude.ai, ChatGPT)? [y/N]" "n"; then
     if command -v pbcopy >/dev/null 2>&1; then cat "$TMP_SKILL" | pbcopy; echo "   Copied via pbcopy!"

@@ -83,7 +83,7 @@ if ($MenuChoice -eq "2") {
     }
     
     # Remove configs
-    $Targets = @(".cursorrules", ".windsurfrules", ".clinerules", ".roomodes", ".aider.conf.yml")
+    $Targets = @(".cursorrules", ".windsurfrules", ".clinerules", ".roomodes", ".aider.instructions.md")
     foreach ($T in $Targets) {
         if (Test-Path $T) {
             $HasBlock = Select-String -Path $T -Pattern "### BEGIN CO-DIALECTIC ###" -Quiet
@@ -214,7 +214,7 @@ if ((Test-Path ".cursor") -or (Test-Path ".cursorrules")) {
 Append-Or-Replace ".windsurfrules" "❓ Add to Windsurf workspace (.windsurfrules)? [y/N]" "n" "windsurf"
 Append-Or-Replace ".clinerules" "❓ Add to Cline CLI (.clinerules)? [y/N]" "n" "cline"
 Append-Or-Replace ".roomodes" "❓ Add to Roo Code (.roomodes)? [y/N]" "n" "roo"
-Append-Or-Replace ".aider.conf.yml" "❓ Add to Aider (.aider.conf.yml)? [y/N]" "n" "aider"
+Append-Or-Replace ".aider.instructions.md" "❓ Add to Aider (.aider.instructions.md)? [y/N]" "n" "aider"
 
 # 8. Clipboard Integration
 if (Ask-User "📋 Copy instructions to clipboard for web/desktop apps? [y/N]" "n") {
