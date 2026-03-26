@@ -83,8 +83,14 @@ Socratic prompting just went viral. The internet is losing its mind over a 2,400
 
 ## Which Version? (Full vs Lite)
 During installation, you will be prompted to choose:
-1. **Full Version**: Best for Claude Pro, ChatGPT Plus, and local desktop use (Cursor/Windsurf). Includes Auto-Handoff memory management and back-teaching protocols.
-2. **Lite Version**: Best for Free Tiers or fast API calls. Includes the core Socratic coaching protocols but removes memory compression/teaching to severely reduce token usage.
+1. **Full Version (SKILL.md)**: 
+   - Best for Claude Pro, ChatGPT Plus, and IDE/Personal use (Cursor/Windsurf). 
+   - Features: Auto-Handoff memory management, back-teaching protocols, and long-term personalization.
+   - *Token usage: ~2,500 system prompt.*
+2. **Lite Version (SKILL-lite.md)**: 
+   - Best for Free Tier users (limited messages) or very high-frequency API calls. 
+   - Features: Core Socratic coaching, persona detection, and prompt sharpening.
+   - *Token usage: ~1,500 system prompt (40% discount).*
 
 ---
 
@@ -164,16 +170,24 @@ Tell your AI how you like to communicate — one sentence is enough:
 
 > *"Don't give me answers. Ask me questions that lead me there."*
 
-Your first personalization is your first flywheel turn. More presets: [customization-examples.md](co-dialectic/customization-examples.md)
+Your first personalization is your first flywheel turn. More presets: [customization-examples.md](examples/customization-examples.md)
 
 
 
 ## [Coming Soon]
 
-1. **Deep Personalization System** — Customize the AI to your exact industry and goals without leaking PII. 
-2. **AI Career Coach** — Navigate the restructuring of your industry to maximize your upside with frontier AI.
+1. **Deep Personalization System** — Create unique styles and reasoning patterns (The Engineer, The Executive, etc.) as modular skills you swap in/out. 
+2. **AI Career Coach** — A dedicated companion to navigate the LLM restructuring of your industry, maximize your upside, and manage your agentic future.
 
-**Subscribe at [thewhyman.blog](https://thewhyman.blog) to get notified when they launch.**
+**Subscribe at [thewhyman.blog](https://thewhyman.blog) to get notified when the beta drops.**
+
+---
+
+## Read More
+
+- [The Language Bridge: Why Learning to Talk to Machines Is the Most Human Thing You Can Do](https://www.thewhyman.blog/p/the-language-bridge-why-learning) — the full 6,000-hour design thesis on Substack
+- [Everyone's Talking About Socratic Prompting. Here's What Comes After.](https://www.linkedin.com/pulse/everyones-talking-socratic-prompting-heres-what-comes-vallamsetla-l8cac) — LinkedIn article
+- [Join the discussion](https://www.linkedin.com/posts/thewhyman_ai-promptengineering-socraticprompting-activity-7442253066516672512-7wGU) — LinkedIn
 
 ---
 

@@ -82,7 +82,8 @@ if [ "$MENU_CHOICE" = "2" ]; then
     for TARGET in ".cursorrules" ".windsurfrules" ".clinerules" ".roomodes" ".aider.conf.yml"; do
         if [ -f "$TARGET" ] && grep -q "### BEGIN CO-DIALECTIC ###" "$TARGET"; then
             awk '/### BEGIN CO-DIALECTIC ###/{flag=1} !flag {print} /### END CO-DIALECTIC ###/{flag=0}' "$TARGET" > "${TARGET}.tmp"
-            mv "${TARGET}.tmp" "$TARGET"
+            cat "${TARGET}.tmp" > "$TARGET"
+            rm "${TARGET}.tmp"
             echo "   Removed from $TARGET"
         fi
     done
@@ -148,7 +149,8 @@ append_or_replace() {
         if ask_user "🔄 Co-Dialectic already in $target_file. Update it? [Y/n]" "y"; then
             awk '/### BEGIN CO-DIALECTIC ###/{flag=1} !flag {print} /### END CO-DIALECTIC ###/{flag=0}' "$target_file" > "${target_file}.tmp"
             cat "$TMP_SKILL" >> "${target_file}.tmp"
-            mv "${target_file}.tmp" "$target_file"
+            cat "${target_file}.tmp" > "$target_file"
+            rm "${target_file}.tmp"
             echo "   ✅ Updated $target_file"
             INSTALLED=true
             INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
