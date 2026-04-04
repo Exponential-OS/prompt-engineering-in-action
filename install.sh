@@ -13,7 +13,7 @@ CONFIG_DIR="$HOME/.co-dialectic"
 # -----------------------------------------
 if [ "$1" = "--bg-check" ]; then
     mkdir -p "$CONFIG_DIR"
-    REMOTE_VERSION=$(curl -fsSL "$REPO/co-dialectic/SKILL.md" | grep "**Version:**" | head -n 1 | awk '{print $2}')
+    REMOTE_VERSION=$(curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" | grep "**Version:**" | head -n 1 | awk '{print $2}')
     LOCAL_VERSION=""
     if [ -f "$CONFIG_DIR/version.txt" ]; then LOCAL_VERSION=$(cat "$CONFIG_DIR/version.txt"); fi
     
@@ -110,11 +110,11 @@ echo " [2] Lite (Best for Free/Fast AI limits)"
 VERSION_CHOICE=$(ask_choice "Select [1/2]:" "1")
 
 if [ "$VERSION_CHOICE" = "2" ]; then
-    SKILL_URL="$REPO/co-dialectic/SKILL-lite.md"
+    SKILL_URL="$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md"
     SELECTED_VER="lite"
     echo "⬇️  Downloading Lite version..."
 else
-    SKILL_URL="$REPO/co-dialectic/SKILL.md"
+    SKILL_URL="$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md"
     SELECTED_VER="full"
     echo "⬇️  Downloading Standard version..."
 fi
@@ -204,9 +204,9 @@ if ask_user "📋 Copy to clipboard for web apps (claude.ai, ChatGPT)? [y/N]" "n
 fi
 
 if [ "$INSTALLED" = false ]; then
-    echo "ℹ️  No installation selected. Downloading to ./co-dialectic/SKILL.md"
-    mkdir -p co-dialectic
-    cp "$TMP_SKILL" "co-dialectic/SKILL.md"
+    echo "ℹ️  No installation selected. Downloading to ./plugins/co-dialectic/skills/co-dialectic/SKILL.md"
+    mkdir -p plugins/co-dialectic/skills/co-dialectic
+    cp "$TMP_SKILL" "plugins/co-dialectic/skills/co-dialectic/SKILL.md"
     INSTALLED_TOOLS="standalone"
 fi
 

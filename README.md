@@ -6,19 +6,30 @@
 
 Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
-![Co-Dialectic — prompt quality from 45% to 91% in 10 days](co-dialectic/social-preview-github.png)
+![Co-Dialectic — prompt quality from 45% to 91% in 10 days](plugins/co-dialectic/social-preview-github.png)
 
 ---
 ## [Install] — Interactive, Cross-Platform. Any AI.
 
-### Option A: Interactive Installer (macOS/Linux)
+### Option A: Claude Code / Cowork Plugin (one command)
+
+If you use Claude Code (CLI, VS Code, JetBrains) or Claude Cowork:
+
+```
+/plugin marketplace add thewhyman/prompt-engineering-in-action
+/plugin install co-dialectic@thewhyman
+```
+
+That's it. Auto-updates when new versions are pushed.
+
+### Option B: Interactive Installer (macOS/Linux)
 TIP: If you don't know how to run a shell command, just ask your AI/LLM on how to do that on your operating system
 
 ```bash
 curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash
 ```
 
-### Option B: Interactive Installer (Windows)
+### Option C: Interactive Installer (Windows)
 TIP: If you don't know how to run a shell command, just ask your AI/LLM on how to do that on your operating system
 
 ```powershell
@@ -46,7 +57,7 @@ If you use **claude.ai**, **ChatGPT**, or **Gemini** in your browser, the easies
 <details>
 <summary>💻 Web/Desktop Users (Tap to expand)</summary>
 
-**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (or [co-dialectic/SKILL-lite.md](co-dialectic/SKILL-lite.md) if you are on a free tier).
+**Step 1.** Copy the entire contents of [plugins/co-dialectic/skills/co-dialectic/SKILL.md](plugins/co-dialectic/skills/co-dialectic/SKILL.md) (or [plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md](plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md) if you are on a free tier).
 **Step 2.** Open your AI and paste this exact prompt (along with the copied text):
 
 > "I want to use the included text as my persistent 'Custom Instructions' or 'System Prompt' so you remember it for all our future conversations. Please give me clear, step-by-step instructions on exactly where to paste this in your current user interface."
@@ -59,7 +70,7 @@ The AI will give you perfect, up-to-date directions. Follow them and you're done
 
 You cannot run bash installers natively on your phone, but **Custom Instructions sync from the cloud.** 
 
-**Step 1.** Copy the entire contents of [co-dialectic/SKILL.md](co-dialectic/SKILL.md) (or [co-dialectic/SKILL-lite.md](co-dialectic/SKILL-lite.md) if you are on a free tier) directly from your phone's browser.
+**Step 1.** Copy the entire contents of [plugins/co-dialectic/skills/co-dialectic/SKILL.md](plugins/co-dialectic/skills/co-dialectic/SKILL.md) (or [plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md](plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md) if you are on a free tier) directly from your phone's browser.
 **Step 2.** Open your ChatGPT or Claude mobile app.
 **Step 3.** Ask the AI: *"I want to save this text as my System Prompt or Custom Instructions. Where is that setting in this mobile app? Tell me exactly where to tap."*
 **Step 4.** Paste the text into those settings. It will sync universally to your account across all platforms!
@@ -126,19 +137,19 @@ The first technique in this library. One file. Paste it into your AI. Five syste
 
 ### Activation — type `cod` and all 5 protocols come alive
 
-![Co-Dialectic activation](co-dialectic/screenshots/01-activation.png)
+![Co-Dialectic activation](plugins/co-dialectic/screenshots/01-activation.png)
 
 ### Prompt coaching — the AI suggests a sharper version, then waits
 
-![Prompt coaching with A/B/C options](co-dialectic/screenshots/02-prompt-coaching.png)
+![Prompt coaching with A/B/C options](plugins/co-dialectic/screenshots/02-prompt-coaching.png)
 
 ### Teaching — the AI names patterns in YOUR prompts and teaches techniques
 
-![Teaching session with named patterns](co-dialectic/screenshots/03-teaching.png)
+![Teaching session with named patterns](plugins/co-dialectic/screenshots/03-teaching.png)
 
 ### Progress tracking — see your prompt quality improve over time
 
-![Prompt quality: 25% clear with pattern diagnosis](co-dialectic/screenshots/04-status.png)
+![Prompt quality: 25% clear with pattern diagnosis](plugins/co-dialectic/screenshots/04-status.png)
 
 ---
 

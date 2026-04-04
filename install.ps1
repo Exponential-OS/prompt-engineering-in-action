@@ -18,7 +18,7 @@ if ($BgCheck) {
     if (-not (Test-Path $ConfigDir)) { New-Item -ItemType Directory -Force -Path $ConfigDir | Out-Null }
     
     try {
-        $RemoteContent = Invoke-RestMethod -Uri "$RepoUrl/co-dialectic/SKILL.md"
+        $RemoteContent = Invoke-RestMethod -Uri "$RepoUrl/plugins/co-dialectic/skills/co-dialectic/SKILL.md"
         $RemoteVersion = ""
         if ($RemoteContent -match "\*\*Version:\*\* ([^\r\n]+)") {
             $RemoteVersion = $matches[1]
@@ -123,11 +123,11 @@ $VersionChoice = Ask-Choice "Select [1/2]" "1"
 
 $SelectedVerStr = "full"
 if ($VersionChoice -eq "2") {
-    $SkillUrl = "$RepoUrl/co-dialectic/SKILL-lite.md"
+    $SkillUrl = "$RepoUrl/plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md"
     $SelectedVerStr = "lite"
     Write-Host "⬇️  Downloading Lite version..." -ForegroundColor Yellow
 } else {
-    $SkillUrl = "$RepoUrl/co-dialectic/SKILL.md"
+    $SkillUrl = "$RepoUrl/plugins/co-dialectic/skills/co-dialectic/SKILL.md"
     Write-Host "⬇️  Downloading Standard version..." -ForegroundColor Yellow
 }
 
@@ -227,9 +227,9 @@ if (Ask-User "📋 Copy instructions to clipboard for web/desktop apps? [y/N]" "
 
 if (-not $Installed) {
     Write-Host "ℹ️  No installation selected. Downloading SKILL.md to current directory..."
-    if (-not (Test-Path "co-dialectic")) { New-Item -ItemType Directory -Force -Path "co-dialectic" | Out-Null }
-    $SkillContent | Set-Content -Path "co-dialectic\SKILL.md" -Encoding UTF8
-    Write-Host "   Downloaded to: .\co-dialectic\SKILL.md"
+    if (-not (Test-Path "plugins\co-dialectic\skills\co-dialectic")) { New-Item -ItemType Directory -Force -Path "plugins\co-dialectic\skills\co-dialectic" | Out-Null }
+    $SkillContent | Set-Content -Path "plugins\co-dialectic\skills\co-dialectic\SKILL.md" -Encoding UTF8
+    Write-Host "   Downloaded to: .\plugins\co-dialectic\skills\co-dialectic\SKILL.md"
     $InstalledTools += "standalone"
 }
 

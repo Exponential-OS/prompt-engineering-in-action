@@ -1,6 +1,6 @@
 # How to Install Co-Dialectic
 
-**You need to do ONE thing:** paste [this text](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) into your AI's custom instructions. That's it.
+**You need to do ONE thing:** paste [this text](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/plugins/co-dialectic/skills/co-dialectic/SKILL.md) into your AI's custom instructions. That's it.
 
 > **⚠️ IMPORTANT: You MUST start a completely new chat/session after pasting the instructions for them to take effect.**
 
@@ -16,7 +16,7 @@ These are the same experience. Projects with custom instructions.
 1. Go to [claude.ai](https://claude.ai) or open **Claude Desktop** and click the **Chat tab**
 2. Create a new **Project** (click "Projects" in the sidebar, then "Create Project")
 3. In the project, find **"Custom Instructions"** or **"Project Instructions"**
-4. Paste the full [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) text
+4. Paste the full [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/plugins/co-dialectic/skills/co-dialectic/SKILL.md) text
 5. Start a new conversation inside that project
 
 **If the UI has changed:** Search the Claude help center for "project instructions" or "custom instructions": [support.anthropic.com](https://support.anthropic.com)
@@ -98,7 +98,7 @@ COMMANDS (natural language): "cod review"=analyze last prompts. "cod teach"=show
 1. Go to [gemini.google.com](https://gemini.google.com) (or open the Gemini app)
 2. Tap your **profile picture** (top-right)
 3. Select **"Personal Intelligence Instructions"** (may also appear as "System Instructions" or "Gems")
-4. Paste the full [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) text
+4. Paste the full [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/plugins/co-dialectic/skills/co-dialectic/SKILL.md) text
 5. Save. Start a new conversation.
 
 **Note:** This may require a Google AI plan subscription.

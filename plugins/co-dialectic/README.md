@@ -128,7 +128,18 @@ Every AI response starts with a dashboard:
 
 ## [Install] — Paste one text. Any AI. 30 seconds.
 
-**Step 1:** Copy [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) (click "Raw", then Ctrl+A, Ctrl+C).
+### Claude Code / Cowork Plugin (recommended)
+
+```
+/plugin marketplace add thewhyman/prompt-engineering-in-action
+/plugin install co-dialectic@thewhyman
+```
+
+Done. Auto-updates on new versions.
+
+### All other platforms
+
+**Step 1:** Copy [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/plugins/co-dialectic/skills/co-dialectic/SKILL.md) (click "Raw", then Ctrl+A, Ctrl+C).
 
 **Step 2:** Paste into your AI's custom instructions:
 
@@ -136,9 +147,7 @@ Every AI response starts with a dashboard:
 |----------|---------------|---------------------|
 | **claude.ai** (web) | Projects → Create Project → Custom Instructions | [Claude docs](https://support.anthropic.com) — search "project instructions" |
 | **Claude Desktop — Chat tab** | Same as claude.ai — Projects → Custom Instructions | Same experience as the web app |
-| **Claude Desktop — Code tab** | `cp -r co-dialectic ~/.claude/skills/co-dialectic` then type `cod` | [Skills docs](https://docs.claude.com/en/docs/claude-code/skills) |
-| **Claude Code** (terminal) | Same as Code tab above | Same as Desktop Code tab |
-| **ChatGPT** | Profile icon → Settings → Personalization → Custom Instructions | [ChatGPT docs](https://help.openai.com/en/articles/8096356-custom-instructions-for-chatgpt). ⚠️ 1,500 char limit — use the [condensed version](../install-instructions.md#condensed-version-for-chatgpt-paste-this) |
+| **ChatGPT** | Profile icon → Settings → Personalization → Custom Instructions | [ChatGPT docs](https://help.openai.com/en/articles/8096356-custom-instructions-for-chatgpt). ⚠️ 1,500 char limit — use the [condensed version](./install-instructions.md#condensed-version-for-chatgpt-paste-this) |
 | **Gemini** | Profile picture → Personal Intelligence Instructions | [Gemini docs](https://ai.google.dev/gemini-api/docs/system-instructions) — search "custom instructions" |
 | **Any other AI** | Start a new chat. Paste as your first message with: "Use these instructions for our entire conversation:" | Works with Copilot, Perplexity, Mistral, Llama — anything |
 
@@ -148,9 +157,9 @@ Every AI response starts with a dashboard:
 
 **UIs change fast.** If the path above doesn't match what you see, search your platform's help center or ask your AI: *"Where do I paste custom instructions?"* — it knows its own settings.
 
-**Full install guide with screenshots:** [install-instructions.md](../install-instructions.md)
+**Full install guide with screenshots:** [install-instructions.md](./install-instructions.md)
 
-**No install at all** — just read [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/co-dialectic/SKILL.md) and use the techniques in your next conversation. The ideas work without any setup.
+**No install at all** — just read [SKILL.md](https://github.com/thewhyman/prompt-engineering-in-action/blob/main/plugins/co-dialectic/skills/co-dialectic/SKILL.md) and use the techniques in your next conversation. The ideas work without any setup.
 
 ---
 

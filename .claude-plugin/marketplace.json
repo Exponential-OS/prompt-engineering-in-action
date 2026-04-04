@@ -1,0 +1,21 @@
+{
+  "name": "thewhyman",
+  "owner": {
+    "name": "Anand Vallamsetla",
+    "email": "thewhyman@users.noreply.github.com"
+  },
+  "metadata": {
+    "description": "Open-source AI tools by Anand Vallamsetla — prompt engineering, coaching, and more",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "co-dialectic",
+      "source": "./plugins/co-dialectic",
+      "description": "LLM prompt optimizer — Socratic coaching, persona detection, context management",
+      "version": "2.1.0",
+      "category": "productivity",
+      "tags": ["prompt-engineering", "coaching", "personas", "prompt-optimizer"]
+    }
+  ]
+}
