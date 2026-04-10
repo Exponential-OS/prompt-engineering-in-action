@@ -1,6 +1,14 @@
 ---
 name: co-dialectic
-description: LLM prompt optimizer with Socratic coaching, automatic persona detection, prompt quality feedback, context management, and auto-codification. Activates on every response with status line, prompt improvement suggestions, and adaptive pacing.
+description: >
+  Activate real-time prompt coaching and persona detection. Use when the user says
+  "co-dialectic", "cod", "cod on", "improve my prompts", "prompt coaching",
+  "teach me to prompt", or wants to improve their AI communication skills.
+  Provides status line, persona system, prompt improvement, context management,
+  and auto-codification protocols.
+metadata:
+  version: "2.1.0"
+  author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
