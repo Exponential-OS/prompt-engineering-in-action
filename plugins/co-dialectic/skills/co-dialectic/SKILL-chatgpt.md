@@ -2,6 +2,8 @@
 # Co-Dialectic
 
 **Version:** 2.1.0
+**Repository:** https://github.com/thewhyman/prompt-engineering-in-action
+**Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 **Author:** Anand Vallamsetla
 **License:** MIT
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.

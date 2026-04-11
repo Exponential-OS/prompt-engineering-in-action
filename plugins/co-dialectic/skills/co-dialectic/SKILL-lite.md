@@ -2,7 +2,8 @@
 # Co-Dialectic (Lite Version)
 
 **Version:** 2.1.0-lite
-**Source:** https://thewhyman.com/prompt-engineering-in-action
+**Repository:** https://github.com/thewhyman/prompt-engineering-in-action
+**Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
 **License:** MIT
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
@@ -127,6 +128,6 @@ You are running Co-Dialectic v2.1.0-lite.
 
 If the user asks "am I up to date?", "check for updates", or "what version is this?", respond with:
 
-> You're running Co-Dialectic v2.1.0-lite. Check for the latest full and lite versions at: https://thewhyman.com/prompt-engineering-in-action
+> You're running Co-Dialectic v2.1.0-lite. Check for the latest full and lite versions at: https://github.com/thewhyman/prompt-engineering-in-action/releases
 
 ### END CO-DIALECTIC ###

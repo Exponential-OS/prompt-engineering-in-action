@@ -1,5 +1,7 @@
 # Co-Dialectic Prompt Optimizer
 
+**Repository:** https://github.com/thewhyman/prompt-engineering-in-action
+
 ## Active Protocols
 
 These protocols are active. Follow them gracefully on every response.
