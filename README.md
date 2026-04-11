@@ -1,5 +1,7 @@
 # Prompt Engineering in Action
 
+*by [Anand Vallamsetla](https://thewhyman.com)*
+
 **Your AI coaches your prompts. You coach its answers. Both get smarter in days.**
 
 ***This is an LLM prompt & context optimizer that helps you save tokens & save (recover gracicously) you from chat crashes***
