@@ -129,12 +129,38 @@ BG_UPDATES=$(ask_user "🔄 Enable weekly background checks for updates (MacOS/L
 INSTALLED=false
 INSTALLED_TOOLS=""
 
+install_skill() {
+    # Full-file overwrite for dedicated skill files (Claude Code, Antigravity).
+    # Unlike append_or_replace, these files are owned entirely by Co-Dialectic,
+    # so YAML frontmatter must sit on line 1 and must not be duplicated on update.
+    local target_file="$1"
+    local prompt_msg="$2"
+    local default_ans="$3"
+    local tool_name="$4"
+
+    if [ -f "$target_file" ]; then
+        if ask_user "🔄 Co-Dialectic already installed at $target_file. Overwrite it? [Y/n]" "y"; then
+            cp "$TMP_SKILL" "$target_file"
+            echo "   ✅ Updated $target_file"
+            INSTALLED=true
+            INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+        fi
+    else
+        if ask_user "$prompt_msg" "$default_ans"; then
+            cp "$TMP_SKILL" "$target_file"
+            echo "   ✅ Installed to $target_file"
+            INSTALLED=true
+            INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+        fi
+    fi
+}
+
 append_or_replace() {
     local target_file="$1"
     local prompt_msg="$2"
     local default_ans="$3"
     local tool_name="$4"
-    
+
     if [ ! -f "$target_file" ]; then touch "$target_file"; fi
     
     # Backward compatibility for completely old installations
@@ -170,16 +196,16 @@ echo ""
 echo "Scanning for AI environments..."
 echo ""
 
-# Tool injections
+# Skill files (Antigravity, Claude Code) — dedicated skill files, full overwrite
 if [ -d "$HOME/.gemini/antigravity/skills" ]; then
     mkdir -p "$HOME/.gemini/antigravity/skills/co-dialectic"
-    append_or_replace "$HOME/.gemini/antigravity/skills/co-dialectic/SKILL.md" "✅ Detected Antigravity. Install here? [Y/n]" "y" "antigravity"
+    install_skill "$HOME/.gemini/antigravity/skills/co-dialectic/SKILL.md" "✅ Detected Antigravity. Install here? [Y/n]" "y" "antigravity"
     echo ""
 fi
 
 if [ -d "$HOME/.claude" ]; then
     mkdir -p "$HOME/.claude/skills/co-dialectic"
-    append_or_replace "$HOME/.claude/skills/co-dialectic/SKILL.md" "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"
+    install_skill "$HOME/.claude/skills/co-dialectic/SKILL.md" "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"
     echo ""
 fi
 

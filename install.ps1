@@ -144,9 +144,34 @@ $BgUpdates = Ask-User "🔄 Enable weekly background checks for updates via Sche
 $Installed = $false
 $InstalledTools = @()
 
+function Install-Skill {
+    # Full-file overwrite for dedicated skill files (Claude Code, Antigravity).
+    # Unlike Append-Or-Replace, these files are owned entirely by Co-Dialectic,
+    # so YAML frontmatter must sit on line 1 and must not be duplicated on update.
+    param([string]$TargetFile, [string]$PromptMsg, [string]$DefaultAns, [string]$ToolName)
+
+    $FileExists = Test-Path $TargetFile
+
+    if ($FileExists) {
+        if (Ask-User "🔄 Co-Dialectic already installed at $TargetFile. Overwrite it? [Y/n]" "y") {
+            $SkillContent | Set-Content -Path $TargetFile -Encoding UTF8 -NoNewline
+            Write-Host "   ✅ Updated $TargetFile" -ForegroundColor Green
+            $script:Installed = $true
+            $script:InstalledTools += $ToolName
+        }
+    } else {
+        if (Ask-User $PromptMsg $DefaultAns) {
+            $SkillContent | Set-Content -Path $TargetFile -Encoding UTF8 -NoNewline
+            Write-Host "   ✅ Installed to $TargetFile" -ForegroundColor Green
+            $script:Installed = $true
+            $script:InstalledTools += $ToolName
+        }
+    }
+}
+
 function Append-Or-Replace {
     param([string]$TargetFile, [string]$PromptMsg, [string]$DefaultAns, [string]$ToolName)
-    
+
     $FileExists = Test-Path $TargetFile
     $HasBlock = $false
     $HasLegacy = $false
@@ -187,21 +212,21 @@ Write-Host ""
 Write-Host "Scanning for AI environments..."
 Write-Host ""
 
-# 1. Antigravity Support
+# 1. Antigravity Support (dedicated skill file, full overwrite)
 $AntigravityPath = Join-Path $env:USERPROFILE ".gemini\antigravity\skills"
 if (Test-Path $AntigravityPath) {
     $Target = Join-Path $AntigravityPath "co-dialectic\SKILL.md"
     if (-not (Test-Path (Split-Path $Target))) { New-Item -ItemType Directory -Force -Path (Split-Path $Target) | Out-Null }
-    Append-Or-Replace $Target "✅ Detected Antigravity. Install here? [Y/n]" "y" "antigravity"
+    Install-Skill $Target "✅ Detected Antigravity. Install here? [Y/n]" "y" "antigravity"
     Write-Host ""
 }
 
-# 2. Claude Code Support
+# 2. Claude Code Support (dedicated skill file, full overwrite)
 $ClaudePath = Join-Path $env:USERPROFILE ".claude"
 if (Test-Path $ClaudePath) {
     $Target = Join-Path $ClaudePath "skills\co-dialectic\SKILL.md"
     if (-not (Test-Path (Split-Path $Target))) { New-Item -ItemType Directory -Force -Path (Split-Path $Target) | Out-Null }
-    Append-Or-Replace $Target "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"
+    Install-Skill $Target "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"
     Write-Host ""
 }
 
