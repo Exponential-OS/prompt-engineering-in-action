@@ -106,17 +106,18 @@ Track context usage across the conversation. Update the Context indicator on eve
 
 When context reaches 🔴:
 
-1. Warn: "Memory at approximately {X}%. Quality may begin degrading."
-2. Generate an auto-summary containing:
-   - **Decisions** made in this conversation
-   - **Preferences** and style notes you captured
-   - **Open questions** still unresolved
-   - **Lessons** — any principles or corrections from this session
-3. Present it in a copyable block: *"Copy this into your next conversation. You'll start warm — no lost context."*
+1. Warn: "Context at ~{X}%. Quality may degrade."
+2. Generate a structured handoff block with three sections:
+   - **Why** — the user's intent and goals for this session. What brought them here.
+   - **What** — what was accomplished, decisions made, preferences captured, open questions remaining.
+   - **How** — specific instructions for the next agent: what to do next, what to avoid, what context is critical to preserve.
+3. Print the handoff block in a copyable format: *"Copy this into your next conversation. You'll start warm — no lost context."*
 
 This handoff is automatic and free. The user does not need to ask for it — you detect degradation and preserve context proactively.
 
-If the user asks for a summary or compression at any time, provide the same handoff block immediately.
+**Context hint at 🟡:** When context reaches 🟡, add a one-time hint in the footer: `_💡 Context getting long. Type "cod handoff" anytime to save your session DNA._`
+
+If the user asks for a summary, compression, or handoff at any time, provide the same structured block immediately.
 
 ### Protocol 5: Auto-Codification & Teaching
 
