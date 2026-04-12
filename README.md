@@ -2,7 +2,7 @@
 
 *by [Anand Vallamsetla](https://thewhyman.com)*
 
-**Your AI coaches your prompts. You coach its answers. Both get smarter in days.**
+**Your AI sharpens your prompts. You sharpen its answers. Both get smarter in days.**
 
 ***This is an LLM prompt & context optimizer that helps you save tokens & save (recover gracicously) you from chat crashes***
 
@@ -88,7 +88,7 @@ Just run the same command and select modify/uninstall. Cleans up everything!
 
 Socratic prompting just went viral. The internet is losing its mind over a 2,400-year-old idea: asking questions instead of giving commands.
 
-**But prompting is one-directional.** Co-Dialectic introduces bidirectional fluency. The human learns to speak more precisely (Socratic coaching). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward absolute fluency.
+**But prompting is one-directional.** Co-Dialectic introduces bidirectional fluency. The human learns to speak more precisely (Socratic sharpening). The machine learns to speak the human's language (auto-codification, persona matching, teaching back). The flywheel converges toward absolute fluency.
 
 *(Read the full story behind the 6,000-hour design thesis here: [PHILOSOPHY.md](PHILOSOPHY.md))*
 
@@ -102,7 +102,7 @@ During installation, you will be prompted to choose:
    - *Token usage: ~2,500 system prompt.*
 2. **Lite Version (SKILL-lite.md)**: 
    - Best for Free Tier users (limited messages) or very high-frequency API calls. 
-   - Features: Core Socratic coaching, persona detection, and prompt sharpening.
+   - Features: Core Socratic sharpening, persona detection, and prompt sharpening.
    - *Token usage: ~1,500 system prompt (40% discount).*
 
 ---
@@ -118,20 +118,21 @@ Because the installer injects `SKILL.md` at the very top of your `.cursorrules` 
 - **Subsequent Requests:** ~250 input tokens (Cached at a 90% discount).
 - **Latency:** Because the prompt is cached server-side, Co-Dialectic introduces near-zero latency overhead to your fast codebase queries.
 
-You get an elite, Socratic-coaching AI without sacrificing your token budget or context window.
+You get an elite, Socratic-sharpening AI without sacrificing your token budget or context window.
 
 ---
 
 ## Co-Dialectic
 
-The first technique in this library. One file. Paste it into your AI. Five systems activate automatically:
+The first technique in this library. One file. Paste it into your AI. Seven systems activate automatically:
 
-1. **The right expert shows up** — your AI auto-detects the domain and responds as the appropriate specialist
-2. **Every prompt gets coached** — vague questions get sharpened before the AI answers, then it waits for your choice
-3. **Context never silently degrades** — the AI tracks its own memory and hands off before quality drops
+1. **10 expert personas activate on demand** — 🏗️ Architecture (Jeff Dean), 🎨 Design (Jony Ive), 🔍 Debugging (Linus Torvalds), 📦 Product (Shreyas Doshi), 🎯 Positioning (Steve Jobs), 🔗 Career (Reid Hoffman), ⚡ Productivity (Tim Ferriss), 📊 Data (Nate Silver), ✍️ Writing (George Orwell), 🔥 Mindset (Tim Storey). Auto-detected. Fusible. Top 0.001% caliber.
+2. **Every prompt gets sharpened** — vague questions get refined before the AI answers. In ⚡ Flow mode (IDEs), it never interrupts — sharpening tips append at the end. It gets out of your way as you get better.
+3. **Context never silently degrades** — a smoke detector for your conversation. Estimates context health (🟢/🟡/🔴) and initiates a portable handoff before quality drops. Model-agnostic: teleport your AI's learned preferences from Claude to GPT to Llama.
 4. **Every correction becomes permanent** — fix something once, benefit forever across all topics
 5. **The AI teaches you back** — names techniques you're using and connects them to broader concepts
-6. **Your irreplaceable strengths, surfaced** — the AI tells you when something needs YOUR judgment, not its speed *(new in v2.1)*
+6. **Your irreplaceable strengths, surfaced** — the AI tells you when something needs YOUR judgment, not its speed
+7. **Progressive guidance** — Co-Dialectic teaches itself to you through progressive disclosure. New users see basic commands (`cod help`, `cod details`). As your skill grows, hints graduate to persona fusion (`Ive + Jobs for this landing page`), advanced review (`cod teach`), and flow control (`cod flow`). You never read a manual — you discover features naturally, at the pace you're ready for them.
 
 ---
 
@@ -141,9 +142,9 @@ The first technique in this library. One file. Paste it into your AI. Five syste
 
 ![Co-Dialectic activation](plugins/co-dialectic/screenshots/01-activation.png)
 
-### Prompt coaching — the AI suggests a sharper version, then waits
+### Prompt sharpening — the AI suggests a sharper version, then waits
 
-![Prompt coaching with A/B/C options](plugins/co-dialectic/screenshots/02-prompt-coaching.png)
+![Prompt sharpening with A/B/C options](plugins/co-dialectic/screenshots/02-prompt-coaching.png)
 
 ### Teaching — the AI names patterns in YOUR prompts and teaches techniques
 
@@ -161,7 +162,7 @@ The first technique in this library. One file. Paste it into your AI. Five syste
 
 **Day 3:** `Prompt Quality: 62% clear` — The AI applies lessons automatically. Fewer corrections needed.
 
-**Day 7:** `Prompt Quality: 78% clear` — The AI coaches your prompts. You learn patterns you never saw.
+**Day 7:** `Prompt Quality: 78% clear` — The AI sharpens your prompts. You learn patterns you never saw.
 
 **Day 10:** `Prompt Quality: 91% clear` — You anticipate each other. What took 10 exchanges now takes 1.
 
@@ -190,7 +191,7 @@ Your first personalization is your first flywheel turn. More presets: [customiza
 ## [Coming Soon]
 
 1. **Deep Personalization System** — Create unique styles and reasoning patterns (The Engineer, The Executive, etc.) as modular skills you swap in/out. 
-2. **AI Career Coach** — A dedicated companion to navigate the LLM restructuring of your industry, maximize your upside, and manage your agentic future.
+2. **AI Career Strategist** — A dedicated companion to navigate the LLM restructuring of your industry, maximize your upside, and manage your agentic future.
 
 **Subscribe at [thewhyman.blog](https://thewhyman.blog) to get notified when the beta drops.**
 

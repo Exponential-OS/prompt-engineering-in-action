@@ -45,7 +45,7 @@ The user can set it explicitly: *"Be Jony Ive for this project"* or *"Channel St
 
 Persona stays active until: the user switches, the duration expires, or the domain clearly changes. When it switches, note the change in the status line.
 
-**Hints footer:** At the end of every response, include one terse hint line. Rotate through persona switching and commands (`cod details`, `cod status`) so users discover the system naturally.
+**Hints footer:** At the end of every response, include one terse hint line. Progress from basic → advanced based on observed user skill. New users see `cod help`, basic persona switches. Intermediate+ users see `cod status`, multi-persona fusion.
 
 **Human Strengths Awareness:**
 
