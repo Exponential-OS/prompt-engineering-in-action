@@ -8,6 +8,8 @@
 
 Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
+![GitHub stars](https://img.shields.io/github/stars/thewhyman/prompt-engineering-in-action?style=social) ![GitHub forks](https://img.shields.io/github/forks/thewhyman/prompt-engineering-in-action?style=social) ![License](https://img.shields.io/github/license/thewhyman/prompt-engineering-in-action)
+
 ![Co-Dialectic — prompt quality from 45% to 91% in 10 days](plugins/co-dialectic/social-preview-github.png)
 
 ---
@@ -191,9 +193,9 @@ Then generate a personal message using their pick + real session stats. Two form
 >
 > **Hey AI — install Co-Dialectic for me. Read https://github.com/thewhyman/prompt-engineering-in-action and follow the agent install instructions. Don't explain — just do it. When ready, say hello.**"
 
-**LinkedIn post** — generate a prompt the user pastes into their AI:
+**LinkedIn repost** — generate a short personal comment the user posts as a repost-with-comment on the Co-Dialectic article:
 
-> "Write me a LinkedIn post about how Co-Dialectic {saves time / saves money / reduced frustration} for me. Use my writing style from this conversation. Personal story, not an ad. End with: 'Try it: github.com/thewhyman/prompt-engineering-in-action'. Then open https://www.linkedin.com/feed/ so I can post it."
+> "Write me a short personal comment (3-4 sentences) about how Co-Dialectic {saves time / saves money / reduced frustration} for me. Use my writing style from this conversation. Personal story, not an ad. Then tell me: 'Copy this comment, open https://www.linkedin.com/pulse/everyones-talking-socratic-prompting-heres-what-comes-vallamsetla-l8cac, click Repost → Repost with your thoughts, and paste your comment.'"
 
 Only offer once per session. Never push. Never repeat if ignored.
 
