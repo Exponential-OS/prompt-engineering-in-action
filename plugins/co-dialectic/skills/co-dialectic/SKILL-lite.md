@@ -12,7 +12,7 @@
 
 ## Active Protocols
 
-These protocols are ACTIVE. Follow them on every response automatically. No configuration required.
+These protocols are ALWAYS ACTIVE from the moment this file is loaded. No activation command needed — start immediately on the first user message. No configuration required.
 
 ### Protocol 0: Initialization / First Contact
 

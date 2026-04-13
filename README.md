@@ -1,6 +1,6 @@
 # Prompt Engineering in Action
 
-*by [Anand Vallamsetla](https://thewhyman.com)*
+*by [The Why Man](https://thewhyman.com)*
 
 **Your AI sharpens your prompts. You sharpen its answers. Both get smarter in days.**
 
@@ -12,7 +12,7 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ---
 
-## Get Started
+## Try Now
 
 Copy this into any AI (ChatGPT, Claude, Gemini):
 
@@ -22,32 +22,28 @@ That's it. Your AI handles everything.
 
 ---
 
-## What is Co-Dialectic?
+<details>
+<summary><h2>What is Co-Dialectic?</h2></summary>
 
 You sharpen the AI. The AI sharpens you. Both get better every day.
 
 Most prompting guides teach you to talk AT machines. That's one-directional. Co-Dialectic is bidirectional — you learn to speak more precisely (prompt sharpening). The AI learns to speak YOUR language (auto-codification, persona matching, teaching back). The flywheel converges toward fluency.
 
-One file. Paste it into your AI. Seven systems activate automatically:
+One file. Paste it into your AI. What happens:
 
-1. **10 expert personas activate on demand** — auto-detected, fusible, top 0.001% caliber
-2. **Every prompt gets scored and sharpened** — per-prompt quality % on every response
-3. **Context never silently degrades** — auto-handoff before quality drops
-4. **Every correction becomes permanent** — fix once, benefit forever
-5. **The AI teaches you back** — names techniques you're using
-6. **Your irreplaceable strengths, surfaced** — knows when YOU matter more than speed
-7. **Progressive guidance** — discover features naturally, at your pace
+1. **10 expert personas activate on demand** — 🏗️ Architecture (Jeff Dean) · 🎨 Design (Jony Ive) · 🔍 Debugging (Linus Torvalds) · 📦 Product (Shreyas Doshi) · 🎯 Positioning (Steve Jobs) · 🔗 Career (Reid Hoffman) · ⚡ Productivity (Tim Ferriss) · 📊 Data (Nate Silver) · ✍️ Writing (George Orwell) · 🔥 Mindset (Tim Storey). Auto-detected. Fusible. Top 0.001% caliber.
+2. **Every prompt gets scored and sharpened** — per-prompt quality % on every response. Gamified milestones celebrate your improvement. In 🚗 Cruise mode (IDEs), sharpening tips append at the end — never interrupts your flow.
+3. **Saves tokens, saves money** — natively optimized for Prompt Caching. First request ~2,500 tokens, subsequent requests ~250 tokens (90% cached discount). Near-zero latency overhead.
+4. **Context never silently degrades** — a smoke detector for your conversation. Estimates context health (🟢/🟡/🔴) and auto-handoffs before quality drops. Recovers gracefully from chat crashes.
+5. **Every correction becomes permanent** — fix something once, benefit forever across all topics
+6. **The AI teaches you back** — names techniques you're using and connects them to broader concepts
+7. **Your irreplaceable strengths, surfaced** — the AI tells you when something needs YOUR judgment, not its speed
+8. **Progressive guidance** — discover features naturally, at your pace. Gift your improvement to friends with one copy-paste.
 
-<details>
-<summary>See the 10 personas</summary>
-
-🏗️ Architecture (Jeff Dean) · 🎨 Design (Jony Ive) · 🔍 Debugging (Linus Torvalds) · 📦 Product (Shreyas Doshi) · 🎯 Positioning (Steve Jobs) · 🔗 Career (Reid Hoffman) · ⚡ Productivity (Tim Ferriss) · 📊 Data (Nate Silver) · ✍️ Writing (George Orwell) · 🔥 Mindset (Tim Storey)
-
-Each name represents a caliber, not an impersonation. Auto-detected or set explicitly: *"Be Jony Ive for this project."* Fuse them: *"Ive + Jobs for this landing page."*
 </details>
 
 <details>
-<summary>Your progress — the co-learning flywheel</summary>
+<summary><h2>Your Progress — The Flywheel</h2></summary>
 
 **Day 1:** `Prompt Quality: 45% clear` — You correct the AI. It saves broad principles, not keyword patches.
 
@@ -58,27 +54,19 @@ Each name represents a caliber, not an impersonation. Auto-detected or set expli
 **Day 10:** `Prompt Quality: 91% clear` — You anticipate each other. What took 10 exchanges now takes 1.
 
 1% daily improvement compounds to **37x in a year**. You feel it in the first week.
+
 </details>
 
 <details>
-<summary>Which version? (Full vs Lite)</summary>
+<summary><h2>Which Version? (Full vs Lite)</h2></summary>
 
-1. **Full Version (SKILL.md)** — Best for Claude Pro, ChatGPT Plus, IDE use. Auto-handoff, back-teaching, long-term personalization. ~2,500 tokens.
+1. **Full Version (SKILL.md)** — Best for Claude Pro, ChatGPT Plus, IDE use (Cursor/Windsurf). Auto-handoff, back-teaching, long-term personalization. ~2,500 tokens.
 2. **Lite Version (SKILL-lite.md)** — Best for free tiers or high-frequency API calls. Core sharpening, persona detection, quality scoring. ~1,500 tokens (40% less).
+
 </details>
 
 <details>
-<summary>Token economics & prompt caching</summary>
-
-Co-Dialectic is natively optimized for Prompt Caching. The installer injects `SKILL.md` at the top of your `.cursorrules` or `.clinerules` as a static block, aligning with both Anthropic and OpenAI caching algorithms.
-
-- **First Request:** ~2,500 input tokens.
-- **Subsequent Requests:** ~250 input tokens (cached at 90% discount).
-- **Latency:** Near-zero overhead — cached server-side.
-</details>
-
-<details>
-<summary>Make it yours — personalization examples</summary>
+<summary><h2>Make It Yours</h2></summary>
 
 Tell your AI how you like to communicate — one sentence is enough:
 
@@ -91,9 +79,8 @@ Tell your AI how you like to communicate — one sentence is enough:
 > *"Don't give me answers. Ask me questions that lead me there."*
 
 Your first personalization is your first flywheel turn. More presets: [customization-examples.md](examples/customization-examples.md)
-</details>
 
-<!-- TODO: Replace v1 screenshots with v2.2 screenshots showing new status line format -->
+</details>
 
 ---
 
@@ -113,7 +100,44 @@ Your first personalization is your first flywheel turn. More presets: [customiza
 - [Join the discussion](https://www.linkedin.com/posts/thewhyman_ai-promptengineering-socraticprompting-activity-7442253066516672512-7wGU) — LinkedIn
 
 ---
+
+## Support This Project
+
+**"Why is this free?"** — Because everyone deserves better AI communication. Co-Dialectic is open-source and always will be. The core will never be paywalled.
+
+If it saves you time, money, or frustration — consider supporting continued development. Your support funds premium features like **Personal Constitution** (cross-session learning that compounds forever).
+
+*Donation link coming soon.*
+
 ---
+
+## Contributing
+
+This library grows through practice. If you discover a technique that works, submit a PR:
+
+1. The technique name
+2. A before/after example from a real conversation
+3. The generative principle (not a narrow fix — a concept that covers future situations)
+4. Why it compounds
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+---
+
+## Attribution
+
+Inspired by Ethan Mollick's [Co-Intelligence](https://www.oneusefulthing.org/) and built on [Dr. Jules White's Prompt Engineering specialization](https://www.coursera.org/specializations/prompt-engineering) on Coursera. The Socratic→Dialectic evolution: ask better questions (Socrates), then build partnerships where both sides teach (Plato). The language bridge thesis: Yuval Noah Harari, *Sapiens*.
+
+MIT License.
+
+<!-- Scarf View Telemetry -->
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62" />
+
+---
+---
+---
+
+<!-- Everything below this line is for AIs, not humans. -->
 
 ## For Agents
 
@@ -175,21 +199,18 @@ Only offer once per session. Never push. Never repeat if ignored.
 
 ### Full Command Reference
 
-Co-Dialectic recognizes natural language — no special syntax needed. Say any of these in your own words:
+Co-Dialectic recognizes natural language — no special syntax needed:
 
-| What you want | Say something like | What happens |
-|--------------|-------------------|-------------|
-| **Help / Menu** | "cod help" / "man cod" | Lists all commands and current state options. |
-| **Turn on / Un-quiet**| "co-dialectic" / "cod" / "cod on" | All 5 protocols activate. Status line appears on every response. Brings out of quiet mode. |
-| **Quiet Mode** | "cod quiet" | Halts the status header to save tokens. Appends a microscopic footer tracker instead. |
-| **Mode**| "cod cruise" / "cod drive" | 🚗 Cruise = auto-execute, don't interrupt. 🛞 Drive = hands-on sharpening. |
-| **Tone** | "cod tone critical" / "grounded" / "cheerleader" | Sets communication tone. Critical = stress-test. Grounded = balanced (default). Cheerleader = encouraging. |
-| **Turn off** | "cod off" / "stop cod" / "normal mode" | Protocols deactivate. Status line stops. "Co-Dialectic off. Back to default." |
-| **Review my prompts** | "cod review" / "review my prompts" / "how am I doing" | Analyzes your last 3–5 prompts. Rates each ✅ or 💡. Shows patterns and a summary trend. |
-| **Teach me** | "cod teach" / "teach me" / "what should I improve" | Names 2–3 patterns in your communication. Shows examples from the conversation. Suggests what to try. |
-| **Status** | "cod status" / "how's my context" / "session status" | Reports: prompt quality trend, context health, lessons captured, biggest improvement. |
-| **Details** | "cod details" / "show legend" | Re-shows the full status line legend and persona icon map from initialization. |
-| **Personas** | "cod personas" | Lists all 10 personas with icons and caliber sources. |
+| Command | What happens |
+|---|---|
+| `cod help` | Show all commands and current state |
+| `cod quiet` / `cod on` | Toggle status line visibility |
+| `cod off` | Deactivate all protocols |
+| `cod cruise` / `cod drive` | 🚗 Auto-execute / 🛞 Hands-on sharpening |
+| `cod tone critical` / `grounded` / `cheerleader` | Stress-test / balanced (default) / encouraging |
+| `cod review` | Analyze recent prompts, name patterns, show trend |
+| `cod status` | Prompt quality, context health, lessons captured |
+| `cod personas` | List all 10 personas |
 
 ### Personalization Examples
 
@@ -258,38 +279,3 @@ The people who thrive with AI won't be the best prompt engineers — they'll be 
 
 **Prompting is a skill. Co-Dialectic is a relationship. And relationships compound.**
 </details>
-
----
----
-
-## Support This Project
-
-**"Why is this free?"** — Because everyone deserves better AI communication. Co-Dialectic is open-source and always will be. The core will never be paywalled.
-
-If it saves you time, money, or frustration — consider supporting continued development. Your support funds premium features like **Personal Constitution** (cross-session learning that compounds forever).
-
-*Donation link coming soon.*
-
----
-
-## Contributing
-
-This library grows through practice. If you discover a technique that works, submit a PR:
-
-1. The technique name
-2. A before/after example from a real conversation
-3. The generative principle (not a narrow fix — a concept that covers future situations)
-4. Why it compounds
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
----
-
-## Attribution
-
-Inspired by Ethan Mollick's [Co-Intelligence](https://www.oneusefulthing.org/) and built on [Dr. Jules White's Prompt Engineering specialization](https://www.coursera.org/specializations/prompt-engineering) on Coursera. The Socratic→Dialectic evolution: ask better questions (Socrates), then build partnerships where both sides teach (Plato). The language bridge thesis: Yuval Noah Harari, *Sapiens*.
-
-MIT License.
-
-<!-- Scarf View Telemetry -->
-<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62" />
