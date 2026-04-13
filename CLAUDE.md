@@ -10,6 +10,19 @@
 - **Marketing strategy, campaign docs, and private content go in `anand-career-os` (private repo)** at `WIP/co-dialectic/03_CONTENT/`. Never commit strategy to this public repo.
 - **Handoff doc:** `anand-career-os/WIP/co-dialectic/NEXT_SESSION_HANDOFF_co-dialectic.md`
 
+## Private Repo References (anand-career-os)
+
+When working on marketing, distribution, or identity-related tasks, lazy-load from these files:
+
+- **Content distribution flywheel:** `.career-os/memory/content-distribution-flywheel.md` — platform choices, algorithm rules, campaign patterns, hub URLs, posting rules
+- **Identity:** `.career-os/memory/identity.md` — who Anand is, philosophies, values, co-intelligence thesis
+- **Professional brand:** `.career-os/memory/professional-brand.md` — brand statement, headlines, LinkedIn about, differentiators
+- **Brand identity & handles:** `WIP/common/BRAND_IDENTITY.md` — master social handle table, creative assets
+- **Campaign status:** `WIP/co-dialectic/CAMPAIGN_STATUS.md` — execution state, engagement metrics, what's posted/pending
+- **Article drafts:** `WIP/co-dialectic/03_CONTENT/` — Substack drafts, LinkedIn articles, social post copy
+
+Generic distribution principles live in the Constitution (P16 Content Flywheel). These files are the personal Layer 2 choices.
+
 ## Plugin System
 
 - **Marketplace name is `thewhyman`** — must match README install command: `/plugin install co-dialectic@thewhyman`. Never rename without updating README.

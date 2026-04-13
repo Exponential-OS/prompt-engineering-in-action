@@ -43,12 +43,17 @@ echo "=== 2. No orphaned directories ==="
 [ ! -d "skills" ] && pass "root skills/ removed" || fail "root skills/ still exists"
 
 # -----------------------------------------------
-# 3. No symlinks
+# 3. No unexpected symlinks (GEMINI.md→CLAUDE.md is intentional)
 # -----------------------------------------------
 echo ""
-echo "=== 3. No symlinks ==="
-SYMLINKS=$(find . -type l -not -path './.git/*' 2>/dev/null | head -5)
-[ -z "$SYMLINKS" ] && pass "no symlinks found" || fail "symlinks found: $SYMLINKS"
+echo "=== 3. No unexpected symlinks ==="
+SYMLINKS=$(find . -type l -not -path './.git/*' -not -name 'GEMINI.md' 2>/dev/null | head -5)
+[ -z "$SYMLINKS" ] && pass "no unexpected symlinks found" || fail "symlinks found: $SYMLINKS"
+# Verify GEMINI.md symlink target is correct
+if [ -L "./GEMINI.md" ]; then
+    TARGET=$(readlink "./GEMINI.md")
+    [ "$TARGET" = "CLAUDE.md" ] && pass "GEMINI.md → CLAUDE.md symlink correct" || fail "GEMINI.md points to $TARGET (expected CLAUDE.md)"
+fi
 
 # -----------------------------------------------
 # 4. JSON validity
