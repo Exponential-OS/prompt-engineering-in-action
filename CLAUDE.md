@@ -16,9 +16,18 @@
 - **marketplace.json:** `pluginRoot` lives under `metadata`. Each plugin entry must have a `source` field. Both are required by Claude Code.
 - **Install path verified:** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 
+## SKILL / README Architecture (v2.2+)
+
+- **SKILL.md is the thin core** — all 5 protocols, persona list, fetch directive. Must work standalone without URL access.
+- **README.md "For Agents" section is the CDN** — extended features (gamification, gifting, commands, philosophy) live here and evolve without reinstall.
+- **The contract is semantic, not syntactic** — SKILL.md says "read the Gamification section," not "#agent-gamification". LLMs match by meaning. Section headings in the Agent section can be renamed as long as meaning is preserved.
+- **The structural contract** — the "For Agents" section must exist at the GitHub repo URL. This is the one syntactic contract; everything within it is semantic.
+- **README has 3 sections** — (1) For Humans: simple gift-prompt CTA, (2) For Agents: CDN content, (3) Support/Donate.
+- **Never duplicate CDN content back into SKILL files** — the whole point is single source of truth in README.
+
 ## SKILL Files — Critical Rules
 
-- **4 variants must stay in sync:** `SKILL.md`, `SKILL-lite.md`, `SKILL-chatgpt.md`, `SKILL-chatgpt-lite.md` (all under `plugins/co-dialectic/skills/co-dialectic/`)
+- **2 variants must stay in sync:** `SKILL.md`, `SKILL-lite.md` (all under `plugins/co-dialectic/skills/co-dialectic/`). ChatGPT variants were removed (OpenAI plugin bug filed, never responded — files recoverable from git history).
 - **"Coaching" is BANNED** — ChatGPT rejected the plugin for health-coaching policy. Use "sharpening" everywhere: prompt sharpening, Socratic sharpening, 🛑 Refine (not Coach), 💡 Sharpen (not Improve), Mindset (not Life Coach).
 - **Run `bash test-plugin.sh` after any SKILL/plugin changes** — must pass 42/42.
 - **After editing, reinstall locally:** `cp plugins/co-dialectic/skills/co-dialectic/SKILL.md ~/.claude/skills/co-dialectic/SKILL.md`
@@ -36,8 +45,13 @@
 
 🎨 Design (Jony Ive) · 🏗️ Architecture (Jeff Dean) · 🔍 Debugging (Linus Torvalds) · 📦 Product (Shreyas Doshi) · 🎯 Positioning (Steve Jobs) · 🔗 Career (Reid Hoffman) · ⚡ Productivity (Tim Ferriss) · 📊 Data (Nate Silver) · ✍️ Writing (George Orwell) · 🔥 Mindset (Tim Storey)
 
-## Planned (v2.2 — designed, not implemented)
+## Shipped (v2.2)
 
 1. **Tone selector** — `cod tone critical` / `cod tone grounded` / `cod tone cheerleader`
 2. **Gamification + viral sharing** — milestone celebrations + gift prompts
-3. **SKILL.md compression** — core (~4KB) + extended files, ~60% token savings
+3. **SKILL.md compression** — thin core + README CDN architecture. ~33% token savings.
+
+## Planned (v3.0 — designed, not implemented)
+
+1. **Personal Constitution** — users build their own living constitution from accumulated lessons. Premium/donation-gated.
+2. **Deep Personalization System** — modular reasoning styles as swappable skills.

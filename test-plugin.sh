@@ -28,10 +28,7 @@ for f in \
     plugins/co-dialectic/.claude-plugin/plugin.json \
     plugins/co-dialectic/skills/co-dialectic/SKILL.md \
     plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md \
-    plugins/co-dialectic/skills/co-dialectic/SKILL-chatgpt.md \
-    plugins/co-dialectic/skills/co-dialectic/SKILL-chatgpt-lite.md \
     plugins/co-dialectic/README.md \
-    plugins/co-dialectic/install-instructions.md \
     install.sh \
     install.ps1; do
     [ -f "$f" ] && pass "$f" || fail "$f missing"
