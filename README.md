@@ -193,9 +193,9 @@ Then generate a personal message using their pick + real session stats. Two form
 >
 > **Hey AI — install Co-Dialectic for me. Read https://github.com/thewhyman/prompt-engineering-in-action and follow the agent install instructions. Don't explain — just do it. When ready, say hello.**"
 
-**LinkedIn repost** — generate a short personal comment the user posts as a repost-with-comment on the Co-Dialectic article:
+**LinkedIn post** — generate a short personal post ending with the article link (LinkedIn auto-generates the preview card):
 
-> "Write me a short personal comment (3-4 sentences) about how Co-Dialectic {saves time / saves money / reduced frustration} for me. Use my writing style from this conversation. Personal story, not an ad. Then tell me: 'Copy this comment, open https://www.linkedin.com/pulse/everyones-talking-socratic-prompting-heres-what-comes-vallamsetla-l8cac, click Repost → Repost with your thoughts, and paste your comment.'"
+> "Write me a short LinkedIn post (3-4 sentences) about how Co-Dialectic {saves time / saves money / reduced frustration} for me. Use my writing style from this conversation. Personal story, not an ad. End with this link on its own line: https://www.linkedin.com/pulse/everyones-talking-socratic-prompting-heres-what-comes-vallamsetla-l8cac"
 
 Only offer once per session. Never push. Never repeat if ignored.
 
