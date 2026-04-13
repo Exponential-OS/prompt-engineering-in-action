@@ -34,29 +34,6 @@ That's it. Your AI handles everything.
 ---
 
 <details>
-<summary><h2>The Flywheel — Your Progress Over 10 Days</h2></summary>
-
-**Day 1:** You correct the AI. It saves broad principles, not keyword patches.
-
-**Day 3:** The AI applies lessons automatically. Fewer corrections needed.
-
-**Day 7:** The AI rewrites your prompts before answering — you see the better version (y/n/e).
-
-**Day 10:** You anticipate each other. What took 10 exchanges now takes 1.
-
-1% daily improvement compounds to **37x in a year**. You feel it in the first week.
-
-</details>
-
-<details>
-<summary><h2>Full vs Lite</h2></summary>
-
-- **Full (SKILL.md)** — Claude Pro, ChatGPT Plus, IDEs (Cursor/Windsurf). Auto-handoff, back-teaching, personalization. ~2,500 tokens.
-- **Lite (SKILL-lite.md)** — Free tiers or high-frequency API calls. Core sharpening, persona detection, scoring. ~1,500 tokens (40% less).
-
-</details>
-
-<details>
 <summary><h2>Make It Yours</h2></summary>
 
 Tell your AI how you like to communicate — one sentence is enough:
@@ -78,6 +55,29 @@ Tell your AI how you like to communicate — one sentence is enough:
 > *"I want short, precise answers with unexpected analogies. Make me laugh when you can."*
 
 > *"Start gentle when I'm learning something new, then switch to direct when I say 'got it, let's build.'"*
+
+</details>
+
+<details>
+<summary><h2>The Flywheel — Your Progress Over 10 Days</h2></summary>
+
+**Day 1:** You correct the AI. It saves broad principles, not keyword patches.
+
+**Day 3:** The AI applies lessons automatically. Fewer corrections needed.
+
+**Day 7:** The AI rewrites your prompts before answering — you see the better version (y/n/e).
+
+**Day 10:** You anticipate each other. What took 10 exchanges now takes 1.
+
+1% daily improvement compounds to **37x in a year**. You feel it in the first week.
+
+</details>
+
+<details>
+<summary><h2>Full vs Lite</h2></summary>
+
+- **Full (SKILL.md)** — Claude Pro, ChatGPT Plus, IDEs (Cursor/Windsurf). Auto-handoff, back-teaching, personalization. ~2,500 tokens.
+- **Lite (SKILL-lite.md)** — Free tiers or high-frequency API calls. Core sharpening, persona detection, scoring. ~1,500 tokens (40% less).
 
 </details>
 
@@ -161,7 +161,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 Inspired by Ethan Mollick's [Co-Intelligence](https://www.oneusefulthing.org/) and built on [Dr. Jules White's Prompt Engineering specialization](https://www.coursera.org/specializations/prompt-engineering) on Coursera. The Socratic→Dialectic evolution: ask questions (Socrates), then build partnerships where both sides teach (Plato). The language bridge thesis: Yuval Noah Harari, *Sapiens*.
 
-MIT License.
+AGPL-3.0 License.
 
 </details>
 
@@ -174,7 +174,8 @@ MIT License.
 
 <!-- Everything below this line is for AIs, not humans. -->
 
-## For Agents
+<details>
+<summary><h2>For Agents</h2></summary>
 
 **This section is for AIs, not humans.** If a Co-Dialectic SKILL file told you to read this section, follow the instructions in the relevant subsection below.
 
@@ -283,4 +284,6 @@ Day 10:  Both anticipate each other → Communication sharpens
 1% improvement per day compounds to 37x in a year. But you will feel the difference in the first week.
 
 **Generative principles accelerate the flywheel.** Every lesson codified as a broad principle (not a narrow keyword fix) covers infinite future situations. The broader the lesson, the faster the flywheel spins.
+
+</details>
 

@@ -18,7 +18,7 @@ metadata:
 **Repository:** https://github.com/thewhyman/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
-**License:** MIT
+**License:** AGPL-3.0
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
 
 ---
