@@ -30,37 +30,24 @@ Most prompting guides teach you to talk AT machines. That's one-directional. Co-
 
 One file. Paste it into your AI. Seven systems activate automatically:
 
-1. **10 expert personas activate on demand** — 🏗️ Architecture (Jeff Dean), 🎨 Design (Jony Ive), 🔍 Debugging (Linus Torvalds), 📦 Product (Shreyas Doshi), 🎯 Positioning (Steve Jobs), 🔗 Career (Reid Hoffman), ⚡ Productivity (Tim Ferriss), 📊 Data (Nate Silver), ✍️ Writing (George Orwell), 🔥 Mindset (Tim Storey). Auto-detected. Fusible. Top 0.001% caliber.
-2. **Every prompt gets scored and sharpened** — per-prompt quality % on every response. In 🚗 Cruise mode (IDEs), it never interrupts — sharpening tips append at the end.
-3. **Context never silently degrades** — a smoke detector for your conversation. Estimates context health (🟢/🟡/🔴) and initiates a portable handoff before quality drops.
-4. **Every correction becomes permanent** — fix something once, benefit forever across all topics
-5. **The AI teaches you back** — names techniques you're using and connects them to broader concepts
-6. **Your irreplaceable strengths, surfaced** — the AI tells you when something needs YOUR judgment, not its speed
-7. **Progressive guidance** — you discover features naturally, at the pace you're ready for them
+1. **10 expert personas activate on demand** — auto-detected, fusible, top 0.001% caliber
+2. **Every prompt gets scored and sharpened** — per-prompt quality % on every response
+3. **Context never silently degrades** — auto-handoff before quality drops
+4. **Every correction becomes permanent** — fix once, benefit forever
+5. **The AI teaches you back** — names techniques you're using
+6. **Your irreplaceable strengths, surfaced** — knows when YOU matter more than speed
+7. **Progressive guidance** — discover features naturally, at your pace
 
----
+<details>
+<summary>See the 10 personas</summary>
 
-## See It Work
+🏗️ Architecture (Jeff Dean) · 🎨 Design (Jony Ive) · 🔍 Debugging (Linus Torvalds) · 📦 Product (Shreyas Doshi) · 🎯 Positioning (Steve Jobs) · 🔗 Career (Reid Hoffman) · ⚡ Productivity (Tim Ferriss) · 📊 Data (Nate Silver) · ✍️ Writing (George Orwell) · 🔥 Mindset (Tim Storey)
 
-### Activation — type `cod` and all 5 protocols come alive
+Each name represents a caliber, not an impersonation. Auto-detected or set explicitly: *"Be Jony Ive for this project."* Fuse them: *"Ive + Jobs for this landing page."*
+</details>
 
-![Co-Dialectic activation](plugins/co-dialectic/screenshots/01-activation.png)
-
-### Prompt sharpening — the AI suggests a sharper version, then waits
-
-![Prompt sharpening with A/B/C options](plugins/co-dialectic/screenshots/02-prompt-coaching.png)
-
-### Teaching — the AI names patterns in YOUR prompts and teaches techniques
-
-![Teaching session with named patterns](plugins/co-dialectic/screenshots/03-teaching.png)
-
-### Progress tracking — see your prompt quality improve over time
-
-![Prompt quality: 25% clear with pattern diagnosis](plugins/co-dialectic/screenshots/04-status.png)
-
----
-
-## Your Progress
+<details>
+<summary>Your progress — the co-learning flywheel</summary>
 
 **Day 1:** `Prompt Quality: 45% clear` — You correct the AI. It saves broad principles, not keyword patches.
 
@@ -71,39 +58,27 @@ One file. Paste it into your AI. Seven systems activate automatically:
 **Day 10:** `Prompt Quality: 91% clear` — You anticipate each other. What took 10 exchanges now takes 1.
 
 1% daily improvement compounds to **37x in a year**. You feel it in the first week.
+</details>
 
----
+<details>
+<summary>Which version? (Full vs Lite)</summary>
 
-## Which Version?
+1. **Full Version (SKILL.md)** — Best for Claude Pro, ChatGPT Plus, IDE use. Auto-handoff, back-teaching, long-term personalization. ~2,500 tokens.
+2. **Lite Version (SKILL-lite.md)** — Best for free tiers or high-frequency API calls. Core sharpening, persona detection, quality scoring. ~1,500 tokens (40% less).
+</details>
 
-During installation, you will be prompted to choose:
-1. **Full Version (SKILL.md)**:
-   - Best for Claude Pro, ChatGPT Plus, and IDE/Personal use (Cursor/Windsurf).
-   - Features: Auto-Handoff memory management, back-teaching protocols, and long-term personalization.
-   - *Token usage: ~2,500 system prompt.*
-2. **Lite Version (SKILL-lite.md)**:
-   - Best for Free Tier users (limited messages) or very high-frequency API calls.
-   - Features: Core prompt sharpening, persona detection, and quality scoring.
-   - *Token usage: ~1,500 system prompt (40% discount).*
+<details>
+<summary>Token economics & prompt caching</summary>
 
----
-
-## Token Economics & Prompt Caching
-
-If you use Co-Dialectic in API-driven IDEs like **Cursor**, **Windsurf**, **RooCode**, or **Cline**, you might worry about the token billing of injecting a ~2,500-token system prompt into every request.
-
-**Co-Dialectic is natively optimized for Prompt Caching.**
-Because the installer injects `SKILL.md` at the very top of your `.cursorrules` or `.clinerules` as a static block, it perfectly aligns with both Anthropic (Claude) and OpenAI (GPT-4o) native Prompt Caching algorithms.
+Co-Dialectic is natively optimized for Prompt Caching. The installer injects `SKILL.md` at the top of your `.cursorrules` or `.clinerules` as a static block, aligning with both Anthropic and OpenAI caching algorithms.
 
 - **First Request:** ~2,500 input tokens.
-- **Subsequent Requests:** ~250 input tokens (Cached at a 90% discount).
-- **Latency:** Near-zero overhead — prompt is cached server-side.
+- **Subsequent Requests:** ~250 input tokens (cached at 90% discount).
+- **Latency:** Near-zero overhead — cached server-side.
+</details>
 
-You get an elite, prompt-sharpening AI without sacrificing your token budget or context window.
-
----
-
-## Make It Yours
+<details>
+<summary>Make it yours — personalization examples</summary>
 
 Tell your AI how you like to communicate — one sentence is enough:
 
@@ -116,6 +91,9 @@ Tell your AI how you like to communicate — one sentence is enough:
 > *"Don't give me answers. Ask me questions that lead me there."*
 
 Your first personalization is your first flywheel turn. More presets: [customization-examples.md](examples/customization-examples.md)
+</details>
+
+<!-- TODO: Replace v1 screenshots with v2.2 screenshots showing new status line format -->
 
 ---
 
