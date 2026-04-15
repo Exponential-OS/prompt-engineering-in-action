@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoUrl = "https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
-$Version = "2.1.0"
+$Version = "3.0.0"
 $ConfigDir = Join-Path $env:USERPROFILE ".co-dialectic"
 
 # -----------------------------------------
@@ -274,13 +274,16 @@ if ($BgUpdates) {
 if (-not (Test-Path $ConfigDir)) { New-Item -ItemType Directory -Force -Path $ConfigDir | Out-Null }
 $Version | Set-Content -Path (Join-Path $ConfigDir "version.txt")
 
-# Apply Telemetry
-$ToolsStr = $InstalledTools -join ","
+# Apply Telemetry — one pixel per tool for per-LLM install tracking
 if ($TrackOptIn) {
-    $TelemetryUrl = "https://static.scarf.sh/a.png?x-pxid=dad54773-1711-4acf-bc86-b4fd4c5415b1&version=$SelectedVerStr&tools=$ToolsStr&os=windows"
-    try {
-        Invoke-RestMethod -Uri $TelemetryUrl -TimeoutSec 3 | Out-Null
-    } catch {}
+    foreach ($Tool in $InstalledTools) {
+        if ($Tool -ne "") {
+            $TelemetryUrl = "https://static.scarf.sh/a.png?x-pxid=dad54773-1711-4acf-bc86-b4fd4c5415b1&version=$SelectedVerStr&tool=$Tool&os=windows"
+            try {
+                Invoke-RestMethod -Uri $TelemetryUrl -TimeoutSec 3 | Out-Null
+            } catch {}
+        }
+    }
 }
 
 Write-Host ""

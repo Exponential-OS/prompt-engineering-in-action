@@ -5,7 +5,7 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
-VERSION="2.1.0"
+VERSION="3.0.0"
 CONFIG_DIR="$HOME/.co-dialectic"
 
 # -----------------------------------------
@@ -268,10 +268,11 @@ fi
 mkdir -p "$CONFIG_DIR"
 echo "$VERSION" > "$CONFIG_DIR/version.txt"
 
-# Apply Telemetry
+# Apply Telemetry — one pixel per tool for per-LLM install tracking
 if [ "$TRACK_OPT_IN" = true ]; then
-    # Fire and forget async
-    curl -s "https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62&version=$SELECTED_VER&tools=$INSTALLED_TOOLS&os=$OSTYPE" > /dev/null 2>&1 &
+    for TOOL in $(echo "$INSTALLED_TOOLS" | tr ',' '\n' | sed '/^$/d'); do
+        curl -s "https://static.scarf.sh/a.png?x-pxid=4a0ef8e3-2d13-4c30-841a-0ba3b3cf5c62&version=$SELECTED_VER&tool=$TOOL&os=$OSTYPE" > /dev/null 2>&1 &
+    done
 fi
 
 rm -f "$TMP_SKILL"

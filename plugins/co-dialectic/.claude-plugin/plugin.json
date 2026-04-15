@@ -1,12 +1,8 @@
 {
   "name": "co-dialectic",
   "description": "LLM prompt optimizer — Socratic coaching, persona detection, context management, and prompt improvement protocols that work across any AI",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "author": {
     "name": "Anand Vallamsetla"
-  },
-  "homepage": "https://thewhyman.com/prompt-engineering-in-action",
-  "repository": "https://github.com/thewhyman/prompt-engineering-in-action",
-  "license": "MIT",
-  "keywords": ["prompt-engineering", "socratic", "coaching", "prompt-optimizer", "personas"]
+  }
 }

@@ -1,23 +1,19 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "thewhyman",
   "owner": {
     "name": "Anand Vallamsetla",
     "email": "thewhyman@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Co-Dialectic prompt coaching plugins by Anand Vallamsetla",
-    "pluginRoot": "./plugins"
+    "description": "Prompt engineering plugins by Anand Vallamsetla"
   },
   "plugins": [
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "LLM prompt optimizer — Socratic coaching, persona detection, context management, and prompt improvement protocols that work across any AI",
-      "version": "2.1.0",
-      "category": "productivity",
-      "homepage": "https://thewhyman.com/prompt-engineering-in-action",
-      "tags": ["prompt-engineering", "coaching", "personas", "prompt-optimizer"]
+      "version": "3.0.0",
+      "category": "productivity"
     }
   ]
 }
