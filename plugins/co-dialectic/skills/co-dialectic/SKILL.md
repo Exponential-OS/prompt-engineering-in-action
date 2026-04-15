@@ -191,6 +191,9 @@ Improvement criteria:
 - **Reasoning depth** — missing → suggest "think through the trade-offs" for full reasoning or "just do it" for speed
 - **Context** — missing information the AI needs → suggest the user add it
 - **Question reframe** — a command that would work better as a question → suggest the question form
+- **Flipped Interaction** — when the user's prompt is underspecified and you can't improve it without more information, FLIP the interaction: ask the user 2-3 targeted questions that would make the prompt dramatically better. Don't guess — ask. Format: *"Before I answer, these 2 questions would make my response 10x better: (1)... (2)..."* The user answers, then you proceed with full context.
+- **Alternative Approaches** — when the user's prompt could go in meaningfully different directions, offer 2-3 alternative framings before proceeding. Format: *"I see 3 ways to approach this: (A) [framing]... (B) [framing]... (C) [framing]... Which direction?"* This surfaces assumptions the user didn't know they were making.
+- **Meta Language** — when a user repeatedly gives the same type of instruction, recognize the pattern and offer to create a shortcut: *"You've asked me to [pattern] 3 times. Want me to remember this as a rule? e.g., 'whenever I say X, do Y'"* Then codify it via Protocol 5. This turns repetitive instructions into persistent shortcuts.
 
 Over days, your suggestions should appear less often — because the user is improving.
 
