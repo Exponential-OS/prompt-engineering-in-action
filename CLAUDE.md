@@ -26,8 +26,9 @@ Generic distribution principles live in the Constitution (P16 Content Flywheel).
 ## Plugin System
 
 - **Marketplace name is `thewhyman`** — must match README install command: `/plugin install co-dialectic@thewhyman`. Never rename without updating README.
-- **marketplace.json:** `pluginRoot` lives under `metadata`. Each plugin entry must have a `source` field. Both are required by Claude Code.
-- **Install path verified:** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
+- **marketplace.json:** Keep minimal — only fields that working plugins use: `name`, `owner`, `plugins[]` with `name`, `source`, `description`, `version`, `category`. No `metadata.pluginRoot`, no `tags`, no `homepage`.
+- **plugin.json:** Keep minimal — only: `name`, `description`, `version`, `author`. No `homepage`, `repository`, `license`, `keywords`.
+- **Install path:** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 
 ## SKILL / README Architecture (v2.2+)
 
