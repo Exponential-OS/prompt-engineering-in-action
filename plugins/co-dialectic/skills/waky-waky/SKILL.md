@@ -33,7 +33,7 @@ On trigger, load the FULL context set below. Read each file (silently — no nee
 
 ### Tier 1 — Constitution + Identity (ALWAYS load)
 
-1. `~/agents/CONSTITUTION.md` — governance, P0-P17, personas, Ground Zero
+1. `~/cyborg/CONSTITUTION.md` — governance, P0-P17, personas, Ground Zero
 2. `~/anand-career-os/.career-os/memory/identity.md` — who Anand is
 3. `~/anand-career-os/.career-os/memory/professional-brand.md` — brand statement
 
