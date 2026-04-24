@@ -4,6 +4,55 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [3.2.1] — 2026-04-24
+
+**Docs + install fixes on top of v3.2.0.** Backwards compatible. No skill-level behavior changes.
+
+### Fixed
+
+- `install.sh`: the curl-one-line installer previously copied only the core `co-dialectic/SKILL.md` into directory-based tools (Claude Code, Antigravity). Users who did NOT go through the plugin marketplace were silently missing 5 of 6 skills (calibration-auditor, hallucination-detector, judge-panel, unknown-unknown, waky-waky). Rewrote install/uninstall flow around a shared `PLUGIN_SKILLS` inventory — all 6 skills now install together; judge-panel's `scripts/judge_panel.py` downloads and chmod+x's automatically.
+- `install.sh` `--bg-check`: the background update checker greps `**Version:**` in SKILL.md, but v3+ SKILL files use YAML frontmatter (`version: "X.Y.Z"`). The check silently never fired. Now parses frontmatter first, legacy format as fallback.
+- Main README: stale "Co-Dialectic v2.2.0" in the "Version and Update Nudges" section (3 minor versions behind) corrected to v3.2.0.
+- Plugin README: license mis-stated as MIT (repo is AGPL-3.0), corrected. Files table expanded to list all 6 skills + the eval harness. "Architecture (v2.2+)" section rewritten for v3.
+- Main README "Try Now" section: previously led with the gift-prompt path only — Claude Code users reading top-down ran `install.sh` instead of `/plugin install co-dialectic@thewhyman` and got the partial install described above. Now distinguishes three install paths by environment (Claude Code plugin / one-line curl / web-AI gift-prompt).
+
+### Added
+
+- `docs/PROTOCOL.md` — Phase 2 (Signal Phase) portable-contract spec. Canonical JSON shape for `judge-panel` output, the six-skill composition diagram, the minimum surfaces any agent runtime needs to expose to claim "Co-Dialectic-compatible." Published so the architecture — not just the code — becomes the durable artifact.
+
+---
+
+## [3.2.0] — 2026-04-24
+
+**Codename:** Jury Beats Judge. Defense-in-Depth Part 2 thesis shipped as a runnable skill.
+
+### Added — 2 base plugins (Scope D)
+
+- **Plugin #4 — Judge Panel** (Core tier). Cross-family cascade-then-jury review. Two cheap cross-family small-fish judges (Gemini Flash + GPT-nano) run in parallel; if they agree with high confidence, the verdict stands. If they disagree or confidence is low, escalates to one expensive cross-family tiebreaker (default GPT-5.4). Returns JSON verdict + confidence + flags + juror breakdown + cost. Stdlib Python only (`urllib`) — no SDK dependency. Triggers: `judge-panel`, `jury beats judge`, `cross-family review`, `review with a panel`. Ships with reproducible eval harness (`tests/judge_panel_eval.py`) and 8-case seeded-flaw corpus. Constitution anchor: Ground Zero — Independent Verification Gate + Model-Diversity sub-mandate; P0.5 (Boundary Self-Awareness); P22 (Boundary-First Qualification).
+- **Plugin #3 — Hallucination Detector** (Core tier). Pre-flight risk-domain classification (factual / legal / medical / financial / code / citation / creative / summarization) + post-flight hallucination scoring that delegates to `judge-panel`. Surfaces grounding suggestions before HIGH-risk prompts ship; maps the cascade verdict onto a 0-100 hallucination risk score with `✓/~/⚠ Hall` status-line label. Constitution anchor: Ground Zero — Data Integrity; P13 (real-world stakes); P0.5 (Boundary Self-Awareness — training-cutoff boundary).
+
+### Eval results (empirical receipts)
+
+`tests/RESULTS.md`, 8-case seeded-flaw corpus, real cross-family API calls:
+- Accuracy: **100% (8/8)** · F1 (fail class): **1.000** (P=1.000, R=1.000)
+- Panel agreement rate: 75% · escalation rate: 25%
+- Total eval cost: **$0.00295** · ~0.037¢ per check · **7.5× cheaper** than a naive parallel Opus jury
+
+### Changed
+
+- Plugin manifest version: `3.1.0` → `3.2.0` (`plugins/co-dialectic/.claude-plugin/plugin.json`) + marketplace manifest.
+- `install.sh`: `VERSION="3.0.0"` → `VERSION="3.2.0"`; background update-check now parses the YAML-frontmatter `version:` field (v3+ format) with legacy-`**Version:**` fallback.
+- Plugin README (`plugins/co-dialectic/README.md`): lists all 6 skills; license corrected MIT → AGPL-3.0.
+- Main README: `Try Now` section now distinguishes three install paths (Claude Code `/plugin install`, one-line curl, gift-prompt for web-AI); `What's New in v3.2.0` callout; `Version and Update Nudges` v2.2.0 → v3.2.0.
+
+### Public artifacts
+
+- Release tag: `v3.2.0` on `origin/main`
+- Public repo: `github.com/thewhyman/prompt-engineering-in-action`
+- Accompanying article: Defense in Depth, Part 2 — "Jury Beats Judge" (shipped 2026-04-23 on Substack)
+
+---
+
 ## [3.1.0] — 2026-04-19
 
 **Codename:** Observer. First release of the Co-Dialectic **wire protocol** base plugins.

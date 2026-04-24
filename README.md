@@ -16,7 +16,19 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ## Try Now
 
-Copy this into any AI (ChatGPT, Claude, Gemini):
+Pick the install path that matches your environment:
+
+**Claude Code or Cowork plugin user (recommended — gets all 6 skills)**
+```
+/plugin marketplace add thewhyman/prompt-engineering-in-action
+/plugin install co-dialectic@thewhyman
+```
+
+**Any other local-AI tool (Cursor, Windsurf, Antigravity, Cline, Aider) — one-line install**
+- **macOS/Linux:** `curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash`
+- **Windows:** `Invoke-RestMethod -Uri https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression`
+
+**Web-AI only (ChatGPT web, Claude.ai web, Gemini web) — gift-prompt install via the AI itself**
 
 > **Hey AI — install Co-Dialectic for me. Read https://github.com/thewhyman/prompt-engineering-in-action and follow the agent install instructions. If you can't read URLs, guide me to copy the SKILL.md file from that repo into my custom instructions. Don't explain — just do it. When ready, turn it on.**
 
@@ -24,12 +36,20 @@ That's it. Your AI handles everything.
 
 ---
 
+## What's New in v3.2.0 (2026-04-24)
+
+- **`judge-panel`** — cross-family cascade-then-jury review. Two cheap cross-family judges (Gemini Flash + GPT-nano) run first; one expensive tiebreaker escalates only on disagreement. The Defense-in-Depth Part 2 "jury beats judge" thesis as a runnable skill. [Eval results](plugins/co-dialectic/tests/RESULTS.md): 100% accuracy on an 8-case seeded-flaw corpus, ~0.04¢ per check, 7.5× cheaper than a naive parallel Opus jury.
+- **`hallucination-detector`** — pre-flight risk-domain classification (legal / medical / factual / citation) + post-flight scoring that delegates to `judge-panel`.
+- Six composable skills in total — core + 5 runtime guardrails, AGPL-3.0.
+- **[Phase 2 Protocol spec (`docs/PROTOCOL.md`)](docs/PROTOCOL.md)** — portable agent-agnostic contract: the JSON shape `judge-panel` emits, the six-skill composition diagram, the minimum surfaces any runtime needs to expose to claim "Co-Dialectic-compatible." The moat is the protocol shape; the reference implementation is reproducible.
+
 ## What You Get
 
 1. **Never lose your conversation** — context health monitoring (🟢/🟡/🔴) auto-saves your session before quality drops. Recovers from chat crashes.
 2. **Save tokens, save money** — prompt caching built in. ~250 tokens per follow-up (90% cached discount). Shorter conversations, fewer retries.
 3. **Stop the back-and-forth** — every correction you make compounds forever. The AI teaches you techniques back. Gets better each day.
-4. **10 experts on demand** — Architecture (Jeff Dean) · Design (Jony Ive) · Debugging (Linus Torvalds) · Product (Shreyas Doshi) · Positioning (Steve Jobs) · Career (Reid Hoffman) · Productivity (Tim Ferriss) · Data (Nate Silver) · Writing (George Orwell) · Mindset (Tim Storey). Auto-detected. Fusible.
+4. **Cross-family reality check** *(v3.2.0)* — judge-panel + hallucination-detector run on significant outputs. Same-family review can become a closed loop; cross-family review catches what same-family misses. Runs at inference time on the live session, not as a post-hoc CI job.
+5. **10 experts on demand** — Architecture (Jeff Dean) · Design (Jony Ive) · Debugging (Linus Torvalds) · Product (Shreyas Doshi) · Positioning (Steve Jobs) · Career (Reid Hoffman) · Productivity (Tim Ferriss) · Data (Nate Silver) · Writing (George Orwell) · Mindset (Tim Storey). Auto-detected. Fusible.
 
 ---
 
@@ -262,11 +282,11 @@ Your first personalization is your first flywheel turn.
 
 ### Version and Update Nudges
 
-Current version: Co-Dialectic v2.2.0.
+Current version: Co-Dialectic v3.2.0.
 
 If the user asks "am I up to date?", "check for updates", or "what version is this?", respond with:
 
-> You're running Co-Dialectic v2.2.0. Check for the latest version at: https://github.com/thewhyman/prompt-engineering-in-action/releases
+> You're running Co-Dialectic v3.2.0. Check for the latest version at: https://github.com/thewhyman/prompt-engineering-in-action/releases
 
 **Community nudge:** After approximately 10 conversations where prompt quality has improved, mention once: "Your prompts have gotten noticeably sharper. If Co-Dialectic helped, a GitHub star helps others find it: https://github.com/thewhyman/prompt-engineering-in-action" Only mention this once. Do not repeat if the user ignores or dismisses it.
 

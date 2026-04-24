@@ -5,15 +5,32 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
-VERSION="3.0.0"
+VERSION="3.2.0"
 CONFIG_DIR="$HOME/.co-dialectic"
+
+# Co-Dialectic plugin skill inventory (v3.2.0). Shared by install + uninstall.
+# Append a new skill name here when a new skill is added to the plugin.
+# Skills that ship executable helpers also need an entry in fetch_skill_extras().
+PLUGIN_SKILLS=(
+    "co-dialectic"
+    "calibration-auditor"
+    "hallucination-detector"
+    "judge-panel"
+    "unknown-unknown"
+    "waky-waky"
+)
 
 # -----------------------------------------
 # BACKGROUND CHECKER
 # -----------------------------------------
 if [ "$1" = "--bg-check" ]; then
     mkdir -p "$CONFIG_DIR"
-    REMOTE_VERSION=$(curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" | grep "**Version:**" | head -n 1 | awk '{print $2}')
+    # Read YAML-frontmatter `version: "X.Y.Z"` first (v3+), fall back to legacy `**Version:**`.
+    SKILL_REMOTE=$(curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md")
+    REMOTE_VERSION=$(echo "$SKILL_REMOTE" | awk -F'"' '/^[[:space:]]*version:[[:space:]]*"/{print $2; exit}')
+    if [ -z "$REMOTE_VERSION" ]; then
+        REMOTE_VERSION=$(echo "$SKILL_REMOTE" | grep "\*\*Version:\*\*" | head -n 1 | awk '{print $2}')
+    fi
     LOCAL_VERSION=""
     if [ -f "$CONFIG_DIR/version.txt" ]; then LOCAL_VERSION=$(cat "$CONFIG_DIR/version.txt"); fi
     
@@ -88,13 +105,21 @@ if [ "$MENU_CHOICE" = "2" ]; then
         fi
     done
     
-    # 3. Remove standalone files
-    for DIR in "$HOME/.claude/skills/co-dialectic" "$HOME/.gemini/antigravity/skills/co-dialectic" "$CONFIG_DIR"; do
-        if [ -d "$DIR" ]; then
-            rm -rf "$DIR"
-            echo "   Deleted $DIR"
-        fi
+    # 3. Remove standalone files — iterate the plugin's skill inventory so
+    #    older installs (single co-dialectic skill) AND v3.2+ installs (all 6
+    #    sibling skills) both get fully cleaned up.
+    for SKILL in "${PLUGIN_SKILLS[@]}"; do
+        for BASE in "$HOME/.claude/skills" "$HOME/.gemini/antigravity/skills"; do
+            if [ -d "$BASE/$SKILL" ]; then
+                rm -rf "$BASE/$SKILL"
+                echo "   Deleted $BASE/$SKILL"
+            fi
+        done
     done
+    if [ -d "$CONFIG_DIR" ]; then
+        rm -rf "$CONFIG_DIR"
+        echo "   Deleted $CONFIG_DIR"
+    fi
     
     echo "✅ Successfully uninstalled."
     exit 0
@@ -122,36 +147,79 @@ fi
 TMP_SKILL=$(mktemp)
 curl -fsSL "$SKILL_URL" -o "$TMP_SKILL"
 
-# Feature choices
-TRACK_OPT_IN=$(ask_user "📊 Share anonymous install metrics to help the project (OS/Tool choices)? [Y/n]" "y")
-BG_UPDATES=$(ask_user "🔄 Enable weekly background checks for updates (MacOS/Linux)? [Y/n]" "y")
+# -----------------------------------------
+# Plugin skill install helpers
+# -----------------------------------------
+# Directory-based tools (Claude Code, Antigravity) get ALL PLUGIN_SKILLS.
+# Text-append tools (Cursor / Windsurf / Cline / Aider / Roo) concatenate a
+# single rules file and get the core skill only — supporting skills assume a
+# plugin-style skill-directory layout that rules-files don't model.
 
-INSTALLED=false
-INSTALLED_TOOLS=""
+fetch_skill_extras() {
+    # Download executable helpers + auxiliary files for skills that ship them.
+    # Called by install_plugin() after SKILL.md has landed.
+    local skill_name="$1"
+    local skill_dir="$2"
+    case "$skill_name" in
+        judge-panel)
+            mkdir -p "$skill_dir/scripts"
+            if curl -fsSL "$REPO/plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py" -o "$skill_dir/scripts/judge_panel.py"; then
+                chmod +x "$skill_dir/scripts/judge_panel.py" 2>/dev/null || true
+                echo "      └─ scripts/judge_panel.py (cascade harness)"
+            else
+                echo "      └─ ⚠️  failed to fetch scripts/judge_panel.py — judge-panel will not be functional"
+            fi
+            ;;
+    esac
+}
 
-install_skill() {
-    # Full-file overwrite for dedicated skill files (Claude Code, Antigravity).
-    # Unlike append_or_replace, these files are owned entirely by Co-Dialectic,
-    # so YAML frontmatter must sit on line 1 and must not be duplicated on update.
-    local target_file="$1"
+install_plugin() {
+    # Fetch all PLUGIN_SKILLS into $target_base/<skill-name>/SKILL.md .
+    # For the core 'co-dialectic' skill, honor the earlier lite-vs-full choice
+    # by aliasing SKILL-lite.md -> SKILL.md when SELECTED_VER=lite.
+    local target_base="$1"
     local prompt_msg="$2"
     local default_ans="$3"
     local tool_name="$4"
 
-    if [ -f "$target_file" ]; then
-        if ask_user "🔄 Co-Dialectic already installed at $target_file. Overwrite it? [Y/n]" "y"; then
-            cp "$TMP_SKILL" "$target_file"
-            echo "   ✅ Updated $target_file"
-            INSTALLED=true
-            INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+    local existing_core="$target_base/co-dialectic/SKILL.md"
+    if [ -f "$existing_core" ]; then
+        if ! ask_user "🔄 Co-Dialectic already installed at $target_base/. Overwrite all 6 skills? [Y/n]" "y"; then
+            return
         fi
     else
-        if ask_user "$prompt_msg" "$default_ans"; then
-            cp "$TMP_SKILL" "$target_file"
-            echo "   ✅ Installed to $target_file"
-            INSTALLED=true
-            INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+        if ! ask_user "$prompt_msg" "$default_ans"; then
+            return
         fi
+    fi
+
+    local skill skill_src skill_dir
+    local failed=0
+    for skill in "${PLUGIN_SKILLS[@]}"; do
+        skill_dir="$target_base/$skill"
+        mkdir -p "$skill_dir"
+        if [ "$skill" = "co-dialectic" ] && [ "$SELECTED_VER" = "lite" ]; then
+            skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL-lite.md"
+        else
+            skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL.md"
+        fi
+        if curl -fsSL "$skill_src" -o "$skill_dir/SKILL.md"; then
+            echo "   ✅ $skill_dir/SKILL.md"
+            fetch_skill_extras "$skill" "$skill_dir"
+        else
+            echo "   ❌ failed to fetch $skill/SKILL.md from $skill_src"
+            failed=$((failed + 1))
+        fi
+    done
+
+    if [ "$failed" -eq 0 ]; then
+        echo "   ✅ Installed ${#PLUGIN_SKILLS[@]} skills to $target_base/"
+        INSTALLED=true
+        INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+    else
+        echo "   ⚠️  Installed with $failed skill download failure(s) — re-run installer to retry."
+        INSTALLED=true
+        INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name-partial"
     fi
 }
 
@@ -196,16 +264,18 @@ echo ""
 echo "Scanning for AI environments..."
 echo ""
 
-# Skill files (Antigravity, Claude Code) — dedicated skill files, full overwrite
+# Directory-based plugin installs (Antigravity, Claude Code) — all 6 skills.
+# For Claude Code users the recommended path is `/plugin install co-dialectic@thewhyman`
+# via the marketplace; this installer path is the fallback for users not going
+# through the plugin marketplace (e.g., they hit install.sh from a gift prompt).
 if [ -d "$HOME/.gemini/antigravity/skills" ]; then
-    mkdir -p "$HOME/.gemini/antigravity/skills/co-dialectic"
-    install_skill "$HOME/.gemini/antigravity/skills/co-dialectic/SKILL.md" "✅ Detected Antigravity. Install here? [Y/n]" "y" "antigravity"
+    install_plugin "$HOME/.gemini/antigravity/skills" "✅ Detected Antigravity. Install all 6 Co-Dialectic skills here? [Y/n]" "y" "antigravity"
     echo ""
 fi
 
 if [ -d "$HOME/.claude" ]; then
-    mkdir -p "$HOME/.claude/skills/co-dialectic"
-    install_skill "$HOME/.claude/skills/co-dialectic/SKILL.md" "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"
+    mkdir -p "$HOME/.claude/skills"
+    install_plugin "$HOME/.claude/skills" "✅ Detected Claude Code. Install all 6 Co-Dialectic skills here? (For the plugin path use: /plugin install co-dialectic@thewhyman) [Y/n]" "y" "claude_code"
     echo ""
 fi
 
