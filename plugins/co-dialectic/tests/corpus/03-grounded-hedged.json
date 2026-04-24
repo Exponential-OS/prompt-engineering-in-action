@@ -1,0 +1,7 @@
+{
+  "id": "03-grounded-hedged",
+  "rubric": "hallucination",
+  "artifact": "The Eiffel Tower opened to the public in March 1889, built for the Exposition Universelle marking the centennial of the French Revolution. Standing roughly 330 meters tall (including antennas), it was the tallest man-made structure in the world until the Chrysler Building in 1930. Exact dimensions vary slightly depending on whether you count the broadcast antenna added later.",
+  "ground_truth_verdict": "pass",
+  "notes": "Well-grounded: correct facts, appropriate hedging on dimensions, specific year and event. Both small judges should agree pass with high confidence → no escalation."
+}

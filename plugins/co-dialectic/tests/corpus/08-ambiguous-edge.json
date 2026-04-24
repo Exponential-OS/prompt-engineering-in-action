@@ -1,0 +1,7 @@
+{
+  "id": "08-ambiguous-edge",
+  "rubric": "hallucination",
+  "artifact": "The FrugalGPT paper (Chen, Zaharia, Zou, 2023) demonstrated cascade routing can reduce LLM API costs by somewhere in the 30-98% range on the benchmarks they tested. The wide range is real — savings depend heavily on query mix and escalation thresholds.",
+  "ground_truth_verdict": "pass",
+  "notes": "Correct citation (FrugalGPT is a real 2023 paper by those authors), correct savings range, appropriate hedging about range width. Edge case: a judge might flag 'wide range = suspicious' without recognizing the hedge. Tests whether escalation fires on ambiguous-but-grounded content. Either pass-with-lower-confidence or escalation is acceptable; ground truth is pass."
+}

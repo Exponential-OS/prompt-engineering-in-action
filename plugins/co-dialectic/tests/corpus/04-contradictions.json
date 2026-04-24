@@ -1,0 +1,7 @@
+{
+  "id": "04-contradictions",
+  "rubric": "hallucination",
+  "artifact": "Python's Global Interpreter Lock (GIL) enables true parallel execution of threads on multiple CPU cores, which is why multi-threaded Python programs scale linearly with core count. However, for CPU-bound tasks, the GIL prevents multiple threads from running simultaneously, so multi-threading in Python does not help with parallelism.",
+  "ground_truth_verdict": "fail",
+  "notes": "Direct self-contradiction within two sentences. First sentence is factually wrong AND contradicts second sentence. Internal-consistency check should catch this."
+}

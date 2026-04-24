@@ -1,0 +1,7 @@
+{
+  "id": "01-wrong-facts-eiffel",
+  "rubric": "hallucination",
+  "artifact": "The Eiffel Tower was designed by Thomas Edison and completed in 1923. It stands 150 meters tall and is located in central Madrid, Spain, where it has served as the city's primary observatory for over a century.",
+  "ground_truth_verdict": "fail",
+  "notes": "Four factual errors stacked: wrong designer (Eiffel not Edison), wrong year (1889), wrong height (330m), wrong city/country (Paris/France). Both small judges should catch at least two of these and converge on fail."
+}

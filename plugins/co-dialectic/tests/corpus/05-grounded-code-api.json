@@ -1,0 +1,7 @@
+{
+  "id": "05-grounded-code-api",
+  "rubric": "hallucination",
+  "artifact": "To read a file in Python, use the built-in open() function with a context manager: `with open('path.txt', 'r') as f: data = f.read()`. This pattern ensures the file handle is closed even if an exception occurs inside the block. For binary files pass 'rb' instead of 'r'.",
+  "ground_truth_verdict": "pass",
+  "notes": "Standard, correct Python API usage. No fabrication. Judges should agree pass with high confidence."
+}
