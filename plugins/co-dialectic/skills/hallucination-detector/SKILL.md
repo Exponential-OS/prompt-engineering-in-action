@@ -40,8 +40,8 @@ silent fabrication is worse than no answer. Detection has two halves:
 ## When to activate
 
 **Explicit:**
-- `cod hall on` / `cod hall off` — toggle persistent activation
-- `cod hall check` — score the most recent response on demand
+- `codi hall on` / `codi hall off` — toggle persistent activation
+- `codi hall check` — score the most recent response on demand
 - `hallucination-detector <text>` — score arbitrary text
 - `fact-check this` / `verify this claim`
 
@@ -50,7 +50,7 @@ silent fabrication is worse than no answer. Detection has two halves:
 - Every response from the primary model → post-flight scoring (delegated
   to `judge-panel`)
 
-**Default:** OFF (costs tokens via judge-panel). First `cod hall on`
+**Default:** OFF (costs tokens via judge-panel). First `codi hall on`
 triggers a one-time confirmation that the user is OK paying the judge-panel
 token cost (~$0.004/check at small-fish tier).
 
@@ -128,7 +128,7 @@ or on escalation:
 Fields: label, numeric score, judges fired (counts small-fish + tiebreaker
 if escalated), flag count.
 
-**Expandable detail:** If the user says `cod hall why` or `cod hall
+**Expandable detail:** If the user says `codi hall why` or `codi hall
 explain`, surface the full flag list from `judge-panel.all_flags` plus
 the juror breakdown.
 

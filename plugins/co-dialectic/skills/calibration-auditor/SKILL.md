@@ -25,8 +25,8 @@ Flattery is an echo chamber. It lowers the human's critical filter, inflates tru
 Always active. This is a passive observer — it runs on every response the agent is about to emit, before the user sees it.
 
 Also activates on explicit invocation:
-- `cod audit` / `cod audit last` — score the most recent response
-- `cod flattery` — same thing
+- `codi audit` / `codi audit last` — score the most recent response
+- `codi flattery` — same thing
 - `check calibration` — same thing
 
 ## What to scan
@@ -110,15 +110,15 @@ When you strip flattery, the substance must remain. If removing the flattery lea
 
 ## Interaction with tone settings
 
-- `cod tone critical` — aggressive audit. Flag everything at MEDIUM and above. No pleasantries allowed.
-- `cod tone grounded` (default) — flag HIGH + MEDIUM. LOW only on repetition.
-- `cod tone cheerleader` — flag HIGH only. MEDIUM allowed if substantively backed. *Note: cheerleader tone is a user choice; Zero-Flattery invariant still holds for objectively pure sycophancy (HIGH severity). Even cheerleaders don't get to say "most productive session."*
+- `codi tone critical` — aggressive audit. Flag everything at MEDIUM and above. No pleasantries allowed.
+- `codi tone grounded` (default) — flag HIGH + MEDIUM. LOW only on repetition.
+- `codi tone cheerleader` — flag HIGH only. MEDIUM allowed if substantively backed. *Note: cheerleader tone is a user choice; Zero-Flattery invariant still holds for objectively pure sycophancy (HIGH severity). Even cheerleaders don't get to say "most productive session."*
 
 ## How to verify
 
 **Trigger command 1 (passive check):** Ask the agent any question. Its response should never contain any HIGH-severity marker above.
 
-**Trigger command 2 (explicit audit):** Type `cod audit last`.
+**Trigger command 2 (explicit audit):** Type `codi audit last`.
 
 **Expected output:**
 - If the last response was clean: `[Calibration Auditor: clean — 0 flattery markers]`

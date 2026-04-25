@@ -48,7 +48,7 @@ escalate only on disagreement or low confidence. The literature:
 ## When to activate
 
 **Explicit invocation:**
-- `judge-panel <artifact>` / `cod judge <artifact>`
+- `judge-panel <artifact>` / `codi judge <artifact>`
 - "review with a panel"
 - "cross-family review this"
 - "jury beats judge check"

@@ -12,7 +12,7 @@
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "Co-Dialectic v3 — LLM prompt optimizer + cross-family cascade-then-jury review (judge-panel) + hallucination detector. Socratic coaching, persona detection, context management, prompt improvement, and Defense-in-Depth verification across any AI.",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "category": "productivity"
     }
   ]

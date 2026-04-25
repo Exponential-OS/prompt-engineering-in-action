@@ -32,7 +32,7 @@ Activate on explicit trigger phrases:
 - `what am I missing`
 - `where else does this apply`
 - `rumsfeld` / `rumsfeld matrix`
-- `cod expand` / `cod cross`
+- `codi expand` / `codi cross`
 
 Also auto-activate (non-blocking suggestion) when:
 - A significant insight is being codified (user says "save this", "remember this", "codify this")

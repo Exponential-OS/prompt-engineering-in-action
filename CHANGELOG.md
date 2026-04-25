@@ -4,6 +4,40 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [3.3.0] — 2026-04-24
+
+**Codename:** Anti-drift. Command rename + swarm reasoning primitive.
+
+### Added
+
+- **Protocol 6 — Internal Swarm Escalation (AI-to-AI / AI-to-Self)** added to the core Co-Dialectic skill. Three rules: (1) self-correction via internal dialectic before touching Ground Zero invariants, (2) swarm escalation to Human Cyborg on stalemate instead of silent failure, (3) misunderstanding-as-growth (Platonic dialectic applied — extract generative value from API failures, peer surprises, user rejections). Merged from the Antigravity thread's swarm-reasoning spec (`WIP/career-os-product/feature-specs/co-dialectic-v3-mem0-integration-SPEC.md`). Forward-compatible: runs today via in-context recall; binds to Mem0 / Neo4j when the Docker swarm architecture is deployed.
+- **Spec-first ownership contract.** `WIP/prompt-engineering-in-action-product/co-dialectic/01_SPECS/v3.3.0-SPEC.md` (private) defines: only the Co-Dialectic thread edits canonical SKILL.md files. Other threads propose via specs. Target-location skill files are auto-generated artifacts.
+
+### Changed
+
+- **Command prefix renamed `cod` → `codi`** across all six SKILL.md files. Four-letter prefix, phonetically unambiguous. Description still accepts `cod` as a trigger keyword for backward-compatibility; user-facing commands use `codi`. Brand name stays Co-Dialectic (the plugin registered as `co-dialectic` in the marketplace; unchanged).
+- Plugin version: `3.2.1` → `3.3.0` (user-facing command surface changed).
+
+### Infrastructure — anti-drift (workspace-level)
+
+This ships on the **workspace** side (`anand-career-os`), not in the plugin repo:
+
+- **`ci/skill-compiler.sh` NEW** — reads `workspace.manifest.yaml`, iterates `(skill, agent)` pairs, runs per-agent transformer, writes target with auto-generated banner + canonical-SHA stamp. Same pattern as `ci/mcp-compiler.sh`. Two transformers today: `claude-code` (identity copy) + `antigravity` (identity copy). Stubs for cursor / gemini-cli / codex / cowork / windsurf / cline / aider / roo warn pending v3.4.0 without silently failing.
+- **`workspace.manifest.yaml` updated** — `antigravity` added to `distribute_to` enum for the co-dialectic skill. Ownership note inlined: only Co-Dialectic thread edits canonical.
+- **Banner discipline** — generated target files carry `<!-- AUTO-GENERATED from <canonical> @<sha>. DO NOT EDIT. Edits overwritten on next sync. Propose changes via spec in WIP/... or edit canonical if you own it. -->`. Banner placed AFTER YAML frontmatter (not before — Claude Code's frontmatter parse requires `---` on line 1).
+- **Drift problem resolved**: as of v3.3.0 compile, canonical content at `~/aiprojects/prompt-engineering-in-action/plugins/co-dialectic/skills/co-dialectic/SKILL.md` is mirrored to both `~/.claude/skills/co-dialectic/SKILL.md` (Claude Code) and `~/.gemini/antigravity/skills/co-dialectic/SKILL.md` (Antigravity) on every sync. Local edits at target locations die on next compile; banner warns.
+
+### Deferred to v3.3.1 (docs-only, no skill behavior change)
+
+- Main README "Try Now" install-prompt rewrite (two-path CDN URL + inline fallback + user-consent ask)
+- "For Agents" CDN section restructured as per-runtime branch tree
+- `docs/PROTOCOL.md` addendum documenting Protocol 6 + Mem0/Neo4j-on-Docker reference
+- Chrome-extension teaser in web-AI path
+
+Shipping docs separately so v3.3.0 lands today with the anti-drift infrastructure + command rename + Protocol 6 merge — user's stated top-priority value.
+
+---
+
 ## [3.2.1] — 2026-04-24
 
 **Docs + install fixes on top of v3.2.0.** Backwards compatible. No skill-level behavior changes.

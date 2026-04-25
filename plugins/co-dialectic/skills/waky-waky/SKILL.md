@@ -25,7 +25,7 @@ Activate ONLY when the user explicitly utters one of these trigger phrases. Do n
 - `reincarnate the swarm`
 - `wake up the swarm`
 - `restore context`
-- `cod wake` / `cod reincarnate`
+- `codi wake` / `codi reincarnate`
 
 ## What to do
 
