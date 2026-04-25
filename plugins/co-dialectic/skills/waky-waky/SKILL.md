@@ -33,7 +33,7 @@ On trigger, load the FULL context set below. Read each file (silently — no nee
 
 ### Tier 1 — Constitution + Identity (ALWAYS load)
 
-1. `~/cyborg/CONSTITUTION.md` — governance, P0-P17, personas, Ground Zero
+1. `~/cyborg/CONSTITUTION.md` — governance, all application principles (currently P0-P22), eight Ground Zero frameworks, personas
 2. `~/anand-career-os/.career-os/memory/identity.md` — who Anand is
 3. `~/anand-career-os/.career-os/memory/professional-brand.md` — brand statement
 
@@ -64,7 +64,7 @@ After loading, print this compact status block (no fluff, no recap of file conte
 
 ```
 Co-Dialectic · Waky Waky — context restored.
-  Constitution: loaded (P0-P17, personas, Ground Zero)
+  Constitution: loaded (all application principles, eight frameworks, personas)
   Identity: loaded
   Root handoff: loaded (last updated: <date from file>)
   Per-WIP handoffs: loaded (<N> files)

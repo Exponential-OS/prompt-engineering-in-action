@@ -74,7 +74,7 @@ For every insight, force-evaluate against this fixed slot list. These are the Ru
 - **Marketing hook** — is there a LinkedIn post, Substack thread, or campaign arc here?
 - **Product feature** — does this belong in Co-Dialectic, AgencyOS, xOS, or Career OS?
 - **IP / patent** — is this a distinctive mechanism worth filing?
-- **Constitution principle** — does this sharpen or add a principle (P0-P17)?
+- **Constitution principle** — does this sharpen or add an application principle (currently P0-P22)?
 - **Persona** — is there a new persona to add or sharpen?
 - **Relationship** — does this unlock or re-frame an existing relationship in the network?
 
