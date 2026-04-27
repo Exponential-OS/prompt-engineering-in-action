@@ -50,9 +50,13 @@ silent fabrication is worse than no answer. Detection has two halves:
 - Every response from the primary model → post-flight scoring (delegated
   to `judge-panel`)
 
-**Default:** OFF (costs tokens via judge-panel). First `codi hall on`
-triggers a one-time confirmation that the user is OK paying the judge-panel
-token cost (~$0.004/check at small-fish tier).
+**Default:** OFF for explicit-trigger mode. When Protocol 8 (Auto-Verify) is
+active (default ON in co-dialectic v4.1+), hallucination-detector fires
+automatically at T2+ without the user typing `codi hall on`. See
+**Auto-fire trigger** section below.
+
+First explicit `codi hall on` triggers a one-time confirmation that the user
+is OK paying the judge-panel token cost (~$0.004/check at small-fish tier).
 
 ## Pre-flight: risk domain classification
 
@@ -143,6 +147,20 @@ Post-flight scoring costs tokens every time it fires. Two levers:
    `$JUDGE_PANEL_SESSION_BUDGET` (default $0.50/session), surface:
    *"Hall detector has used ~\$0.47 this session. Continue (y) / pause
    (n) / switch to pre-flight-only (p)?"*
+
+## Auto-fire trigger (Protocol 8 — co-dialectic v4.1+)
+
+**Protocol 8 (Auto-Verify by Stakes) dispatches to this skill automatically.
+No user command required.**
+
+| Tier | What fires | How |
+|---|---|---|
+| T2 (shared/multi-step-undo) | `hallucination-preflight` rubric via fish-swarm | Fish-swarm rubric `hallucination-preflight` runs BEFORE response generation. Classifies risk domain; injects grounding suggestion if HIGH-risk. Result maps to `✓ checked` footer on the response. |
+| T4 (irreversible/external-facing) | Full post-flight hallucination scoring | After artifact is drafted (but before T4 explicit-confirm gate), runs full post-flight scoring via judge-panel with `hallucination` rubric. Verdict feeds into RED preflight summary. |
+
+**Integration contract:** Protocol 8 invokes this skill's pre-flight logic at T2 using the fish-swarm harness (cheap, non-blocking). At T4, it invokes post-flight scoring via the judge-panel harness (full cascade). The skill does not need to know it was invoked by Protocol 8 vs. explicit `codi hall on` — the invocation path is identical. The only difference is that Protocol 8 routes through fish-swarm for T2 (lightweight path) and directly through judge-panel for T4 (full path).
+
+**When `career-os.bio-claim-verifier` is available (TODO integration point):** At T4 with biographical claims, Protocol 8 first dispatches to `career-os.bio-claim-verifier` before falling back to this skill. This skill handles general factual claims; the bio-claim verifier handles Anand-specific canonical-source diffs. The two are complementary and both can fire on the same T4 artifact.
 
 ## Interaction with other plugins
 
