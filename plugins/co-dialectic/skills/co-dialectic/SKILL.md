@@ -7,14 +7,14 @@ description: >
   Provides status line, persona system, caliber enforcement, prompt improvement,
   context management, and auto-codification protocols.
 metadata:
-  version: "3.5.1"
+  version: "4.1.0"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 3.5.1
+**Version:** 4.1.0
 **Repository:** https://github.com/thewhyman/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -80,11 +80,11 @@ Track context usage from conversation length relative to your known context wind
 
 **Mode toggle is session-scoped, derived from conversation context — not install-time.** The Drive/Cruise/Quiet/Tone toggles persist for the duration of the conversation, not as global config. On every turn, the agent re-derives current mode from the session's prior turns:
 
-1. **Default at session start = Drive + tone:grounded + verbose status header.** Every fresh session begins in collaborative mode with full status visibility, regardless of any prior session's setting. This is the safest default for the typical Anand workflow (sharpening + dialectic).
+1. **Default at session start = Drive + honesty:grounded + verbose status header.** Every fresh session begins in collaborative mode with full status visibility, regardless of any prior session's setting. This is the safest default for the typical Anand workflow (sharpening + dialectic).
 2. **Most-recent-wins.** If the user typed `codi cruise` in turn N and `codi drive` in turn N+5, the current mode is Drive (the later toggle).
 3. **One toggle, one persistence.** A `codi cruise` flips the agent to Cruise for ALL subsequent turns in this session, until the user types `codi drive` (or any equivalent natural-language switch like *"go autopilot"*) or the session ends.
 4. **No persistence across sessions.** A new session starts at the default again. This is intentional: install-time defaults that span sessions accumulate stale state and surprise the user mid-demo.
-5. **Demo preset:** `codi demo` activates Cruise + Quiet + tone:grounded as a single command — for live demos where Anand wants codi running silently without pause-for-improvement turns. Ends on `codi off-demo` or session end.
+5. **Demo preset:** `codi demo` activates Cruise + Quiet + honesty:grounded as a single command — for live demos where Anand wants codi running silently without pause-for-improvement turns. Ends on `codi off-demo` or session end.
 
 **Why session-scoped rather than install-time:** demo, deep-work, and triage all require different defaults; tying the toggle to install-time means changing it requires editing config files mid-session, which Anand will not do. Session-scoped is the only ergonomic place for the toggle to live.
 
@@ -349,8 +349,8 @@ No research gate fires. Codi operates in current mode (may ask human without res
 
 #### Status-line indicator
 
-- `honesty brutal` active → prepend `🔪 honesty:brutal` to the status line on every response while active.
-- `honesty soft` active → prepend `🤝 honesty:soft` to the status line on every response while active.
+- `honesty brutal` active → append `🔪 honesty:brutal` to the status line on every response while active.
+- `honesty soft` active → append `🤝 honesty:soft` to the status line on every response while active.
 - `honesty grounded` active → no indicator shown (default is noise-free).
 - When posture changes, emit once inline: *"Switched to 🔪 brutal."* or *"Switched to 🤝 soft."*
 
@@ -359,7 +359,7 @@ No research gate fires. Codi operates in current mode (may ask human without res
 When `honesty soft` is active AND the output is a T3 or T4 artifact (architecture decision, outreach email, patent spec, significant shipped artifact — anything where soft-pedaling a concern could cause real harm), **auto-downgrade to `honesty grounded` for that single response only**. Do not change the session-level setting. Emit a one-line notice at the top of the response:
 
 ```
-[Honesty: auto-grounded for this T3 response — soft posture suppressed to avoid omitting load-bearing concerns. Type "codi honesty soft" to re-enable.]
+[Honesty: auto-grounded for this high-stakes response — soft posture suppressed to avoid omitting load-bearing concerns. Type "codi honesty soft" to re-enable.]
 ```
 
 Rationale: the user chose soft for momentum; Protocol 10 ensures soft never hides a concern that could cost a warm path, a patent claim, or an architecture decision.

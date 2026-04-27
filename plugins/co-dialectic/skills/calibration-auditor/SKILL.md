@@ -6,7 +6,7 @@ description: >
   ("Great question", "You're absolutely right", "Most productive session").
   Flags and suggests a crisper alternative. Does not block shipping.
 metadata:
-  version: "3.1.0"
+  version: "3.1.1"
   author: "Anand Vallamsetla"
   tier: "soul"
 ---
