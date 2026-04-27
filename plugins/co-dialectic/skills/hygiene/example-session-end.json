@@ -1,46 +1,15 @@
 {
-  "session_id": "2026-04-27T14:32:11-07:00",
+  "session_id": "uuid-v4",
   "schema_version": "1.0",
-  "protocol": 12,
-  "skill": "codi-hygiene",
-  "ran_at": "2026-04-27T14:32:11-07:00",
-  "duration_seconds": 3.4,
-  "sweep": {
-    "lessons_learned": 2,
-    "claims_verified": 5,
-    "claims_unverified": 1,
-    "blast_radius_pending": 0
-  },
-  "codify": {
-    "lessons_codified": 2,
-    "targets_written": 2,
-    "no_lesson_reason": null
-  },
-  "reorg": {
-    "flags_total": 4,
-    "by_severity": {"high": 0, "medium": 2, "low": 2},
-    "by_detection": {
-      "1_workspace_root_pollution": 1,
-      "2_duplicate_handoff": 1,
-      "3_deprecated_symlink": 1,
-      "4_plugin_runtime_sprawl": 0,
-      "5_oneoff_scripts_stale": 1,
-      "6_campaign_artifacts_at_root": 0,
-      "7_plugin_bundle_misplaced": 0
-    },
-    "executed": 1,
-    "dismissed": 1,
-    "deferred_to_next_session": 2
-  },
-  "merge": {
-    "brain_commits_pushed": 2,
-    "repos": ["~/cyborg", "~/anand-career-os"],
-    "public_uncommitted": 0
-  },
-  "pull": {
-    "repos_pulled": ["~/cyborg", "~/anand-career-os"],
-    "diverging_repos": 0
-  },
-  "status": "flagged",
-  "next_session_followups": 2
+  "model": {"family": "claude", "version": "opus-4.7-1m", "host": "claude-code"},
+  "duration_min": 90,
+  "msg_count": 42,
+  "ended_reason": "user-bye",
+  "hygiene": {
+    "reorg_flags_count": 3,
+    "lessons_codified_count": 2,
+    "merges_pushed_count": 4,
+    "pulls_completed_count": 2,
+    "fired_at": "2026-04-27T15:30:00-07:00"
+  }
 }

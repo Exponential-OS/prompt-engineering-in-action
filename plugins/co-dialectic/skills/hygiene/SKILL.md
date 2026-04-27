@@ -9,7 +9,7 @@ description: >
   SYSTEM IMMUNITY mandates after every conversation. Detects file sprawl,
   duplicate handoffs, deprecated symlinks, and uncommitted brain writes;
   surfaces a structured report to stdout AND emits a JSON beacon to
-  ~/.codialectic/hooks/session_end.json companion path for the CODA
+  ~/.codialectic/hooks/session_end.json for the CODA
   mothership telemetry.
 metadata:
   version: "4.1.0"
@@ -375,12 +375,12 @@ Type "dismiss <detection_id>" to drop a flag (persists to handoff).
 Type "skip reorg" to leave all flags for next session.
 ```
 
-### 2. JSON beacon (companion to handoff)
+### 2. JSON beacon (multi-protocol write to canonical path)
 
-Write a minimal telemetry beacon to
-`~/.codialectic/hooks/session_end.json.hygiene-companion` (do NOT
-overwrite the handoff hook registry at
-`~/.codialectic/hooks/session_end.json` — that's owned by codi-handoff).
+Write a minimal telemetry beacon to the canonical path
+`~/.codialectic/hooks/session_end.json`. Use the multi-protocol-write
+contract (see section below) to merge the `"hygiene"` key without
+clobbering sibling protocol keys (e.g., `"handoff"` written by Protocol 9).
 
 The beacon is **telemetry only** — pings ship-stats to a future CODA
 mothership. NOT decisions / lessons / open-loops (those go to the
@@ -441,24 +441,35 @@ and bloat co-dialectic storage"*):
 `session_id` and `ran_at` MUST be the OS current time (per TEMPORAL
 GROUNDING INVARIANT) — `date -Iseconds` or equivalent. NEVER recalled.
 
-**Why this beacon path is separate from the handoff registry:** the
-handoff registry (`session_end.json`) is the workspace-extensible hook
-contract owned by codi-handoff. The hygiene beacon is telemetry-only,
-emitted alongside but not interfering with the handoff hooks. Future
-CODA mothership polls both files; co-dialectic plugin doesn't need to
-coordinate writes between them. If the path collides with a future hook
-registry change, hygiene moves to its own canonical path — flagged as
-TODO.
+**Multi-protocol-write contract:**
+
+All protocols that write to `~/.codialectic/hooks/session_end.json`
+share ONE file. Each protocol owns a top-level key; shared metadata
+lives at root. Atomic merge pattern:
+
+1. Read existing file (if present) into `existing = json.load(...)`.
+2. Merge own protocol's payload under its key (e.g., `existing["hygiene"] = {...}`) — never clobber sibling keys (`"handoff"`, etc.).
+3. Update root-level shared metadata fields (`session_id`, `schema_version`, `model`, `duration_min`, `msg_count`, `ended_reason`) — only from the first protocol to write (don't overwrite once set).
+4. Write merged object to a temp file (`session_end.json.tmp`).
+5. `mv session_end.json.tmp session_end.json` (atomic).
+
+Reader semantics: any consumer reads the file, sees all protocols'
+fields under their respective keys plus shared root metadata.
+
+**Key layout:**
+
+- Root (shared): `session_id`, `schema_version`, `model`, `duration_min`, `msg_count`, `ended_reason`
+- `"hygiene"`: Protocol 12 fields — `reorg_flags_count`, `lessons_codified_count`, `merges_pushed_count`, `pulls_completed_count`, `fired_at`
+- `"handoff"`: Protocol 9 fields — written by codi-handoff when active
 
 **TODO (punted to v1.1):**
-- Beacon path canonicalization (today: ad-hoc `.hygiene-companion`
-  suffix; v1.1 should adopt a documented canonical path under
-  `~/.codialectic/beacons/<protocol>-<skill>.json` or similar).
 - Append-only beacon log (today: each run overwrites; v1.1 should
   append to a JSONL for cross-session aggregation).
 - Schema validation against `~/.codialectic/schemas/hygiene-1.0.json`
   before write — defense against malformed beacons reaching the
   mothership.
+- Conflict resolution when two concurrent protocol writes race on the
+  same key (today: last writer wins; v1.1: advisory lock or CRDT merge).
 
 ## Composition with other v4.1 protocols
 
@@ -524,9 +535,9 @@ COORDINATION's enforcement primitive at the session-end seam.
 2. Confirm the markdown report shows `Status: CLEAN` with all 7
    detection counts at 0.
 3. Confirm the JSON beacon written to
-   `~/.codialectic/hooks/session_end.json.hygiene-companion` parses
-   valid JSON via
-   `python3 -c "import json,sys; json.load(open('<path>'))"`.
+   `~/.codialectic/hooks/session_end.json` parses valid JSON and
+   contains a `"hygiene"` key via
+   `python3 -c "import json,sys; d=json.load(open('<path>')); assert 'hygiene' in d"`.
 4. Confirm `session_id` and `ran_at` are current OS time, not training
    recall.
 
