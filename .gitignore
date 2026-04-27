@@ -8,3 +8,9 @@ handoff.md
 # Whitelist co-dialectic handoff skill (a shipped product feature, not a session doc)
 !plugins/co-dialectic/skills/handoff/
 !plugins/co-dialectic/skills/handoff/**
+
+# Auto-generated / transient
+.context-sharing-last-seen-sha
+__pycache__/
+*.pyc
+docs/*.pdf
