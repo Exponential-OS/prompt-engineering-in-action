@@ -111,7 +111,7 @@ Use `null` for unknown values; do NOT omit fields.
 
 ```json
 {
-  "session_id": "ISO-8601 timestamp with timezone",
+  "session_id": "uuid-v4 (e.g., '550e8400-e29b-41d4-a716-446655440000')",
   "summary": "Two-line summary of what the session accomplished",
   "unfinished_items": [
     {
@@ -135,8 +135,9 @@ Use `null` for unknown values; do NOT omit fields.
 }
 ```
 
-`session_id` MUST be the OS current time (per TEMPORAL GROUNDING INVARIANT).
-Run `date -Iseconds` or equivalent — never compose from training recall.
+`session_id` MUST be a freshly-generated uuid-v4 (per spec). Generate via
+`python3 -c "import uuid; print(uuid.uuid4())"` or equivalent — never
+compose from training recall or timestamp.
 
 ### Phase 3 — Read the hook registry
 
@@ -347,7 +348,9 @@ non-zero on real failures (per FAIL-HARD discipline).
    `Adapters fired: none registered (stdout)`.
 3. Validate the printed JSON parses with `python3 -c "import json,sys;
    json.loads(sys.stdin.read())"` (paste the JSON in).
-4. Confirm `session_id` is current OS time, not training-recall.
+4. Confirm `session_id` is a valid uuid-v4 string (e.g., matches pattern
+   `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}`),
+   not a timestamp or training-recall value.
 
 **Verification protocol — registered adapter:**
 
@@ -372,8 +375,9 @@ non-zero on real failures (per FAIL-HARD discipline).
   proceed to stdout fallback.
 - Stdout fallback fired silently without surfacing the JSON →
   FAIL-HARD violation (silent skip is forbidden per FAIL-HARD INVARIANT).
-- Hallucinated session_id (training-recall date instead of OS-fetched) →
-  TEMPORAL GROUNDING violation.
+- Hallucinated session_id (timestamp or training-recall value instead of
+  freshly-generated uuid-v4) → schema mismatch + TEMPORAL GROUNDING
+  violation.
 
 ## Protocol 9 — Auto-Handoff (Closure Detection)
 
@@ -417,10 +421,11 @@ literal-string lookup.
 
 bye · goodbye · see ya · see you · see you later · later · ttyl · talk
 to you later · g2g · gotta go · signing off · good night · gnight ·
-logging off · logging out · shutting down · afk for the day · calling it
-· calling it a day · calling it a night · end of day · EOD · EOW · i'm
-done · done for now · that's all for today · wrap up · wrap it up ·
-let's wrap
+good morning (as a farewell / session-end salutation) · good evening,
+signing off · logging off · logging out · shutting down · afk for the day
+· calling it · calling it a day · calling it a night · end of day · EOD ·
+EOW · i'm done · done for now · that's all for today · wrap up · wrap it
+up · let's wrap
 
 **Tier B — Explicit handoff (HIGHEST confidence, fire IMMEDIATELY, no debounce):**
 
@@ -613,9 +618,13 @@ multi-protocol-write contract — see section 9.5).
 
 ```json
 {
-  "session_id": "ISO-8601 timestamp with timezone (matches Protocol 1-2 packet)",
-  "schema_version": "v4.1",
-  "model": "model identifier — e.g., claude-opus-4-7, gemini-2.5-pro, gpt-5",
+  "session_id": "uuid-v4 (e.g., '550e8400-e29b-41d4-a716-446655440000'; matches Protocol 1-2 packet)",
+  "schema_version": "1.0",
+  "model": {
+    "family": "string — llm family: 'claude' | 'gemini' | 'gpt' | 'codex' | etc.",
+    "version": "string — model version string, e.g., 'opus-4.7-1m', '2.5-pro', '5'",
+    "host": "string — runtime host: 'claude-code' | 'gemini-cli' | 'openai-api' | etc."
+  },
   "duration_min": "integer — minutes from first user message to closure",
   "msg_count": "integer — total user+assistant messages in session",
   "ended_reason": "string — 'tier_A_direct_closure' | 'tier_B_explicit_handoff' | 'tier_C_terminal_gratitude' | 'tier_D_pause_confirmed' | 'tier_E_lifecycle' | 'tier_F_unknown_unknown' | 'inactivity_timeout' | 'manual'",
@@ -631,23 +640,40 @@ multi-protocol-write contract — see section 9.5).
       "T4": "integer"
     },
     "agent_swarm_fans": "integer — count of cross-family fan-out reviews triggered",
-    "honesty_mode": "string — 'grounded' | 'strict' | 'standard' | 'relaxed' (per honesty toggle if v4.1+)",
+    "honesty_mode": "string — 'brutal' | 'grounded' | 'soft' (per honesty toggle if v4.1+)",
     "errors_caught_pre_emit": "integer — count of T2+ findings caught BEFORE artifact ship",
     "ended_reason": "string — mirrors root ended_reason; duplicated for per-protocol consumers that only read the 'handoff' key"
   }
 }
 ```
 
+> **Schema note — multi-protocol nested design.** The spec's flat example
+> showed `verify_fires_by_tier`, `agent_swarm_fans`, etc. at the root level.
+> The implementation correctly nests these under the `"handoff"` top-level key
+> per the multi-protocol contract (§ 9.5). This nested design is the
+> **canonical shape** and supersedes the spec's flat example. Each protocol
+> owns exactly one top-level key (`"handoff"`, `"hygiene"`, etc.); shared
+> session metadata lives at root (`session_id`, `schema_version`, `model`,
+> `duration_min`, `msg_count`, `ended_reason`).
+
 Field semantics — shared root fields:
 
-- `session_id` — same value as Protocol 2 JSON packet. Cross-references
-  the full state in target (1). Written by the first protocol that fires;
-  subsequent protocols verify + leave unchanged.
-- `schema_version` — pinned to `v4.1`; bumped only on schema change. Older
-  beacon files preserve their original schema_version (P18 Forward
-  Compatibility).
-- `model` — runtime fills this from its own model identifier. Codi does
-  NOT infer this from training recall.
+- `session_id` — uuid-v4, same value as Protocol 2 JSON packet.
+  Cross-references the full state in target (1). Written by the first
+  protocol that fires; subsequent protocols verify + leave unchanged.
+  IMPORTANT: `session_id` is a uuid-v4, NOT an ISO-8601 timestamp.
+  UUIDs are collision-resistant; timestamps can collide when two sessions
+  start in the same second.
+- `schema_version` — pinned to `"1.0"` (beacon-schema version, independent
+  of the plugin release version). Do NOT conflate with the plugin's release
+  version (e.g., `v4.1`). Schema version bumps only on breaking beacon
+  schema changes. Older beacon files preserve their original schema_version
+  (P18 Forward Compatibility).
+- `model` — nested object, NOT a flat string. Runtime fills this from its
+  own model identifier. Codi does NOT infer this from training recall.
+  Shape: `{"family": "claude", "version": "opus-4.7-1m", "host": "claude-code"}`.
+  Cross-LLM interop depends on the nested structure — flat strings from
+  different runtimes have no consistent parse contract.
 - `duration_min` / `msg_count` — basic session telemetry.
 - `ended_reason` (root) — which Protocol 9 tier (or manual / lifecycle)
   caused the fire. Authoritative for fleet-level analytics.
@@ -665,7 +691,9 @@ Field semantics — `"handoff"` key (Protocol 9's payload):
   fan-out (e.g., judge-panel, fish-swarm). Indicates COMPLEMENTARY
   COMPOSITION engagement.
 - `honesty_mode` — placeholder for v4.1's honesty toggle if shipped;
-  default to `"grounded"` if not implemented.
+  default to `"grounded"` if not implemented. Enum values align with
+  Protocol 10: `"brutal"` | `"grounded"` | `"soft"`. (The stale v3.x
+  labels `strict` / `standard` / `relaxed` are retired.)
 - `errors_caught_pre_emit` — count of FAIL-HARD or T2+ verification
   findings that were caught BEFORE the artifact left codi (the
   pre-immune-cycle signal).
@@ -700,8 +728,9 @@ families**. Reasons:
 
 - Minimal field set — easy for any runtime to populate.
 - Content-free — no privacy review blocker.
-- Versioned — older agents emit v4.1; future agents emit v4.2+ with
-  additive fields only (P18 Forward Compatibility).
+- Versioned — older agents emit schema_version `"1.0"`; future agents
+  emit `"1.1"` / `"2.0"` etc. with additive fields only (P18 Forward
+  Compatibility). Schema version is independent of plugin release version.
 - Tier semantics align with EMERGENT SYSTEM IMMUNITY's T0-T4 (already a
   cross-family vocabulary candidate per the Constitution's framework
   layer).
