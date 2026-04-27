@@ -375,6 +375,13 @@ Type "dismiss <detection_id>" to drop a flag (persists to handoff).
 Type "skip reorg" to leave all flags for next session.
 ```
 
+**Spec note:** The report template above extends the v4.1 spec's originally
+listed sections (Sweep / Reorg flags / Merge / Pull / Followups) with a
+`Codify:` section. This addition surfaces codification outcomes directly in
+the hygiene report — consistent with the LEARNING FLYWHEEL mandate that every
+session produces at least one codified lesson. The spec's report template is
+intentionally minimal; the Codify section is the sanctioned extension.
+
 ### 2. JSON beacon (multi-protocol write to canonical path)
 
 Write a minimal telemetry beacon to the canonical path
@@ -390,56 +397,32 @@ Schema (minimal — per 2026-04-27 user directive: *"don't over engineer
 and bloat co-dialectic storage"*):
 
 ```json
-{
-  "session_id": "ISO-8601 timestamp with timezone",
-  "schema_version": "1.0",
-  "protocol": 12,
-  "skill": "codi-hygiene",
-  "ran_at": "ISO-8601 timestamp with timezone",
-  "duration_seconds": <number>,
-  "sweep": {
-    "lessons_learned": <number>,
-    "claims_verified": <number>,
-    "claims_unverified": <number>,
-    "blast_radius_pending": <number>
-  },
-  "codify": {
-    "lessons_codified": <number>,
-    "targets_written": <number>,
-    "no_lesson_reason": "<string-or-null>"
-  },
-  "reorg": {
-    "flags_total": <number>,
-    "by_severity": {"high": <number>, "medium": <number>, "low": <number>},
-    "by_detection": {
-      "1_workspace_root_pollution": <number>,
-      "2_duplicate_handoff": <number>,
-      "3_deprecated_symlink": <number>,
-      "4_plugin_runtime_sprawl": <number>,
-      "5_oneoff_scripts_stale": <number>,
-      "6_campaign_artifacts_at_root": <number>,
-      "7_plugin_bundle_misplaced": <number>
-    },
-    "executed": <number>,
-    "dismissed": <number>,
-    "deferred_to_next_session": <number>
-  },
-  "merge": {
-    "brain_commits_pushed": <number>,
-    "repos": ["<list>"],
-    "public_uncommitted": <number>
-  },
-  "pull": {
-    "repos_pulled": ["<list>"],
-    "diverging_repos": <number>
-  },
-  "status": "clean | flagged | blocked",
-  "next_session_followups": <number>
+"hygiene": {
+  "reorg_flags_count": <int>,
+  "lessons_codified_count": <int>,
+  "merges_pushed_count": <int>,
+  "pulls_completed_count": <int>,
+  "fired_at": "<ISO 8601 timestamp>"
 }
 ```
 
-`session_id` and `ran_at` MUST be the OS current time (per TEMPORAL
-GROUNDING INVARIANT) — `date -Iseconds` or equivalent. NEVER recalled.
+`fired_at` MUST be the OS current time (per TEMPORAL GROUNDING INVARIANT)
+— `date -Iseconds` or equivalent. NEVER recalled.
+
+`session_id` and `schema_version` belong at root only (per multi-protocol
+contract key layout). They MUST NOT be duplicated inside the `"hygiene"`
+nested key.
+
+Field semantics:
+- `reorg_flags_count`: total reorg flags detected across all 7 detection
+  categories (sum of all severities).
+- `lessons_codified_count`: count of lessons written to `~/cyborg/*` this
+  session (0 is valid — log `no_lesson_reason` in the markdown report).
+- `merges_pushed_count`: count of brain commits merged to `origin/main`
+  and pushed during the Merge phase.
+- `pulls_completed_count`: count of repos successfully pulled during the
+  Pull phase.
+- `fired_at`: ISO 8601 timestamp when this hygiene run completed.
 
 **Multi-protocol-write contract:**
 
