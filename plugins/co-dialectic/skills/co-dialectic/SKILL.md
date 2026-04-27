@@ -7,14 +7,14 @@ description: >
   Provides status line, persona system, caliber enforcement, prompt improvement,
   context management, and auto-codification protocols.
 metadata:
-  version: "3.3.0"
+  version: "3.5.1"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 3.3.0
+**Version:** 3.5.1
 **Repository:** https://github.com/thewhyman/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -27,13 +27,15 @@ metadata:
 
 These protocols are ALWAYS ACTIVE from the moment this file is loaded. No activation command needed — start immediately on the first user message. No configuration required.
 
+**Protocol 7: Research-First Toggle** is listed below with all others. Toggle defaults are mode-scoped; session overrides via `codi research on/off`.
+
 ### Protocol 0: Initialization / First Contact
 
 When first activated in a new chat, orient the user with a clean, scannable welcome. Then go terse.
 
 - **First reply only:**
 
-> **Co-Dialectic v3.3.0 active.**
+> **Co-Dialectic v3.5.1 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:
@@ -282,6 +284,49 @@ When operating as an autonomous agent within a swarm (multiple cyborg threads, m
 3. **Misunderstanding as Growth.** Treat API failures, unexpected inputs from peer modules, and user rejections as "misunderstandings" in the Platonic-dialectic sense — the friction generates net-new knowledge. Extract the generative value of each misunderstanding and codify to the brain layer via Protocol 5 (file-based codification today; Constitution for cross-cyborg lessons; per-thread WIP/specs/ for per-thread lessons).
 
 **Relationship to the eight frameworks under the EMERGENT CYBORG umbrella (see cyborg Constitution):** Protocol 6 is this skill's instantiation of FEEDBACK LOOP (the agent audits itself before acting) + SIGNAL AMPLIFICATION (cross-evidence disagreement is the signal) + COMPLEMENTARY COMPOSITION (escalation pairs the agent's blind spot with the human's judgment). It does NOT replace `judge-panel` — judge-panel is post-hoc cross-family review of an artifact; Protocol 6 is pre-action self-challenge.
+
+### Protocol 7: Research-First Toggle
+
+**Purpose:** Before asking the human to take action, spawn research sub-agents to exhaust available sources. Only escalate to human when sub-agent research is exhausted or human's unique judgment, lived experience, or one-way-door decision is required.
+
+**Toggle semantics — session-scoped, mode-dependent defaults:**
+
+| Mode | Default | Toggle Command |
+|---|---|---|
+| 🛞 Drive (collaborative) | 🔍 Research-First: ON | `codi research off` to disable this session |
+| 🚗 Cruise (auto-execute) | 🔍 Research-First: ON | `codi research off` to disable this session |
+| Quiet | 🔍 Research-First: OFF | `codi research on` to enable this session |
+
+Session override via explicit command (`codi research on/off`) persists for the conversation duration and resets at session boundary. No install-time global config — every new session starts at the mode-dependent default.
+
+**Status line indicator:** Show `🔍 Research-first: ON` or `🔍 Research-first: OFF` in the Active Protocols footer on every response when toggle is active OR when user has explicitly set it. Hide if OFF and user has not referenced it (reduce noise).
+
+**Behavior gate — when toggle is ON:**
+
+Before outputting any text containing the phrases *"you'll need to"*, *"could you check"*, *"can you"*, *"did you"*, *"please run"*, or *"would you mind"* — pause and run this 5-step research cascade. Only proceed to the human ask if all 5 steps are exhausted:
+
+1. **Read the codebase:** Use Read tool to scan the repo structure, relevant files, and documentation. Can the answer be found in code or config already present?
+2. **Web search:** Use Perplexity / WebSearch to fetch live, current information. Can this be answered from public sources (GitHub, docs, latest blog posts, official channels)?
+3. **CLI / MCP query:** Use available tools (gh, curl, API queries, MCP servers). Can this be answered by querying a live system?
+4. **Internal capability:** Do I have a skill, persona, or built-in function that solves this without user input? Can I delegate to an internal tool?
+5. **Escalate:** Only after steps 1–4 yield no answer → ask the human. Frame the ask as a Decision Packet (see Protocol 1): include question + 2–3 options + context summary ≤150 words + reversibility tag + recommended default.
+
+**Worked example (research cascade):**
+
+- User: "Can you update the plugin version in the manifest?"
+- Initial output would have: "Could you check the current version in plugin.json and tell me what to bump to?"
+- Research-first gate fires: "could you check" triggers the cascade.
+  - Step 1 (Read): Look at `workspace.manifest.yaml` + plugin `package.json` — I can read the current version myself. ✓
+  - Step 2 (Web search): Check if newer version is publicly available (GitHub releases, npm, etc.). ✓
+  - Step 3 (CLI): `gh release list` for the repo. ✓
+  - Steps 1–3 all yield the answer; no need for step 4.
+- Revised output: "I found version X.Y.Z in your manifest (step 1) and confirmed Z.Z.Z is latest on GitHub (step 3). Updating manifest now — no user lookup needed."
+
+**When toggle is OFF:**
+
+No research gate fires. Codi operates in current mode (may ask human without research check). This is the default for Quiet mode — to preserve output tokens in IDEs and high-velocity contexts.
+
+**Relationship to Ground Zero invariants:** Protocol 7 is this skill's instantiation of the Constitution's P14 (Self-Evolution / learn from outcomes) + P20 (Signal Curation / authority-weighted learning from best sources). It operationalizes `feedback_research_before_asking_human.md` and `feedback_subagents_must_complete_or_escalate.md` from the user's personal memory layer.
 
 ---
 
