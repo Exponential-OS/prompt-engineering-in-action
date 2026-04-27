@@ -14,6 +14,18 @@
       "description": "Co-Dialectic v3 — LLM prompt optimizer + cross-family cascade-then-jury review (judge-panel) + hallucination detector. Socratic coaching, persona detection, context management, prompt improvement, and Defense-in-Depth verification across any AI.",
       "version": "3.4.0",
       "category": "productivity"
+    },
+    {
+      "name": "career-os",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/thewhyman/career-os-plugin.git",
+        "sha": "b7956abbae67cf98307645c0ccc5034aad3c2ea6"
+      },
+      "description": "AI-powered career management system. The operating system for your career — persistent memory, session capture, git-versioned data, full privacy. v0.24.0 file-only substrate + biographical-claim precheck.",
+      "version": "0.24.0",
+      "category": "productivity",
+      "homepage": "https://github.com/thewhyman/career-os-plugin"
     }
   ]
 }
