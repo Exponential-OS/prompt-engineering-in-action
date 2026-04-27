@@ -58,9 +58,29 @@ If the user mentions a person, company, or WIP by name in the trigger utterance,
 
 Skip any file that does not exist. Never fabricate contents for a missing file.
 
+## Session-start fail-hard checks (NEW v3.4.0+)
+
+After context loads, run two fail-hard checks BEFORE confirming readiness. Per FAIL-HARD INVARIANT (Constitution Ground Zero, 2026-04-27): soft warnings on session-start drift = hidden variance that surfaces mid-task. Better to fail loud at session start.
+
+**Check 1 — MCP availability** (workspace manifest declares the contract; reality must match):
+
+```bash
+bash ~/cyborg/rules/fail-hard/HOW.sh '{"target_mode":"mcp-availability"}'
+```
+
+If verdict = `BLOCK`, surface the unresolved MCPs in the status block (see below) and prompt the user to install before continuing. Each unresolved MCP is a workspace-discipline drift the rule catches mechanically. Common causes: a manifest-declared CLI was uninstalled, a binary was renamed, a new dev machine doesn't have the tool yet.
+
+**Check 2 — Constitution coherence** (every invariant has its rule directory):
+
+```bash
+bash ~/cyborg/rules/fail-hard/HOW.sh '{"target_mode":"constitution"}'
+```
+
+This is informational at session-start (will surface the Phase 6 retrofit count, currently ~17 prose-only invariants). Don't BLOCK on this — surface the count in the status block as a known-debt indicator.
+
 ## Confirmation output
 
-After loading, print this compact status block (no fluff, no recap of file contents):
+After loading + fail-hard checks, print this compact status block (no fluff, no recap of file contents):
 
 ```
 Co-Dialectic · Waky Waky — context restored.
@@ -68,10 +88,16 @@ Co-Dialectic · Waky Waky — context restored.
   Identity: loaded
   Root handoff: loaded (last updated: <date from file>)
   Per-WIP handoffs: loaded (<N> files)
+  MCP availability: <PASS — N stdio MCPs resolve> | <BLOCK — list unresolved>
+  Constitution coherence: <N of M invariants have rule directories — Phase 6 retrofit progress>
   Skipped (not found): <list, or "none">
 
 Ready. What are we picking up?
 ```
+
+If MCP-availability BLOCKed, add a remediation line per unresolved MCP:
+- `⚠️ gitkraken-mcp: command "gk" not on PATH — install: npm install -g @gitkraken/gk`
+- `⚠️ <name>: command "<binary>" not found — see workspace.manifest.yaml line N`
 
 Then wait for the user. Do NOT auto-summarize the handoff — the user will direct the next action. Summarizing unasked = P13 violation (sacred time) and a Calibration Auditor flag (performative warmth).
 
