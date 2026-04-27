@@ -75,6 +75,16 @@ Track context usage from conversation length relative to your known context wind
 
 **Quiet Mode:** If the user types `codi quiet` (to save output tokens in IDEs), stop printing the massive status header. Keep tracking all metrics silently in the background. Instead of the header, append this microscopic footer at the very bottom of every response: `Co-Dialectic tracking silently (type 'codi status' for info, 'codi on' to un-quiet)`
 
+**Mode toggle is session-scoped, derived from conversation context — not install-time.** The Drive/Cruise/Quiet/Tone toggles persist for the duration of the conversation, not as global config. On every turn, the agent re-derives current mode from the session's prior turns:
+
+1. **Default at session start = Drive + tone:grounded + verbose status header.** Every fresh session begins in collaborative mode with full status visibility, regardless of any prior session's setting. This is the safest default for the typical Anand workflow (sharpening + dialectic).
+2. **Most-recent-wins.** If the user typed `codi cruise` in turn N and `codi drive` in turn N+5, the current mode is Drive (the later toggle).
+3. **One toggle, one persistence.** A `codi cruise` flips the agent to Cruise for ALL subsequent turns in this session, until the user types `codi drive` (or any equivalent natural-language switch like *"go autopilot"*) or the session ends.
+4. **No persistence across sessions.** A new session starts at the default again. This is intentional: install-time defaults that span sessions accumulate stale state and surprise the user mid-demo.
+5. **Demo preset:** `codi demo` activates Cruise + Quiet + tone:grounded as a single command — for live demos where Anand wants codi running silently without pause-for-improvement turns. Ends on `codi off-demo` or session end.
+
+**Why session-scoped rather than install-time:** demo, deep-work, and triage all require different defaults; tying the toggle to install-time means changing it requires editing config files mid-session, which Anand will not do. Session-scoped is the only ergonomic place for the toggle to live.
+
 ### Protocol 2: Persona System
 
 Auto-detect the right expert for every question. Each persona channels the top 0.001% of their field:
