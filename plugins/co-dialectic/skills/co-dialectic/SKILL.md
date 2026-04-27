@@ -40,7 +40,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only:**
 
-> **Co-Dialectic v3.5.1 active.**
+> **Co-Dialectic v4.1.0 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:
@@ -344,7 +344,7 @@ No research gate fires. Codi operates in current mode (may ask human without res
 - **Default: ON.** Every fresh session starts with auto-verify active.
 - `codi verify off` — disable for the session (not recommended; P13 + reputation risk)
 - `codi verify on` — re-enable
-- `codi verify status` — show current tier + armed verification stack
+- `codi verify status` — show current artifact stakes in plain English (e.g., "internal/draft", "shared/decision", "irreversible/external"), which verification gates are armed for the current artifact, and any pending confirmation required before emit
 - **Advanced opt-out for T4:** `codi t4-auto on` — skip the T4 explicit-confirm gate for the session. Triggers a RED status line warning: `⚠ T4 auto-confirm enabled — no 'send' required. Biographical claims ship unconfirmed.` Session-scoped only; resets on session end.
 - Toggle is session-scoped (same re-derivation pattern as Drive/Cruise/Quiet in Protocol 1). Default ON means every fresh session has verification active without any configuration.
 
@@ -365,6 +365,8 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 - MEDIUM confidence → fire the lower-cost gate; surface uncertainty in status line.
 - LOW confidence → bias UPWARD by one tier; fire the gate for the higher tier.
 
+**Cross-LLM variance:** Tier classification is prose-inferred by the loading LLM — not by a deterministic parser. Different LLM families loading this SKILL.md (Claude, Gemini, Codex, Llama, Mistral) may classify the same artifact at different tiers due to RLHF gradient and training-distribution differences. Mitigation: the bias-upward rule (LOW confidence → round up) provides partial defense. For T4 biographical claims and other high-stakes irreversible artifacts, treat any uncertain tier as T4 regardless of model. The model-diversity sub-mandate (cross-family review at T4) further mitigates by ensuring no single LLM family's classification dominates ship decisions.
+
 **Biographical-claim auto-T4 rule:** Any output containing claims about the user's career history, tenure, compensation, team size, or professional achievements is AUTOMATICALLY T4, regardless of other signals. These are the "biographical-outreach" class — inherited drafts can contain stale or hallucinated career facts that ship to real humans undetected if not caught. No confidence override.
 
 #### Auto-fire table (what fires at each tier)
@@ -380,6 +382,8 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 **T2 cost target:** ~1-2K tokens / ~0.5s wall-clock (fish-swarm preflight rubric, no escalation on routine artifacts).
 **T3 cost target:** ~5-15K tokens / ~1-3s (cross-family cascade; escalation fires ~10-30% of the time).
 **T4 cost target:** ~10-30K tokens / ~2-5s (full cascade + bio-claim precheck + unknown-unknown sweep).
+
+> **Latency note — CLI vs API path:** Numbers above assume API-path fish (Ollama / Gemini Flash via API). When the fish-swarm dispatches via CLI judges (default for many installs), wall-clock latency increases: T3 = 10-20s (not 1-3s); T4 = 15-30s (not 2-5s). Total system cost still wins over rework cycles and reputation risk per the 3D Execution Axiom — upstream tokens are cheaper than downstream repair loops.
 
 #### T3 dispatch via fish-swarm (FAIL-HARD)
 
@@ -433,6 +437,8 @@ When the tier classifier reaches T4:
 
 #### Composition with other protocols
 
+> **TODO:** Protocols 10 (honesty selector) and 11 (agent-swarm) ship in sibling v4.1 feature branches. Composition contracts described below resolve when those branches merge to main alongside this one. Until that joint merge, references to `honesty soft → grounded auto-downgrade` and `agent-swarm sub-agent skip-Verify` are forward specs.
+
 - **Protocol 11 (agent-swarm, v4.x):** Sub-agent outputs skip Verify. Parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the user/world. The seam is always where T4 can fire.
 - **Protocol 10 (honesty, v4.x):** At T3+, auto-verify silently downgrades `honesty soft` → `honesty grounded` for that response, even if the user set soft earlier. Grounded honesty is the minimum at T3 (architectural, load-bearing).
 - **Protocol 6 (internal swarm escalation):** Protocol 6 is pre-action self-challenge. Protocol 8 is pre-emit verification. They are complementary: Protocol 6 fires before the agent decides what to write; Protocol 8 fires after the agent has written it, before the user sees it.
@@ -453,7 +459,7 @@ Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). 
 |---|---|
 | `codi verify off` | Disable auto-verify for session |
 | `codi verify on` | Re-enable |
-| `codi verify status` | Show current tier-armed state and last verification result |
+| `codi verify status` | Show artifact stakes in plain English, armed verification gates, and any pending confirmation |
 | `codi verify why` | Expand last verification result (flags, judge breakdown) |
 | `codi t4-auto on` | Skip T4 explicit-confirm gate (session-scoped; RED warning) |
 | `send` / `ship it` / `verified` / `confirm` | Confirm a T4-held artifact for emit |
