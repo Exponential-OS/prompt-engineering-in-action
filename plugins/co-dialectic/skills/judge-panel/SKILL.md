@@ -10,7 +10,7 @@ description: >
   cross-family tiebreaker. Returns verdict + confidence + which judges fired
   + token cost.
 metadata:
-  version: "3.2.0"
+  version: "3.3.0"
   author: "Anand Vallamsetla"
   tier: "core"
   plugin_number: 4
@@ -106,19 +106,50 @@ Skip the conversational framing.
         └──────────────────┘
 ```
 
-## Models used (pinned, read from ~/cyborg/.env)
+## Auth model — OAuth local CLIs (v3.3.0+)
 
-| Stage | Model | Family | Role | Typical cost |
+**As of v3.3.0, both jurors invoke OAuth-authenticated local CLIs over the
+user's paid Pro subscriptions — no API keys required.**
+
+| Family | CLI | OAuth source | Pre-condition |
+|---|---|---|---|
+| Google | `gemini` | `gcloud auth login` → `~/.gemini/oauth_creds.json` | Gemini Pro / Advanced subscription |
+| OpenAI | `codex exec` | `codex login` → `~/.codex/auth.json` | ChatGPT Plus / Pro subscription |
+
+The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY` from
+the subprocess env to force the CLIs onto the OAuth path (otherwise they
+silently fall back to API billing). If a CLI is missing or unauthenticated,
+the corresponding juror returns `verdict="error"` with a clear message —
+the cascade does NOT silently fall back to API.
+
+### Models used (pinned, read from `~/cyborg/.env`)
+
+| Stage | Model | Family | Role | Notes |
 |---|---|---|---|---|
-| Small-fish | `gemini-3.1-flash-lite-preview` | Google | Panel juror 1 | ~$0.30/$2.50 per 1M in/out tokens |
-| Small-fish | `gpt-5.4-nano` | OpenAI | Panel juror 2 | ~cheap tier |
-| Tiebreaker (default) | `gpt-5.4` | OpenAI | Final verdict | ~mid tier |
-| Tiebreaker (alt) | `gemini-3.1-pro-preview` | Google | Final verdict | ~mid tier |
+| Small-fish | `gemini-3.1-flash-lite-preview` | Google | Panel juror 1 | OAuth-permitted everywhere |
+| Small-fish | `gpt-5.4` | OpenAI | Panel juror 2 | See OAuth-tier caveat below |
+| Tiebreaker (default) | `gemini-3.1-pro-preview` | Google | Final verdict | Cross-tier vs. Flash-Lite |
+| Tiebreaker (alt) | `gpt-5.4` | OpenAI | Final verdict | Pass via `--tiebreaker gpt-5.4` |
 
-**Cross-family guarantee:** the two small judges are from different families
-(Google + OpenAI). The tiebreaker is cross-family vs. author (Claude) AND
-cross-family vs. whichever small judge triggered escalation. No two judges
-in the cascade share a training distribution with the author.
+**OAuth-tier caveat (the small/big cascade collapses on the OpenAI lane).**
+ChatGPT-account-auth Codex rejects `gpt-5.4-nano` and other API-only
+nano/mini-tier models with: `"The 'gpt-5.4-nano' model is not supported
+when using Codex with a ChatGPT account."` So the small-fish OpenAI juror
+defaults to `gpt-5.4` (the cheapest ChatGPT-Plus-permitted tier). On the
+OpenAI lane, small=big in tier — but the cross-FAMILY cascade still holds
+(Gemini-Flash-Lite vs. GPT-5.4 are different training distributions).
+The default tiebreaker is therefore `gemini-3.1-pro-preview` — crossing
+the tier boundary inside Google AND remaining cross-family vs. both small
+judges and the Claude author.
+
+**Override the small-OpenAI model** via `JUDGE_PANEL_OPENAI_OAUTH_MODEL`
+(in `~/cyborg/.env` or shell env). When OpenAI ships a ChatGPT-permitted
+mini/nano tier, set the pin and the small-OpenAI cost drops automatically.
+
+**Cross-family guarantee:** the two small judges are from different
+families (Google + OpenAI). The tiebreaker is cross-family vs. author
+(Claude) AND cross-family vs. whichever small judge triggered escalation.
+No two judges in the cascade share a training distribution with the author.
 
 ## Confidence + agreement rules
 
@@ -171,7 +202,7 @@ verdict without prompting the main LLM again.
 
 ```json
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "rubric": "hallucination",
   "cascade": {
     "stage_1_small_fish": [
@@ -186,14 +217,14 @@ verdict without prompting the main LLM again.
         "latency_ms": 1840
       },
       {
-        "model": "gpt-5.4-nano",
+        "model": "gpt-5.4",
         "family": "openai",
         "verdict": "pass",
         "confidence": 85,
         "flags": [],
         "tokens_in": 412,
         "tokens_out": 52,
-        "latency_ms": 920
+        "latency_ms": 8200
       }
     ],
     "agreement": "agree",
@@ -265,13 +296,25 @@ error fires.
 
 ## Cost discipline (P13 + Ground Zero 3D)
 
-**Optimal cost, not minimum cost.** The cascade costs ~$0.004 per
-small-fish panel (Gemini Flash + GPT-nano on a ~500-token artifact). A
-full naive parallel jury of 3 Opus-class reviewers would cost ~$0.12.
-30× cost delta — and the cascade catches real issues the parallel jury
-misses (Part 2 thesis).
+**Optimal cost, not minimum cost — and on OAuth, "cost" is bounded by
+the user's flat subscription fee.** The `cost_usd_estimate` field still
+reports what the run WOULD have cost on the pay-per-token API
+(useful for cascade-vs-naive-jury comparison), but actual marginal cost
+to the user is zero per call up to subscription quota.
 
-But if escalation fires on every run, the cost advantage collapses. If
+OAuth tradeoffs the user is consciously accepting:
+1. **Latency:** local-CLI calls add ~3-10s of process startup per call
+   (codex spins up a session, gemini parses MCP config). Wall-clock
+   per cascade is ~10-20s vs. ~2-5s for the API path. Cross-family
+   verification is still in P11 / P21 budget.
+2. **Subscription rate-limits:** ChatGPT Plus and Gemini Pro have
+   per-day or per-hour usage caps. A judge-panel campaign that fires
+   the cascade on hundreds of artifacts in a session can exhaust the
+   cap. If a juror returns `verdict="error"` with `rate_limit` in the
+   message, throttle the cascade or fall back to a different rubric.
+3. **Tier collapse on OpenAI lane** (see Auth model section above).
+
+If escalation fires on every run, the cost advantage collapses. If
 the eval harness reports escalation_rate > 50% over 20 runs, the
 confidence threshold (currently 80) is too strict — loosen it, or the
 rubrics are ambiguous — sharpen them. This is P14 (self-evolution)

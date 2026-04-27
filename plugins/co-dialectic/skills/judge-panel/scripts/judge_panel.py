@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
-"""Judge-panel cascade-then-jury harness.
+"""Judge-panel cascade-then-jury harness — OAuth local-CLI edition.
 
 Small-fish first: ≥2 cross-family cheap judges in parallel.
 Escalate to one big-fish cross-family tiebreaker on disagreement or low confidence.
 
-Reads model pins from ~/cyborg/.env. Shells out to `gemini` + `codex` CLIs.
+Both judges run via OAuth-authenticated local CLIs over the user's paid
+subscriptions — NO API keys required:
+  - Google → `gemini` CLI (Gemini Pro / Advanced subscription via gcloud OAuth)
+  - OpenAI → `codex` CLI (ChatGPT Plus/Pro subscription via codex login OAuth)
+
+Pre-conditions (one-time per machine):
+  1. `gemini` on PATH and authenticated:
+       npm i -g @google/generative-ai-cli   # or vendor instructions
+       gcloud auth login                    # OAuth flow
+       (or: gemini auth login if vendored)
+     OAuth creds land at ~/.gemini/oauth_creds.json. The script does NOT
+     pass GEMINI_API_KEY; the CLI will prefer OAuth when no key is set.
+  2. `codex` on PATH and authenticated:
+       codex login                          # OAuth flow opens browser
+     Creds land at ~/.codex/auth.json. The CLI uses ChatGPT Plus/Pro
+     entitlements; no OPENAI_API_KEY needed.
+
+If either CLI is missing or unauthenticated, the corresponding juror returns
+verdict="error" with a clear message — the cascade does NOT silently fall
+back to API keys. Install + authenticate to recover.
+
+Reads model pins from ~/cyborg/.env (no API keys consumed; pins only).
 
 Usage:
     python3 judge_panel.py --rubric hallucination --artifact "..."
@@ -19,16 +40,16 @@ import concurrent.futures as cf
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
-import urllib.error
-import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 
 # ---------------------------------------------------------------------------
 # Config — model pins loaded from ~/cyborg/.env (authoritative per P20)
@@ -50,20 +71,49 @@ def _load_env(path: Path) -> dict:
 
 
 _ENV = _load_env(CYBORG_ENV)
-os.environ.setdefault("OPENAI_API_KEY", _ENV.get("OPENAI_API_KEY", ""))
-os.environ.setdefault("GEMINI_API_KEY", _ENV.get("GEMINI_API_KEY", ""))
-os.environ.setdefault("ANTHROPIC_API_KEY", _ENV.get("ANTHROPIC_API_KEY", ""))
+# NOTE: OAuth path — we deliberately do NOT export *_API_KEY env vars here.
+# The local CLIs (`gemini`, `codex`) authenticate via their own OAuth flows
+# (gcloud / codex login). Setting *_API_KEY would cause some CLIs to prefer
+# the key over OAuth and silently bill against an API account instead of
+# the user's paid Pro subscription.
 
 SMALL_GEMINI = _ENV.get("GEMINI_CLI_DEFAULT_MODEL", "gemini-3.1-flash-lite-preview")
-SMALL_OPENAI = _ENV.get("OPENAI_JUDGE_MODEL", "gpt-5.4-nano")
+# OAuth caveat: ChatGPT-account-auth Codex CLI rejects nano/mini-tier API
+# models with "The 'gpt-5.4-nano' model is not supported when using Codex
+# with a ChatGPT account." So we use a dedicated pin for the OAuth path:
+# JUDGE_PANEL_OPENAI_OAUTH_MODEL takes precedence over OPENAI_JUDGE_MODEL
+# (which may still hold an API-tier nano/mini for legacy callers).
+# Default: gpt-5.4 — the same model as the tiebreaker. The small/big
+# cost-cascade on the OpenAI side collapses on OAuth (one model class is
+# allowed); the cross-family cascade still holds (Gemini-Flash-Lite vs.
+# GPT-5.4 are different families with different blind spots).
+_OPENAI_OAUTH_DEFAULT = _ENV.get("JUDGE_PANEL_OPENAI_OAUTH_MODEL",
+                                  os.environ.get("JUDGE_PANEL_OPENAI_OAUTH_MODEL", "gpt-5.4"))
+SMALL_OPENAI = _OPENAI_OAUTH_DEFAULT
 BIG_OPENAI = _ENV.get("OPENAI_BIG_JUDGE_MODEL", "gpt-5.4")
 BIG_GEMINI = _ENV.get("GEMINI_CLI_PREMIUM_MODEL", "gemini-3.1-pro-preview")
+# Default tiebreaker: Gemini Pro — cross-family AND cross-tier vs. the
+# small-fish panel (Gemini-Flash + GPT-5.4). On OAuth, both small judges
+# are at the same tier (the cheapest tier each subscription permits), so
+# the tiebreaker's only way to add new signal is to be a different
+# (more powerful) family than at least one of them. Gemini-Pro is the
+# orthogonal axis to GPT-5.4 from the same Google family the Flash juror
+# uses — it crosses the tier boundary inside Google AND remains
+# cross-family vs. the Claude author and the GPT small juror.
+DEFAULT_TIEBREAKER = _ENV.get("JUDGE_PANEL_DEFAULT_TIEBREAKER",
+                               os.environ.get("JUDGE_PANEL_DEFAULT_TIEBREAKER", BIG_GEMINI))
 
 CONFIDENCE_THRESHOLD = int(_ENV.get("JUDGE_PANEL_CONF_THRESHOLD", "80"))
-CALL_TIMEOUT_S = int(_ENV.get("JUDGE_PANEL_TIMEOUT_S", "60"))
+CALL_TIMEOUT_S = int(_ENV.get("JUDGE_PANEL_TIMEOUT_S", "120"))
+
+# CLI binaries — overridable via env for testing / non-default install paths.
+GEMINI_BIN = _ENV.get("JUDGE_PANEL_GEMINI_BIN", os.environ.get("JUDGE_PANEL_GEMINI_BIN", "gemini"))
+CODEX_BIN = _ENV.get("JUDGE_PANEL_CODEX_BIN", os.environ.get("JUDGE_PANEL_CODEX_BIN", "codex"))
 
 # Rough per-1M-token USD (published ~2026-04; refresh quarterly per P20).
-# Used only for cost_usd_estimate — not dispatch logic.
+# Used only for cost_usd_estimate — what this run WOULD have cost on the
+# pay-per-token API. Actual cost on OAuth is bounded by the user's flat
+# subscription fee. Reported for cascade-vs-naive-jury comparison only.
 PRICING = {
     SMALL_GEMINI: {"in": 0.30, "out": 2.50},
     SMALL_OPENAI: {"in": 0.05, "out": 0.40},
@@ -172,13 +222,37 @@ def _parse_verdict(raw: str, model: str, family: str, tokens_in: int, tokens_out
     )
 
 
+def _ensure_cli(bin_name: str, family: str, model: str) -> Optional[JurorResult]:
+    """Return a synthetic JurorResult on missing CLI, else None."""
+    if shutil.which(bin_name):
+        return None
+    return JurorResult(
+        model=model, family=family, verdict="error", confidence=0,
+        flags=[], latency_ms=0,
+        error=(f"`{bin_name}` not on PATH — install + authenticate the OAuth CLI. "
+               "See judge_panel.py docstring for setup."),
+    )
+
+
 def _run_gemini(model: str, prompt: str) -> JurorResult:
+    """Call Google Gemini via the OAuth-authenticated `gemini` CLI.
+
+    Uses the user's gcloud / Gemini Pro subscription. We deliberately do NOT
+    set GEMINI_API_KEY in the subprocess env — the CLI prefers OAuth creds
+    at ~/.gemini/oauth_creds.json when no key is set, which is what we want.
+    """
+    missing = _ensure_cli(GEMINI_BIN, "google", model)
+    if missing:
+        return missing
     start = time.time()
+    # Strip API-key env vars so the CLI uses OAuth (not pay-per-token API).
+    child_env = {k: v for k, v in os.environ.items()
+                 if k not in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY")}
     try:
         proc = subprocess.run(
-            ["gemini", "-m", model, "-p", prompt],
+            [GEMINI_BIN, "-m", model, "-p", prompt],
             capture_output=True, text=True, timeout=CALL_TIMEOUT_S, check=False,
-            stdin=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL, env=child_env,
         )
     except subprocess.TimeoutExpired:
         return JurorResult(
@@ -194,6 +268,9 @@ def _run_gemini(model: str, prompt: str) -> JurorResult:
             error=f"gemini exit {proc.returncode}: {proc.stderr[:500]}",
         )
     raw = proc.stdout.strip()
+    # Gemini CLI prepends informational lines (e.g. "MCP issues detected...").
+    # _parse_verdict already does a regex JSON-object search, so cruft is
+    # tolerated, but record the original raw for debugging.
     return _parse_verdict(
         raw, model=model, family="google",
         tokens_in=_estimate_tokens(prompt), tokens_out=_estimate_tokens(raw),
@@ -201,72 +278,76 @@ def _run_gemini(model: str, prompt: str) -> JurorResult:
     )
 
 
-def _run_openai(model: str, prompt: str) -> JurorResult:
-    """Call OpenAI Chat Completions directly via urllib (no SDK dependency).
+def _run_codex(model: str, prompt: str) -> JurorResult:
+    """Call OpenAI via the OAuth-authenticated `codex` CLI.
 
-    We go direct because the bundled `codex` CLI is scoped to the user's
-    ChatGPT-account auth, which does not permit nano/mini-tier models.
-    Direct API with OPENAI_API_KEY works for all pricing tiers.
+    Uses the user's ChatGPT Plus/Pro subscription via `codex login` OAuth.
+    No OPENAI_API_KEY required (and we strip it from the subprocess env so
+    codex doesn't accidentally fall back to API billing).
+
+    `codex exec` is verbose on stdout (session header, hook messages, etc.).
+    We use --output-last-message <tempfile> to write ONLY the agent's final
+    reply to a file — clean extraction without parsing event streams.
     """
+    missing = _ensure_cli(CODEX_BIN, "openai", model)
+    if missing:
+        return missing
     start = time.time()
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key:
-        return JurorResult(
-            model=model, family="openai", verdict="error", confidence=0,
-            flags=[], latency_ms=0, error="OPENAI_API_KEY not set",
-        )
-    body = json.dumps({
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0,
-        "max_completion_tokens": 400,
-    }).encode("utf-8")
-    req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
-        data=body,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-    )
+    child_env = {k: v for k, v in os.environ.items()
+                 if k not in ("OPENAI_API_KEY",)}
+    # Use a tempfile for --output-last-message so we never have to parse
+    # codex's noisy stdout. File is removed in the finally block.
+    fd, last_msg_path = tempfile.mkstemp(prefix="judge-panel-codex-", suffix=".txt")
+    os.close(fd)
     try:
-        with urllib.request.urlopen(req, timeout=CALL_TIMEOUT_S) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        err_body = e.read().decode("utf-8", errors="replace")[:500]
-        return JurorResult(
-            model=model, family="openai", verdict="error", confidence=0,
-            flags=[], latency_ms=int((time.time() - start) * 1000),
-            error=f"openai http {e.code}: {err_body}",
+        try:
+            proc = subprocess.run(
+                [
+                    CODEX_BIN, "exec",
+                    "--skip-git-repo-check",
+                    "--color", "never",
+                    "--sandbox", "read-only",
+                    "--output-last-message", last_msg_path,
+                    "-m", model,
+                    prompt,
+                ],
+                capture_output=True, text=True, timeout=CALL_TIMEOUT_S, check=False,
+                stdin=subprocess.DEVNULL, env=child_env,
+            )
+        except subprocess.TimeoutExpired:
+            return JurorResult(
+                model=model, family="openai", verdict="timeout", confidence=0,
+                flags=[], latency_ms=int((time.time() - start) * 1000),
+                error=f"timeout after {CALL_TIMEOUT_S}s",
+            )
+        latency_ms = int((time.time() - start) * 1000)
+        if proc.returncode != 0:
+            return JurorResult(
+                model=model, family="openai", verdict="error", confidence=0,
+                flags=[], latency_ms=latency_ms,
+                error=f"codex exit {proc.returncode}: {proc.stderr[:500] or proc.stdout[:500]}",
+            )
+        try:
+            raw = Path(last_msg_path).read_text().strip()
+        except OSError as e:
+            return JurorResult(
+                model=model, family="openai", verdict="error", confidence=0,
+                flags=[], latency_ms=latency_ms,
+                error=f"codex last-message read failed: {e}",
+            )
+        if not raw:
+            # Fallback: scan stdout for a JSON object as a last resort.
+            raw = proc.stdout.strip()
+        return _parse_verdict(
+            raw, model=model, family="openai",
+            tokens_in=_estimate_tokens(prompt), tokens_out=_estimate_tokens(raw),
+            latency_ms=latency_ms,
         )
-    except urllib.error.URLError as e:
-        return JurorResult(
-            model=model, family="openai", verdict="error", confidence=0,
-            flags=[], latency_ms=int((time.time() - start) * 1000),
-            error=f"openai url: {e}",
-        )
-    except TimeoutError:
-        return JurorResult(
-            model=model, family="openai", verdict="timeout", confidence=0,
-            flags=[], latency_ms=int((time.time() - start) * 1000),
-            error=f"timeout after {CALL_TIMEOUT_S}s",
-        )
-    latency_ms = int((time.time() - start) * 1000)
-    try:
-        raw = payload["choices"][0]["message"]["content"] or ""
-        usage = payload.get("usage", {}) or {}
-        tokens_in = usage.get("prompt_tokens") or _estimate_tokens(prompt)
-        tokens_out = usage.get("completion_tokens") or _estimate_tokens(raw)
-    except (KeyError, IndexError, TypeError) as e:
-        return JurorResult(
-            model=model, family="openai", verdict="error", confidence=0,
-            flags=[], latency_ms=latency_ms,
-            error=f"openai payload shape: {e} — keys={list(payload.keys())}",
-        )
-    return _parse_verdict(
-        raw, model=model, family="openai",
-        tokens_in=tokens_in, tokens_out=tokens_out, latency_ms=latency_ms,
-    )
+    finally:
+        try:
+            os.unlink(last_msg_path)
+        except OSError:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -291,16 +372,16 @@ def _aggregate(small: list) -> tuple[str, str, bool]:
 def _run_small_panel(prompt: str) -> list:
     with cf.ThreadPoolExecutor(max_workers=2) as ex:
         fut_gem = ex.submit(_run_gemini, SMALL_GEMINI, prompt)
-        fut_gpt = ex.submit(_run_openai, SMALL_OPENAI, prompt)
+        fut_gpt = ex.submit(_run_codex, SMALL_OPENAI, prompt)
         return [fut_gem.result(), fut_gpt.result()]
 
 
 def _run_tiebreaker(prompt: str, tiebreaker_model: str) -> JurorResult:
-    # Default tiebreaker: GPT-5.4 (OpenAI) — cross-family vs Claude author
-    # and cross-family vs Gemini-Flash small judge.
+    # Default tiebreaker: GPT-5.4 (OpenAI via codex) — cross-family vs Claude
+    # author and cross-family vs Gemini-Flash small judge.
     if tiebreaker_model.startswith("gemini"):
         return _run_gemini(tiebreaker_model, prompt)
-    return _run_openai(tiebreaker_model, prompt)
+    return _run_codex(tiebreaker_model, prompt)
 
 
 def _estimate_cost(jurors: list) -> float:
@@ -315,7 +396,9 @@ def _estimate_cost(jurors: list) -> float:
 
 
 def run_cascade(rubric_slug: str, artifact: str, rubric_text: Optional[str] = None,
-                tiebreaker: str = BIG_OPENAI) -> dict:
+                tiebreaker: Optional[str] = None) -> dict:
+    if tiebreaker is None:
+        tiebreaker = DEFAULT_TIEBREAKER
     if rubric_slug == "custom":
         if not rubric_text:
             raise ValueError("rubric=custom requires --rubric-text")
@@ -407,8 +490,8 @@ def main(argv: Optional[list] = None) -> int:
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--artifact", help="Artifact text to evaluate (inline)")
     src.add_argument("--artifact-file", help="Path to file containing the artifact")
-    p.add_argument("--tiebreaker", default=BIG_OPENAI,
-                   help=f"Escalation model (default {BIG_OPENAI})")
+    p.add_argument("--tiebreaker", default=DEFAULT_TIEBREAKER,
+                   help=f"Escalation model (default {DEFAULT_TIEBREAKER})")
     p.add_argument("--silent", action="store_true",
                    help="Emit only JSON on stdout (skip raw-response fields to keep payload lean)")
     args = p.parse_args(argv)
