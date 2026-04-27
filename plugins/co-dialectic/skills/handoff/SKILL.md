@@ -567,17 +567,49 @@ stdout fallback: print the markdown handoff block to stdout. Per
 FAIL-HARD: missing target is degraded operation, not silent skip — emit
 visibly.
 
-**(2) JSON beacon (telemetry-only)** — written to
-`~/.codialectic/beacons/session_end-<ISO-8601>.json` (one file per fired
-event, append-only, never overwritten). This is a SEPARATE path from the
-hook registry at `~/.codialectic/hooks/session_end.json` to avoid path
-collision with Phase 3's registry contract.
+**(2) JSON beacon (telemetry-only)** — written to the SAME canonical path
+used by Phase 3's hook registry: `~/.codialectic/hooks/session_end.json`.
+
+**Multi-protocol-write contract.** `~/.codialectic/hooks/session_end.json`
+is the SINGLE canonical file. Multiple protocols contribute fields under
+distinct top-level keys rather than overwriting the file:
+
+- Protocol 9 (auto-handoff / this skill) writes under `"handoff": {...}`
+- Protocol 12 (hygiene cycle) writes under `"hygiene": {...}`
+- Future protocols each get their own top-level key
+- Shared session metadata lives at the root level (not nested):
+  `session_id`, `schema_version`, `model`, `duration_min`, `msg_count`,
+  `ended_reason`
+
+**Atomic merge pattern** (every writer follows this, no exceptions):
+
+```
+1. read existing file (if present) → parse JSON → result = existing_obj (or {})
+2. merge own protocol's payload:   result["handoff"] = { ...handoff_fields }
+3. merge shared metadata at root:  result["session_id"] = ..., etc.
+4. write to temp file:             ~/.codialectic/hooks/session_end.json.tmp
+5. atomic rename:                  mv session_end.json.tmp session_end.json
+```
+
+The rename guarantees readers never see a partial write. If the existing
+file is malformed JSON, FAIL-HARD: surface the parse error; do NOT silently
+overwrite (the file may contain another protocol's payload that must be
+preserved).
+
+**Reader contract.** Any consumer of `session_end.json` merges per-protocol
+keys without clobbering sibling keys. Each protocol's payload is
+self-contained under its top-level key; the shared metadata is authoritative
+at root. Consumers MUST tolerate missing protocol keys (not every session
+fires every protocol).
 
 The beacon is MINIMAL — telemetry only, NOT a full state dump. The full
 state lives in target (1). The beacon enables cross-LLM-family fleet
 analytics without leaking conversation content.
 
-### 9.6 JSON Beacon Schema (v4.1 Minimal)
+### 9.6 JSON Beacon Schema (v4.1 Multi-Protocol)
+
+File: `~/.codialectic/hooks/session_end.json` (canonical, single file,
+multi-protocol-write contract — see section 9.5).
 
 ```json
 {
@@ -586,30 +618,46 @@ analytics without leaking conversation content.
   "model": "model identifier — e.g., claude-opus-4-7, gemini-2.5-pro, gpt-5",
   "duration_min": "integer — minutes from first user message to closure",
   "msg_count": "integer — total user+assistant messages in session",
-  "verify_fires_by_tier": {
-    "T0": "integer — count of T0 verifications fired (Protocol 8)",
-    "T1": "integer",
-    "T2": "integer",
-    "T3": "integer",
-    "T4": "integer"
-  },
-  "agent_swarm_fans": "integer — count of cross-family fan-out reviews triggered",
-  "honesty_mode": "string — 'strict' | 'standard' | 'relaxed' (per honesty toggle if v4.1+)",
-  "errors_caught_pre_emit": "integer — count of T2+ findings caught BEFORE artifact ship",
-  "ended_reason": "string — 'tier_A_direct_closure' | 'tier_B_explicit_handoff' | 'tier_C_terminal_gratitude' | 'tier_D_pause_confirmed' | 'tier_E_lifecycle' | 'tier_F_unknown_unknown' | 'inactivity_timeout' | 'manual'"
+  "ended_reason": "string — 'tier_A_direct_closure' | 'tier_B_explicit_handoff' | 'tier_C_terminal_gratitude' | 'tier_D_pause_confirmed' | 'tier_E_lifecycle' | 'tier_F_unknown_unknown' | 'inactivity_timeout' | 'manual'",
+  "handoff": {
+    "decisions_count": "integer — count of decisions_made[] entries",
+    "open_loops_count": "integer — count of unfinished_items[] entries",
+    "lessons_codified_count": "integer — count of lessons_learned[] entries",
+    "verify_fires_by_tier": {
+      "T0": "integer — count of T0 verifications fired (Protocol 8)",
+      "T1": "integer",
+      "T2": "integer",
+      "T3": "integer",
+      "T4": "integer"
+    },
+    "agent_swarm_fans": "integer — count of cross-family fan-out reviews triggered",
+    "honesty_mode": "string — 'grounded' | 'strict' | 'standard' | 'relaxed' (per honesty toggle if v4.1+)",
+    "errors_caught_pre_emit": "integer — count of T2+ findings caught BEFORE artifact ship",
+    "ended_reason": "string — mirrors root ended_reason; duplicated for per-protocol consumers that only read the 'handoff' key"
+  }
 }
 ```
 
-Field semantics:
+Field semantics — shared root fields:
 
 - `session_id` — same value as Protocol 2 JSON packet. Cross-references
-  the full state in target (1).
+  the full state in target (1). Written by the first protocol that fires;
+  subsequent protocols verify + leave unchanged.
 - `schema_version` — pinned to `v4.1`; bumped only on schema change. Older
   beacon files preserve their original schema_version (P18 Forward
   Compatibility).
 - `model` — runtime fills this from its own model identifier. Codi does
   NOT infer this from training recall.
 - `duration_min` / `msg_count` — basic session telemetry.
+- `ended_reason` (root) — which Protocol 9 tier (or manual / lifecycle)
+  caused the fire. Authoritative for fleet-level analytics.
+
+Field semantics — `"handoff"` key (Protocol 9's payload):
+
+- `decisions_count` — count of decisions_made[] entries in the full
+  handoff JSON packet (Phase 2). Enables decision-rate tracking.
+- `open_loops_count` — count of unfinished_items[] entries.
+- `lessons_codified_count` — count of lessons_learned[] entries.
 - `verify_fires_by_tier` — Protocol 8 (auto-verify) telemetry. Counts
   per stakes-tier per EMERGENT SYSTEM IMMUNITY's T0-T4 ladder. Useful
   for cross-LLM-family verification-rate benchmarking.
@@ -617,12 +665,28 @@ Field semantics:
   fan-out (e.g., judge-panel, fish-swarm). Indicates COMPLEMENTARY
   COMPOSITION engagement.
 - `honesty_mode` — placeholder for v4.1's honesty toggle if shipped;
-  default to `"standard"` if not implemented.
+  default to `"grounded"` if not implemented.
 - `errors_caught_pre_emit` — count of FAIL-HARD or T2+ verification
   findings that were caught BEFORE the artifact left codi (the
   pre-immune-cycle signal).
-- `ended_reason` — which Protocol 9 tier (or manual / lifecycle) caused
-  the fire. Drives fleet-level analytics on closure-signal effectiveness.
+- `ended_reason` (nested) — mirrors root `ended_reason`; included for
+  consumers that only read the `handoff` sub-object.
+
+**Sibling protocol keys (example — not written by this skill):**
+
+```json
+{
+  "hygiene": {
+    "sweep_done": "boolean",
+    "codify_done": "boolean",
+    "reorg_done": "boolean",
+    "merge_done": "boolean",
+    "pull_done": "boolean"
+  }
+}
+```
+
+Each protocol owns exactly its key. The file is the merge surface.
 
 The beacon is INTENTIONALLY content-free. No conversation snippets, no
 unfinished-item titles, no user names. This makes it safe to aggregate
@@ -663,9 +727,10 @@ tomorrow"
 Detection: "bye" + "see you tomorrow" → Tier A HIGH.
 Suppression checks: no Tier B fire in last 2 turns; session has 12
 substantive turns; no in-flight work; no recent Protocol 9 fire.
-Action: Fire silently. Append to `NEXT_SESSION_HANDOFF.md`. Write beacon
-to `~/.codialectic/beacons/session_end-2026-04-27T18:42:00-07:00.json`
-with `ended_reason: "tier_A_direct_closure"`.
+Action: Fire silently. Append to `NEXT_SESSION_HANDOFF.md`. Merge beacon
+payload into `~/.codialectic/hooks/session_end.json` under `"handoff"` key
+(atomic read → merge → temp write → mv) with
+`ended_reason: "tier_A_direct_closure"`.
 Status block: `Auto-handoff fired (closure detected). NEXT_SESSION_HANDOFF.md
 updated. Beacon recorded.`
 
