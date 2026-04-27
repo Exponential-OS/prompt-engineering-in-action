@@ -108,11 +108,15 @@ When you strip flattery, the substance must remain. If removing the flattery lea
 
 **After:** (this is pure flattery — emit nothing or ask a substantive follow-up question)
 
-## Interaction with tone settings
+## Interaction with honesty settings (Protocol 10)
 
-- `codi tone critical` — aggressive audit. Flag everything at MEDIUM and above. No pleasantries allowed.
-- `codi tone grounded` (default) — flag HIGH + MEDIUM. LOW only on repetition.
-- `codi tone cheerleader` — flag HIGH only. MEDIUM allowed if substantively backed. *Note: cheerleader tone is a user choice; Zero-Flattery invariant still holds for objectively pure sycophancy (HIGH severity). Even cheerleaders don't get to say "most productive session."*
+Audit threshold adjusts based on the active honesty posture (see co-dialectic Protocol 10). Legacy `codi tone <level>` commands map to the canonical honesty commands for one minor version (v4.1.x).
+
+- `codi honesty brutal` (was: `codi tone critical`) — **aggressive audit.** Flag everything at MEDIUM and above. No pleasantries allowed. Threshold is tightest here — even borderline LOW markers are flagged if they appear more than once per session.
+- `codi honesty grounded` (was: `codi tone grounded`) — **default audit.** Flag HIGH + MEDIUM. LOW only on repetition (>3x per session).
+- `codi honesty soft` (was: `codi tone cheerleader`) — **loosened threshold.** Flag HIGH only. MEDIUM allowed if substantively backed. *Note: soft posture is a user choice for momentum; the Zero-Flattery invariant still holds unconditionally for HIGH severity. Even with `honesty soft` active, "most productive session," "brilliant insight," and all other HIGH markers are removed. The threshold loosens; the floor does not drop.*
+
+**T3+ auto-downgrade interaction:** When Protocol 10 auto-downgrades `honesty soft` → `honesty grounded` for a single T3/T4 response, this auditor applies grounded-level thresholds (HIGH + MEDIUM flagged) for that response only.
 
 ## How to verify
 
