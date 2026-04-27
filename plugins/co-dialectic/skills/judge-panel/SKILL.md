@@ -118,9 +118,40 @@ user's paid Pro subscriptions — no API keys required.**
 
 The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY` from
 the subprocess env to force the CLIs onto the OAuth path (otherwise they
-silently fall back to API billing). If a CLI is missing or unauthenticated,
-the corresponding juror returns `verdict="error"` with a clear message —
-the cascade does NOT silently fall back to API.
+silently fall back to API billing).
+
+### API fallback (v3.2.0+) — opt-in, CLI-not-installed only
+
+The cascade does NOT silently fall back to paid API billing. Fallback is
+**off by default** and gated by a tightened approval semantic:
+
+| CLI binary state | Approval flag set? | Behavior |
+|---|---|---|
+| Not on PATH (binary missing) | No | `verdict=error, flags=[CLI_NOT_INSTALLED]` |
+| Not on PATH (binary missing) | Yes | API fallback fires; `flags=[API_FALLBACK_USED, ...]` |
+| On PATH but auth fails / runtime error / non-zero exit | Either | `verdict=error` with the specific CLI error. **No fallback.** |
+| On PATH and runs successfully | N/A | CLI used (existing OAuth path) |
+
+The principle: API fallback exists only for the case where the user has
+genuinely not installed the CLI yet (e.g., a fresh machine, or running
+from CI). CLI installed but failing means the CLI setup is broken — fix
+that, do not silently mask via paid API.
+
+**Approval can be set via:**
+- CLI flags on `python3 judge_panel.py`:
+  - `--api-fallback-approved` (master gate — both lanes)
+  - `--api-fallback-approved-gemini` (Gemini lane only)
+  - `--api-fallback-approved-openai` (OpenAI lane only)
+- Environment variables (programmatic / skill activation):
+  - `JUDGE_PANEL_API_FALLBACK_APPROVED=1`
+  - `JUDGE_PANEL_API_FALLBACK_APPROVED_GEMINI=1`
+  - `JUDGE_PANEL_API_FALLBACK_APPROVED_OPENAI=1`
+
+When approved, the relevant API key must also be set
+(`GEMINI_API_KEY` / `GOOGLE_API_KEY` / `OPENAI_API_KEY`); otherwise the
+juror returns `flags=[API_FALLBACK_NO_KEY]`. **API fallback bills the
+user's pay-per-token API account, not the flat-fee Pro subscription** —
+this is why approval is explicit and per-lane.
 
 ### Models used (pinned, read from `~/cyborg/.env`)
 

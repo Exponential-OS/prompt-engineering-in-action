@@ -21,9 +21,20 @@ Pre-conditions (one-time per machine):
      Creds land at ~/.codex/auth.json. The CLI uses ChatGPT Plus/Pro
      entitlements; no OPENAI_API_KEY needed.
 
-If either CLI is missing or unauthenticated, the corresponding juror returns
-verdict="error" with a clear message — the cascade does NOT silently fall
-back to API keys. Install + authenticate to recover.
+If either CLI is MISSING (binary not on PATH), the juror returns verdict="error"
+with flag CLI_NOT_INSTALLED — UNLESS the user has explicitly approved API-billing
+fallback for that lane via:
+  --api-fallback-approved              (master gate — both lanes)
+  --api-fallback-approved-gemini       (Gemini lane only)
+  --api-fallback-approved-openai       (OpenAI lane only)
+or the equivalent JUDGE_PANEL_API_FALLBACK_APPROVED[_{GEMINI,OPENAI}]=1 env vars.
+When approved AND the relevant API key is set (GEMINI_API_KEY / OPENAI_API_KEY),
+the lane falls back to the paid REST API and the JurorResult is flagged
+API_FALLBACK_USED.
+
+If a CLI is INSTALLED but fails (auth, runtime, timeout, non-zero exit), the
+juror returns the CLI error — NO fallback fires. Auth/runtime errors are signals
+to debug the CLI setup, not silently masked via paid API.
 
 Reads model pins from ~/cyborg/.env (no API keys consumed; pins only).
 
@@ -45,11 +56,53 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
-VERSION = "3.1.0"
+VERSION = "3.2.0"
+
+# ---------------------------------------------------------------------------
+# API-fallback approval gate (module-level — set by main() or programmatic caller).
+#
+# TIGHTENED SEMANTICS: API fallback fires ONLY when the CLI binary is not
+# installed on PATH AND the user has explicitly approved API-billing fallback
+# for that lane. CLI installed but auth-fail / runtime-error does NOT trigger
+# fallback — those are signals to debug the CLI setup, not silently mask via
+# paid API.
+#
+# Approval can be set via:
+#   1. CLI flags (--api-fallback-approved / --api-fallback-approved-gemini /
+#      --api-fallback-approved-openai) on `python3 judge_panel.py`
+#   2. Environment vars (JUDGE_PANEL_API_FALLBACK_APPROVED=1 etc.) for
+#      programmatic callers and skill activation
+#
+# Master flag enables both lanes; per-lane flags take precedence when set
+# explicitly to 0 (e.g., master=1 + per-lane-openai=0 disables OpenAI fallback).
+_API_FALLBACK_APPROVED_GEMINI = False
+_API_FALLBACK_APPROVED_OPENAI = False
+
+
+def _bool_env(name: str, default: bool = False) -> bool:
+    v = os.environ.get(name)
+    if v is None:
+        return default
+    return v.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _init_approval_from_env() -> None:
+    """Honor env-var approval at import time (programmatic callers)."""
+    global _API_FALLBACK_APPROVED_GEMINI, _API_FALLBACK_APPROVED_OPENAI
+    master = _bool_env("JUDGE_PANEL_API_FALLBACK_APPROVED", False)
+    _API_FALLBACK_APPROVED_GEMINI = _bool_env(
+        "JUDGE_PANEL_API_FALLBACK_APPROVED_GEMINI", master)
+    _API_FALLBACK_APPROVED_OPENAI = _bool_env(
+        "JUDGE_PANEL_API_FALLBACK_APPROVED_OPENAI", master)
+
+
+_init_approval_from_env()
 
 # ---------------------------------------------------------------------------
 # Config — model pins loaded from ~/cyborg/.env (authoritative per P20)
@@ -222,16 +275,162 @@ def _parse_verdict(raw: str, model: str, family: str, tokens_in: int, tokens_out
     )
 
 
+def _cli_installed(bin_name: str) -> bool:
+    """Binary present on PATH? Pure check — no auth/runtime probe."""
+    return shutil.which(bin_name) is not None
+
+
 def _ensure_cli(bin_name: str, family: str, model: str) -> Optional[JurorResult]:
-    """Return a synthetic JurorResult on missing CLI, else None."""
-    if shutil.which(bin_name):
+    """Return a synthetic JurorResult on missing CLI, else None.
+
+    Only fires the CLI_NOT_INSTALLED error when API fallback is NOT approved
+    for this lane — when fallback IS approved, the caller routes to the API
+    runner instead. CLI present-but-fails is a different code path (returns
+    CLI_RUNTIME_ERROR / CLI_AUTH_FAILED) and never falls back.
+    """
+    if _cli_installed(bin_name):
         return None
     return JurorResult(
         model=model, family=family, verdict="error", confidence=0,
-        flags=[], latency_ms=0,
-        error=(f"`{bin_name}` not on PATH — install + authenticate the OAuth CLI. "
+        flags=["CLI_NOT_INSTALLED"], latency_ms=0,
+        error=(f"`{bin_name}` not on PATH — install + authenticate the OAuth CLI, "
+               "or pass --api-fallback-approved to allow API-billing fallback. "
                "See judge_panel.py docstring for setup."),
     )
+
+
+# ---------------------------------------------------------------------------
+# API-fallback runners — fire ONLY when CLI is not installed AND user has
+# explicitly approved API billing for that lane.
+
+def _run_gemini_api(model: str, prompt: str) -> JurorResult:
+    """Call Google Gemini via REST API (paid fallback, NOT subscription)."""
+    start = time.time()
+    api_key = (os.environ.get("GEMINI_API_KEY")
+               or os.environ.get("GOOGLE_API_KEY")
+               or _ENV.get("GEMINI_API_KEY", "")
+               or _ENV.get("GOOGLE_API_KEY", ""))
+    if not api_key:
+        return JurorResult(
+            model=model, family="google", verdict="error", confidence=0,
+            flags=["API_FALLBACK_NO_KEY"], latency_ms=0,
+            error="API fallback approved but GEMINI_API_KEY / GOOGLE_API_KEY not set",
+        )
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0, "maxOutputTokens": 400},
+    }).encode("utf-8")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    req = urllib.request.Request(
+        url, data=body,
+        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=CALL_TIMEOUT_S) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")[:500]
+        return JurorResult(
+            model=model, family="google", verdict="error", confidence=0,
+            flags=["API_FALLBACK_HTTP_ERROR"], latency_ms=int((time.time() - start) * 1000),
+            error=f"gemini api http {e.code}: {err_body}",
+        )
+    except urllib.error.URLError as e:
+        return JurorResult(
+            model=model, family="google", verdict="error", confidence=0,
+            flags=["API_FALLBACK_URL_ERROR"], latency_ms=int((time.time() - start) * 1000),
+            error=f"gemini api url: {e}",
+        )
+    except TimeoutError:
+        return JurorResult(
+            model=model, family="google", verdict="timeout", confidence=0,
+            flags=["API_FALLBACK_TIMEOUT"], latency_ms=int((time.time() - start) * 1000),
+            error=f"timeout after {CALL_TIMEOUT_S}s",
+        )
+    latency_ms = int((time.time() - start) * 1000)
+    try:
+        raw = payload["candidates"][0]["content"]["parts"][0]["text"] or ""
+    except (KeyError, IndexError, TypeError) as e:
+        return JurorResult(
+            model=model, family="google", verdict="error", confidence=0,
+            flags=["API_FALLBACK_PAYLOAD_SHAPE"], latency_ms=latency_ms,
+            error=f"gemini api payload shape: {e} — keys={list(payload.keys())}",
+        )
+    result = _parse_verdict(
+        raw, model=model, family="google",
+        tokens_in=_estimate_tokens(prompt), tokens_out=_estimate_tokens(raw),
+        latency_ms=latency_ms,
+    )
+    if "API_FALLBACK_USED" not in result.flags:
+        result.flags.insert(0, "API_FALLBACK_USED")
+    return result
+
+
+def _run_openai_api(model: str, prompt: str) -> JurorResult:
+    """Call OpenAI Chat Completions via REST API (paid fallback, NOT subscription)."""
+    start = time.time()
+    api_key = os.environ.get("OPENAI_API_KEY", "") or _ENV.get("OPENAI_API_KEY", "")
+    if not api_key:
+        return JurorResult(
+            model=model, family="openai", verdict="error", confidence=0,
+            flags=["API_FALLBACK_NO_KEY"], latency_ms=0,
+            error="API fallback approved but OPENAI_API_KEY not set",
+        )
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+        "max_completion_tokens": 400,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=CALL_TIMEOUT_S) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")[:500]
+        return JurorResult(
+            model=model, family="openai", verdict="error", confidence=0,
+            flags=["API_FALLBACK_HTTP_ERROR"], latency_ms=int((time.time() - start) * 1000),
+            error=f"openai api http {e.code}: {err_body}",
+        )
+    except urllib.error.URLError as e:
+        return JurorResult(
+            model=model, family="openai", verdict="error", confidence=0,
+            flags=["API_FALLBACK_URL_ERROR"], latency_ms=int((time.time() - start) * 1000),
+            error=f"openai api url: {e}",
+        )
+    except TimeoutError:
+        return JurorResult(
+            model=model, family="openai", verdict="timeout", confidence=0,
+            flags=["API_FALLBACK_TIMEOUT"], latency_ms=int((time.time() - start) * 1000),
+            error=f"timeout after {CALL_TIMEOUT_S}s",
+        )
+    latency_ms = int((time.time() - start) * 1000)
+    try:
+        raw = payload["choices"][0]["message"]["content"] or ""
+        usage = payload.get("usage", {}) or {}
+        tokens_in = usage.get("prompt_tokens") or _estimate_tokens(prompt)
+        tokens_out = usage.get("completion_tokens") or _estimate_tokens(raw)
+    except (KeyError, IndexError, TypeError) as e:
+        return JurorResult(
+            model=model, family="openai", verdict="error", confidence=0,
+            flags=["API_FALLBACK_PAYLOAD_SHAPE"], latency_ms=latency_ms,
+            error=f"openai api payload shape: {e} — keys={list(payload.keys())}",
+        )
+    result = _parse_verdict(
+        raw, model=model, family="openai",
+        tokens_in=tokens_in, tokens_out=tokens_out, latency_ms=latency_ms,
+    )
+    if "API_FALLBACK_USED" not in result.flags:
+        result.flags.insert(0, "API_FALLBACK_USED")
+    return result
 
 
 def _run_gemini(model: str, prompt: str) -> JurorResult:
@@ -240,10 +439,17 @@ def _run_gemini(model: str, prompt: str) -> JurorResult:
     Uses the user's gcloud / Gemini Pro subscription. We deliberately do NOT
     set GEMINI_API_KEY in the subprocess env — the CLI prefers OAuth creds
     at ~/.gemini/oauth_creds.json when no key is set, which is what we want.
+
+    API fallback (paid billing, NOT subscription) fires ONLY when:
+      (a) `gemini` is not installed on PATH, AND
+      (b) `_API_FALLBACK_APPROVED_GEMINI` is True (CLI flag or env var).
+    CLI installed but auth-fail / runtime-error → returns CLI error,
+    no fallback (fix CLI setup, do not silently bill API).
     """
-    missing = _ensure_cli(GEMINI_BIN, "google", model)
-    if missing:
-        return missing
+    if not _cli_installed(GEMINI_BIN):
+        if _API_FALLBACK_APPROVED_GEMINI:
+            return _run_gemini_api(model, prompt)
+        return _ensure_cli(GEMINI_BIN, "google", model)  # CLI_NOT_INSTALLED error
     start = time.time()
     # Strip API-key env vars so the CLI uses OAuth (not pay-per-token API).
     child_env = {k: v for k, v in os.environ.items()
@@ -288,10 +494,17 @@ def _run_codex(model: str, prompt: str) -> JurorResult:
     `codex exec` is verbose on stdout (session header, hook messages, etc.).
     We use --output-last-message <tempfile> to write ONLY the agent's final
     reply to a file — clean extraction without parsing event streams.
+
+    API fallback (paid OpenAI billing, NOT subscription) fires ONLY when:
+      (a) `codex` is not installed on PATH, AND
+      (b) `_API_FALLBACK_APPROVED_OPENAI` is True (CLI flag or env var).
+    CLI installed but auth-fail / runtime-error → returns CLI error,
+    no fallback.
     """
-    missing = _ensure_cli(CODEX_BIN, "openai", model)
-    if missing:
-        return missing
+    if not _cli_installed(CODEX_BIN):
+        if _API_FALLBACK_APPROVED_OPENAI:
+            return _run_openai_api(model, prompt)
+        return _ensure_cli(CODEX_BIN, "openai", model)  # CLI_NOT_INSTALLED error
     start = time.time()
     child_env = {k: v for k, v in os.environ.items()
                  if k not in ("OPENAI_API_KEY",)}
@@ -494,7 +707,24 @@ def main(argv: Optional[list] = None) -> int:
                    help=f"Escalation model (default {DEFAULT_TIEBREAKER})")
     p.add_argument("--silent", action="store_true",
                    help="Emit only JSON on stdout (skip raw-response fields to keep payload lean)")
+    p.add_argument("--api-fallback-approved", action="store_true",
+                   help="Approve API-billing fallback for BOTH lanes when the OAuth CLI is "
+                        "not installed. Off by default. Per-lane flags override this master.")
+    p.add_argument("--api-fallback-approved-gemini", action="store_true",
+                   help="Approve API-billing fallback ONLY for the Gemini lane.")
+    p.add_argument("--api-fallback-approved-openai", action="store_true",
+                   help="Approve API-billing fallback ONLY for the OpenAI lane.")
     args = p.parse_args(argv)
+
+    # Wire approval flags into module globals (CLI-flag wins over env-init).
+    global _API_FALLBACK_APPROVED_GEMINI, _API_FALLBACK_APPROVED_OPENAI
+    if args.api_fallback_approved:
+        _API_FALLBACK_APPROVED_GEMINI = True
+        _API_FALLBACK_APPROVED_OPENAI = True
+    if args.api_fallback_approved_gemini:
+        _API_FALLBACK_APPROVED_GEMINI = True
+    if args.api_fallback_approved_openai:
+        _API_FALLBACK_APPROVED_OPENAI = True
 
     artifact = args.artifact
     if args.artifact_file:
