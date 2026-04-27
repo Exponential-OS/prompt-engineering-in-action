@@ -176,6 +176,8 @@ fish-swarm gates.
 
 ## When the active model SHOULD invoke fish-swarm
 
+**Per v4.1 Protocol 11a, fish-swarm is now the AUTO-ROUTING TARGET for mechanical sub-tasks (when `codi agent-swarm on`, default). Activation surface expanded from explicit-only to: explicit OR auto-routed by Protocol 11.**
+
 **Always, for these patterns** (these are pure T0-T2 mechanical orchestration):
 
 - User pasted a vague prompt and the model is about to ask clarifying
