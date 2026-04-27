@@ -332,6 +332,11 @@ No research gate fires. Codi operates in current mode (may ask human without res
 
 ## Protocol 11 — Agent-Swarm (default ON)
 
+> See v4.1 spec for full rationale, cost-warning prose, and confidence-MEDIUM ask format example.
+> Spec path: `~/.superset/worktrees/anand-career-os/Career-OS-Main-0427/WIP/prompt-engineering-in-action-product/co-dialectic/01_SPECS/v4.1-auto-verify-and-auto-handoff-2026-04-27.md`
+
+> TODO: After Protocol 10 (honesty rename) lands, this section's references to `tone` mode become `honesty` per Protocol 10. Composition with the honesty mode happens at the same dispatch layer.
+
 **Toggle:** `codi agent-swarm on/off`. **Default:** ON in ALL modes (Drive/Cruise/Demo/Quiet).
 
 **Two layers:**
@@ -342,7 +347,7 @@ When the parent identifies mechanical work (read, grep, count, file-rename, look
 
 ### 11b — Auto-fan-out independent legs
 
-When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE message with multiple parallel sub-agent calls.
+When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE message with multiple parallel sub-agent calls. Where the runtime serializes tool calls, sub-agents run in rapid sequence rather than true simultaneity; protocol behavior is equivalent but latency benefit is runtime-dependent.
 
 **Decomposition heuristics (LLM-internal, not regex):**
 - Independent reads from different files → parallel
