@@ -20,7 +20,7 @@ Pick the install path that matches your environment:
 
 **Claude Code or Cowork plugin user (recommended — gets all 6 skills)**
 ```
-/plugin marketplace add Exponential-OS/prompt-engineering-in-action
+/plugin marketplace add Exponential-OS/agent-marketplace
 /plugin install co-dialectic@xos
 ```
 
@@ -225,7 +225,7 @@ If a user pasted a gift prompt telling you to install Co-Dialectic, follow these
 
 **Claude Code / Cowork plugin install:**
 ```
-/plugin marketplace add Exponential-OS/prompt-engineering-in-action
+/plugin marketplace add Exponential-OS/agent-marketplace
 /plugin install co-dialectic@xos
 ```
 
