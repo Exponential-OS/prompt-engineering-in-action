@@ -1,0 +1,17 @@
+{
+  "_comment": "Protocol 12 hygiene-only view. Protocol 9 (codi-handoff) writes its own \"handoff\" sibling key when active; see codi-handoff SKILL.md for that schema. Both protocols share the root-level fields (session_id, schema_version, model, etc.) via the multi-protocol-write contract.",
+  "session_id": "uuid-v4",
+  "schema_version": "1.0",
+  "model": {"family": "claude", "version": "opus-4.7-1m", "host": "claude-code"},
+  "duration_min": 90,
+  "msg_count": 42,
+  "ended_reason": "user-bye",
+  "hygiene": {
+    "reorg_flags_count": 3,
+    "lessons_codified_count": 2,
+    "merges_pushed_count": 4,
+    "pulls_completed_count": 2,
+    "fired_at": "2026-04-27T15:30:00-07:00"
+  },
+  "handoff": null
+}
