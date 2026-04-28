@@ -382,7 +382,7 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 | T1 | calibration-auditor only (already always-on) | nothing — just the answer |
 | T2 | + `hallucination-detector` passive scan (via fish-swarm rubric `hallucination-preflight`) | compact footer: `✓ checked` |
 | T3 | + `judge-panel` cross-family cascade (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable — surfaces remediation block, never silently skips) | `✓ reviewed by 2 models` (expandable: `codi verify why`) |
-| T4 | + canonical-claim verifier (dispatched to `career-os.bio-claim-verifier` for biographical claims; `hallucination-detector` full post-flight for general claims) + biographical-claim mandatory precheck against the user's canonical career data store (resolved via career-os plugin if installed) + `unknown-unknown` adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit** | `🚀 ready to send — type 'send' to confirm` + RED preflight summary (see T4 flow below) |
+| T4 | + canonical-claim verifier (dispatched to `career-os.bio-claim-verifier` for biographical claims; `hallucination-detector` full post-flight for general claims) + biographical-claim mandatory precheck against `~/anand-career-os/brain/identity/experience-history.md` + `unknown-unknown` adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit** | `🚀 ready to send — type 'send' to confirm` + RED preflight summary (see T4 flow below) |
 
 **T2 cost target:** ~1-2K tokens / ~0.5s wall-clock (fish-swarm preflight rubric, no escalation on routine artifacts).
 **T3 cost target:** ~5-15K tokens / ~1-3s (cross-family cascade; escalation fires ~10-30% of the time).
@@ -410,7 +410,7 @@ Parse `final_verdict` + `final_confidence` + `all_flags`. Surface to user as:
 
 When the tier classifier reaches T4:
 
-1. **Precheck canonical claims.** For biographical claims: diff every factual claim in the draft against the user's canonical biographical sources (resolved via the career-os plugin if installed). Any claim not matching canonical source → flag in preflight summary. For general claims: run `hallucination-detector` full post-flight scoring.
+1. **Precheck canonical claims.** For biographical claims: diff every factual claim in the draft against `~/anand-career-os/brain/identity/experience-history.md` and `identity.md`. Any claim not matching canonical source → flag in preflight summary. For general claims: run `hallucination-detector` full post-flight scoring.
 
    **TODO (integration point):** dispatch to `career-os.bio-claim-verifier` when available — that skill reads canonical identity files and produces a structured claim-diff table. Until it ships, run hallucination-detector with `--rubric hallucination` as fallback. Mark in output: `(bio-claim verifier: pending career-os integration — using hallucination-detector fallback)`.
 
