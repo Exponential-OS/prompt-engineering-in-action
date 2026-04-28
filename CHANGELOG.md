@@ -6,17 +6,33 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ## [4.1.0] — 2026-04-27
 
-**Codename:** Protocol 10 — Honesty Selector.
+**Codename:** Five-protocol release — Auto-Verify · Auto-Handoff · Honesty Selector · Agent-Swarm · Hygiene.
 
-### Added
+### Added — five new protocols (build → judge → revise → re-judge cycle)
 
-- **Protocol 10 — Honesty Selector** (`co-dialectic/SKILL.md`). Three postures: `honesty grounded` (default, session start), `honesty brutal` (maximum challenge, no softening), `honesty soft` (momentum-first, minor concerns held). Status-line indicator appended for non-default postures (`🔪 honesty:brutal`, `🤝 honesty:soft`). T3+ auto-downgrade: when `honesty soft` is active and the output is a high-stakes artifact, silently upgrades to grounded for that single response.
-- Backwards-compat alias policy for one minor version: `tone:brutal` / `tone:soft` / `tone:grounded` accepted as aliases and immediately remapped.
+- **Protocol 8 — Auto-Verify by Stakes** (`co-dialectic/SKILL.md` + `hallucination-detector/SKILL.md` + `judge-panel/SKILL.md` + `unknown-unknown/SKILL.md`). T0-T4 stakes-tier classifier (LLM-inferred, not regex) with auto-fire cascade: T2 = passive hallucination scan, T3 = cross-family judge-panel (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable), T4 = full cascade + canonical-claim verifier (dispatches to `career-os.outreach-fact-check` for biographical claims) + unknown-unknown adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit**. Plain-English status surface — user never sees raw tier labels. Default: ON every fresh session. Toggle: `codi verify on/off/status/why`. Advanced opt-out for T4: `codi t4-auto on` (session-scoped, RED warning). Closes the biographical-outreach near-miss class via auto-T4 on any career-claim artifact.
+
+- **Protocol 9 — Auto-Handoff on Closure Detection** (`co-dialectic/SKILL.md` + `handoff/SKILL.md`). Auto-fires on session-closing words ("bye", "see you", "thank you", "handoff", "close session" — and natural-language equivalents). Writes a canonical session-end beacon at `~/.codialectic/hooks/session_end.json` (single multi-protocol JSON; per-protocol top-level keys: `"hygiene": {...}`, `"handoff": {...}`). Schema v1.0 — uuid-v4 session_id, model nested, honesty enum (`brutal`/`grounded`/`soft`).
+
+- **Protocol 10 — Honesty Selector** (`co-dialectic/SKILL.md` + `calibration-auditor/SKILL.md`). Three postures: `honesty grounded` (default, session start), `honesty brutal` (maximum challenge, no softening), `honesty soft` (momentum-first, minor concerns held). Status-line indicator appended for non-default postures (`🔪 honesty:brutal`, `🤝 honesty:soft`). T3+ auto-downgrade: when `honesty soft` is active and the output is a high-stakes artifact, silently upgrades to grounded for that single response. Backwards-compat alias policy for one minor version: `tone:brutal` / `tone:soft` / `tone:grounded` accepted and remapped.
+
+- **Protocol 11 — Agent-Swarm Default-On** (`co-dialectic/SKILL.md` + `fish-swarm/SKILL.md`). Replaces "fish swarm" terminology with "agent swarm" at the user surface. Auto-on at session start; user can disable with `codi swarm off` if too many parallel outputs are annoying. Sub-agent outputs skip Verify (Protocol 8); parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the user/world (T4 fires at the seam, not inside sub-agents).
+
+- **Protocol 12 — Hygiene Cycle** (`co-dialectic/SKILL.md` + `hygiene/SKILL.md`). Per-conversation immune cycle: **sweep + codify + reorg + merge + pull**. Operationalizes Constitution EMERGENT SYSTEM IMMUNITY invariant per unit-of-work. Closes the conversation by ensuring lessons land in `~/cyborg/*`, file sprawl is checked, brain-writes are merged + pushed, and the next conversation starts on fresh brain. Minimal 5-field schema in the session_end.json beacon; multi-protocol context note in example.
 
 ### Changed
 
-- **calibration-auditor/SKILL.md** (`3.1.0` → `3.1.1`): T3+ auto-downgrade interaction codified; LOW threshold tightened on brutal posture.
-- Version bumped: `3.5.1` → `4.1.0`.
+- **Welcome banner version** bumped `v3.5.1` → `v4.1.0` across all SKILL.md files.
+- **`hallucination-detector` / `judge-panel` / `unknown-unknown` skills** integrated as Protocol 8 dispatch targets (toggle controls applied at the protocol layer, not per-skill).
+- **`calibration-auditor/SKILL.md`** (`3.1.0` → `3.1.1`): T3+ auto-downgrade interaction codified; LOW threshold tightened on brutal posture.
+- **Plugin version** bumped: `4.0.0` → `4.1.0`.
+
+### Discipline
+
+All five protocols shipped through the build → judge → revise → re-judge cycle:
+- P8: APPROVE 87/100 · P9: APPROVE 91/100 · P10: APPROVE 91/100 · P11: APPROVE 84/100 · P12: APPROVE 91/100.
+- Post-merge: P10 had a v3.5.1 banner remnant (line 38 SKILL.md) — fixed in `e612afb`.
+- Spec contradictions on Protocol 11 sub-agent verification reconciled in `cef3aa0` (pre-merge spec cleanup).
 
 ---
 
