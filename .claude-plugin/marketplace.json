@@ -5,14 +5,14 @@
     "email": "thewhyman@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Prompt engineering plugins by Anand Vallamsetla"
+    "description": "Legacy mirror marketplace — canonical is Exponential-OS/agent-marketplace (@xos). This path still resolves for backwards compatibility."
   },
   "plugins": [
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v3 — LLM prompt optimizer + cross-family cascade-then-jury review (judge-panel) + hallucination detector. Socratic coaching, persona detection, context management, prompt improvement, and Defense-in-Depth verification across any AI.",
-      "version": "3.4.0",
+      "description": "Co-Dialectic v4.1.0 — LLM prompt optimizer + auto-verify by stakes (T0-T4) + auto-handoff on closure + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector + research-first mode + fish-swarm orchestration.",
+      "version": "4.1.0",
       "category": "productivity"
     },
     {
@@ -20,10 +20,10 @@
       "source": {
         "source": "url",
         "url": "https://github.com/Exponential-OS/career-os-plugin.git",
-        "sha": "b7956abbae67cf98307645c0ccc5034aad3c2ea6"
+        "sha": "690db081d4a2fd831ef853d86df318c124fbb6d4"
       },
-      "description": "AI-powered career management system. The operating system for your career — persistent memory, session capture, git-versioned data, full privacy. v0.24.0 file-only substrate + biographical-claim precheck.",
-      "version": "0.24.0",
+      "description": "Career OS v0.27.0 — AI-powered career management system. Persistent memory, session capture, git-versioned data, full privacy. outreach-fact-check (T4 immunity) + interviewer-research (panel prep automation).",
+      "version": "0.27.0",
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"
     }
