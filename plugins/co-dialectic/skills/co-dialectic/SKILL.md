@@ -442,7 +442,7 @@ When the tier classifier reaches T4:
 
 #### Composition with other protocols
 
-> **TODO:** Protocols 10 (honesty selector) and 11 (agent-swarm) ship in sibling v4.1 feature branches. Composition contracts described below resolve when those branches merge to main alongside this one. Until that joint merge, references to `honesty soft → grounded auto-downgrade` and `agent-swarm sub-agent skip-Verify` are forward specs.
+> Protocols 10 (Honesty Selector) and 11 (Agent-Swarm) are co-located in this same v4.1.0 release. Composition contracts (`honesty soft → grounded auto-downgrade` at T3+, `agent-swarm sub-agent skip-Verify` at T0/T1) are FUNCTIONAL as documented below — not forward specs.
 
 - **Protocol 11 (agent-swarm, v4.x):** Sub-agent outputs skip Verify. Parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the user/world. The seam is always where T4 can fire.
 - **Protocol 10 (honesty, v4.x):** At T3+, auto-verify silently downgrades `honesty soft` → `honesty grounded` for that response, even if the user set soft earlier. Grounded honesty is the minimum at T3 (architectural, load-bearing).
@@ -536,10 +536,7 @@ See calibration-auditor SKILL.md for full audit-behavior spec per honesty level.
 
 ## Protocol 11 — Agent-Swarm (default ON)
 
-> See v4.1 spec for full rationale, cost-warning prose, and confidence-MEDIUM ask format example.
-> Spec path: `~/.superset/worktrees/anand-career-os/Career-OS-Main-0427/WIP/prompt-engineering-in-action-product/co-dialectic/01_SPECS/v4.1-auto-verify-and-auto-handoff-2026-04-27.md`
-
-> TODO: After Protocol 10 (honesty rename) lands, this section's references to `tone` mode become `honesty` per Protocol 10. Composition with the honesty mode happens at the same dispatch layer.
+> See repo CHANGELOG entry for v4.1.0 for the full rationale and cost-warning prose.
 
 **Toggle:** `codi agent-swarm on/off`. **Default:** ON in ALL modes (Drive/Cruise/Demo/Quiet).
 

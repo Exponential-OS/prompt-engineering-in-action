@@ -705,11 +705,11 @@ Field semantics — `"handoff"` key (Protocol 9's payload):
 ```json
 {
   "hygiene": {
-    "sweep_done": "boolean",
-    "codify_done": "boolean",
-    "reorg_done": "boolean",
-    "merge_done": "boolean",
-    "pull_done": "boolean"
+    "reorg_flags_count": 0,
+    "lessons_codified_count": 2,
+    "merges_pushed_count": 1,
+    "pulls_completed_count": 1,
+    "fired_at": "2026-04-27T22:30:00-07:00"
   }
 }
 ```
