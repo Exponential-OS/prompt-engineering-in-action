@@ -534,6 +534,45 @@ See calibration-auditor SKILL.md for full audit-behavior spec per honesty level.
 
 ---
 
+## Protocol 11 — Agent-Swarm (default ON)
+
+> See v4.1 spec for full rationale, cost-warning prose, and confidence-MEDIUM ask format example.
+> Spec path: `~/.superset/worktrees/anand-career-os/Career-OS-Main-0427/WIP/prompt-engineering-in-action-product/co-dialectic/01_SPECS/v4.1-auto-verify-and-auto-handoff-2026-04-27.md`
+
+> TODO: After Protocol 10 (honesty rename) lands, this section's references to `tone` mode become `honesty` per Protocol 10. Composition with the honesty mode happens at the same dispatch layer.
+
+**Toggle:** `codi agent-swarm on/off`. **Default:** ON in ALL modes (Drive/Cruise/Demo/Quiet).
+
+**Two layers:**
+
+### 11a — Auto-route mechanical sub-tasks to fish-swarm
+
+When the parent identifies mechanical work (read, grep, count, file-rename, lookup, surgical edit, mechanical pattern-match — no synthesis), auto-route to fish-swarm. Pool order: Ollama (free local) → Gemini Flash → GPT-nano. **NEVER Haiku/Sonnet/Opus** for mechanical work — those are reserved for synthesis. **FAIL-HARD when no fish available** (don't silently fall back to expensive models).
+
+### 11b — Auto-fan-out independent legs
+
+When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE message with multiple parallel sub-agent calls. Where the runtime serializes tool calls, sub-agents run in rapid sequence rather than true simultaneity; protocol behavior is equivalent but latency benefit is runtime-dependent.
+
+**Decomposition heuristics (LLM-internal, not regex):**
+- Independent reads from different files → parallel
+- Independent diagnostic queries → parallel
+- Independent edits to non-overlapping files → parallel (NOT same file — coherence requires serial)
+- Sequential dependencies → serial
+- Synthesis after parallel reads → serial-after
+
+**Confidence rule:**
+- HIGH → fan out (parallel)
+- MEDIUM → ask: "These N legs look independent — fan out? (or serial)"
+- LOW → serial (safety default)
+
+**Cost cap:** T0/T1 NEVER fan out (cost > value). Hard cap 5 sub-agents per parent task.
+
+**Status line:** when fan-out happened in last response, show `agent-swarm:active`.
+
+**Composition with Protocol 8 (Auto-Verify):** sub-agent outputs SKIP Verify; the parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the world. Avoids triplicate cost.
+
+---
+
 ## Extended Features
 
 If you can read web pages or fetch URLs, enhanced features are available. Read the "For Agents" section at:
