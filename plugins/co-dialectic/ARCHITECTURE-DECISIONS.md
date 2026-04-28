@@ -38,7 +38,7 @@ These are HOW-WE-BUILD principles. They apply regardless of whether co-dialectic
 
 ### Decision 2 — Cyborg Substrate is NOT Imported (Decoupling)
 
-Co-dialectic ships standalone. A user installs co-dialectic via `/plugin install co-dialectic@thewhyman` (or future open-source marketplace) on a fresh Claude Code with NO `~/cyborg/`, NO `~/anand-career-os/`, NO `WIP/`, NO brain layer, NO GitHub Issues at thewhyman, and NO thewhyman-specific path. Co-dialectic must work end-to-end in that environment.
+Co-dialectic ships standalone. A user installs co-dialectic via `/plugin install co-dialectic@xos` (or future open-source marketplace) on a fresh Claude Code with NO `~/cyborg/`, NO `~/anand-career-os/`, NO `WIP/`, NO brain layer, NO GitHub Issues at thewhyman, and NO thewhyman-specific path. Co-dialectic must work end-to-end in that environment.
 
 The principles from Decision 1 are universal. The thewhyman *substrate* that implements them on Anand's machine is not. Co-dialectic source must never reach into that substrate.
 

@@ -9,7 +9,7 @@ PASS=0
 FAIL=0
 WARN=0
 CHECK_REMOTE=false
-REPO="https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
+REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 
 if [ "${1:-}" = "--remote" ]; then
     CHECK_REMOTE=true

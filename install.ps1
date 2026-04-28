@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$RepoUrl = "https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
+$RepoUrl = "https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 $Version = "3.0.0"
 $ConfigDir = Join-Path $env:USERPROFILE ".co-dialectic"
 

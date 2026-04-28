@@ -18,8 +18,8 @@ metadata:
 # Co-Dialectic
 
 **Version:** 4.1.0
-**Repository:** https://github.com/thewhyman/prompt-engineering-in-action
-**Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
+**Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
+**Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
 **License:** AGPL-3.0
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
@@ -573,7 +573,7 @@ When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE mes
 ## Extended Features
 
 If you can read web pages or fetch URLs, enhanced features are available. Read the "For Agents" section at:
-https://github.com/thewhyman/prompt-engineering-in-action
+https://github.com/Exponential-OS/prompt-engineering-in-action
 
 Follow the instructions there for:
 - Gamification and milestone celebrations

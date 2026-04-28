@@ -1,10 +1,10 @@
 #!/bin/bash
 # Co-Dialectic Manager
-# Usage: curl -fsSL https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main/install.sh | bash
 
 set -e
 
-REPO="https://raw.githubusercontent.com/thewhyman/prompt-engineering-in-action/main"
+REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 VERSION="3.2.0"
 CONFIG_DIR="$HOME/.co-dialectic"
 
@@ -265,7 +265,7 @@ echo "Scanning for AI environments..."
 echo ""
 
 # Directory-based plugin installs (Antigravity, Claude Code) — all 6 skills.
-# For Claude Code users the recommended path is `/plugin install co-dialectic@thewhyman`
+# For Claude Code users the recommended path is `/plugin install co-dialectic@xos`
 # via the marketplace; this installer path is the fallback for users not going
 # through the plugin marketplace (e.g., they hit install.sh from a gift prompt).
 if [ -d "$HOME/.gemini/antigravity/skills" ]; then
@@ -275,7 +275,7 @@ fi
 
 if [ -d "$HOME/.claude" ]; then
     mkdir -p "$HOME/.claude/skills"
-    install_plugin "$HOME/.claude/skills" "✅ Detected Claude Code. Install all 6 Co-Dialectic skills here? (For the plugin path use: /plugin install co-dialectic@thewhyman) [Y/n]" "y" "claude_code"
+    install_plugin "$HOME/.claude/skills" "✅ Detected Claude Code. Install all 6 Co-Dialectic skills here? (For the plugin path use: /plugin install co-dialectic@xos) [Y/n]" "y" "claude_code"
     echo ""
 fi
 

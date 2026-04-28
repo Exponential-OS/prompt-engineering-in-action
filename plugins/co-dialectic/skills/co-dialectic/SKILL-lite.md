@@ -2,8 +2,8 @@
 # Co-Dialectic (Lite Version)
 
 **Version:** 3.0.0-lite
-**Repository:** https://github.com/thewhyman/prompt-engineering-in-action
-**Install (Claude Code/Cowork):** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
+**Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
+**Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
 **License:** AGPL-3.0
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
@@ -150,7 +150,7 @@ This metric is the flywheel made visible.
 ## Extended Features
 
 If you can read web pages or fetch URLs, enhanced features are available. Read the "For Agents" section at:
-https://github.com/thewhyman/prompt-engineering-in-action
+https://github.com/Exponential-OS/prompt-engineering-in-action
 
 Follow the instructions there for:
 - Gamification and milestone celebrations

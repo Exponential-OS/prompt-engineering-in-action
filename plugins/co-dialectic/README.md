@@ -6,8 +6,8 @@ Works in Claude Code, Cowork, ChatGPT, Gemini, and any LLM that accepts a system
 No infrastructure. No subscriptions required.
 
 ```
-/plugin marketplace add thewhyman/agent-marketplace
-/plugin install co-dialectic@thewhyman
+/plugin marketplace add Exponential-OS/agent-marketplace
+/plugin install co-dialectic@xos
 ```
 
 ---
@@ -33,8 +33,8 @@ The name is the thesis. A monologue between you and one model is a closed loop w
 ## Install (60 seconds, no infrastructure)
 
 ```
-/plugin marketplace add thewhyman/agent-marketplace
-/plugin install co-dialectic@thewhyman
+/plugin marketplace add Exponential-OS/agent-marketplace
+/plugin install co-dialectic@xos
 ```
 
 That's it. Open Claude Code or Cowork; co-dialectic activates on every conversation.
