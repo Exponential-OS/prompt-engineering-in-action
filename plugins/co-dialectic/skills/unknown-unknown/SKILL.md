@@ -39,6 +39,11 @@ Also auto-activate (non-blocking suggestion) when:
 - A new concept is being named (user coins a phrase or framework)
 - A decision crosses domains (e.g., product + brand + legal)
 
+**Also auto-activate via Protocol 8 (Auto-Verify by Stakes, co-dialectic v4.1+):**
+- At T4 (irreversible/external-facing artifacts), Protocol 8 triggers an
+  unknown-unknown adjacency scan BEFORE the T4 explicit-confirm gate. See
+  **Auto-fire trigger** section below.
+
 ## What to do
 
 On trigger, enumerate candidate adjacencies by scanning these context sources, in order:
@@ -102,6 +107,36 @@ Want to extract into any of these? (say "extract to <slot>" or "extract to all")
 - **Cap at 5-7 adjacencies.** More is noise. Rank by actionability.
 - **Always end with the question.** The user decides what to extract. Peer parity (Dialectic Framework).
 - **Never auto-write to adjacent files.** This plugin surfaces; it doesn't codify. Codification is the Memory Curator (plugin #14) and Cross-Pollinator (plugin #9) territory.
+
+## Auto-fire trigger (Protocol 8 — co-dialectic v4.1+)
+
+**Protocol 8 (Auto-Verify by Stakes) dispatches to this skill at T4.
+No user command required.**
+
+| Tier | When it fires | Output disposition |
+|---|---|---|
+| T4 (irreversible/external-facing) | After canonical-claim precheck and hallucination scan, BEFORE the explicit-confirm gate | Top 3 adjacencies are appended inline to the RED preflight summary block. User sees them alongside the `🚀 ready to send — type 'send' to confirm` prompt. |
+
+**Why T4 specifically:** A T4 artifact is the highest-value moment for
+N-dimensional extraction. The artifact is about to leave the Cyborg and
+touch the external world — a person, a system, an audience. Cross-slot
+opportunities that the user isn't seeing (related WIPs, brand implications,
+IP candidates, network nodes that could help) are most actionable when
+surfaced RIGHT BEFORE the artifact ships, not after. This is the
+N-dimensional extraction lens (Constitution Meta-Learning) applied as a
+final gate.
+
+**Integration contract:** Protocol 8 runs the unknown-unknown scan on the
+T4 artifact in silent mode. The scan reads MEMORY catalog + workspace.manifest
+(per normal operation) and caps at 3 adjacencies for the preflight summary
+(not the full 5-7 that an explicit `unknown unknowns` invocation would show).
+Full adjacency detail available via `codi verify why` after the preflight.
+
+**Scope of auto-scan at T4:** The scan is non-blocking — it runs in parallel
+with the canonical-claim precheck and hallucination scoring, not sequentially.
+Result feeds into the preflight summary regardless of whether the other checks
+pass or fail. An adjacency surfaced at T4 is always actionable even if the
+artifact has claim flags that need fixing.
 
 ## Interaction with other plugins
 

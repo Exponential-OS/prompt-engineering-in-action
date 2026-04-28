@@ -59,9 +59,11 @@ escalate only on disagreement or low confidence. The literature:
   scoring
 - `calibration-auditor` may call judge-panel for sycophancy scoring when
   the caller requests an external verdict
+- **Protocol 8 (Auto-Verify by Stakes, co-dialectic v4.1+)** calls judge-panel
+  automatically at T3 and T4 — see **Auto-fire trigger** section below
 
-**Silent mode:** When called by another skill, emit only the JSON verdict.
-Skip the conversational framing.
+**Silent mode:** When called by another skill or by Protocol 8, emit only the
+JSON verdict. Skip the conversational framing.
 
 ## The cascade
 
@@ -350,6 +352,33 @@ the eval harness reports escalation_rate > 50% over 20 runs, the
 confidence threshold (currently 80) is too strict — loosen it, or the
 rubrics are ambiguous — sharpen them. This is P14 (self-evolution)
 applied to the cascade.
+
+## Auto-fire trigger (Protocol 8 — co-dialectic v4.1+)
+
+**Protocol 8 (Auto-Verify by Stakes) dispatches to this skill automatically
+at T3 and T4. No user command required.**
+
+| Tier | Rubric selected | Escalation threshold | What user sees |
+|---|---|---|---|
+| T3 (important-decision/hard-to-undo) | `spec-coherence` for architectural/spec artifacts; `hallucination` for factual artifacts — caller picks based on artifact shape | Standard (agree+high-conf skips escalation) | `✓ reviewed by 2 models` on pass; `⚠ review flagged` on fail |
+| T4 (irreversible/external-facing) | `hallucination` for general claims; biographical claims routed to `career-os.bio-claim-verifier` first (fallback to `hallucination` until that skill ships) | Standard | Result feeds into RED preflight summary; user must type 'send' to confirm |
+
+**Integration contract:** Protocol 8 invokes judge-panel at T3 via the
+fish-swarm dispatcher (same harness; fish-swarm rubric routes the T3 call
+through the cascade). At T4, invoked directly for post-flight scoring.
+
+**FAIL-HARD (T3 dispatch):** If zero fish are reachable when Protocol 8
+triggers T3 auto-verify, the response is BLOCKED per the FAIL-HARD
+invariant. Protocol 8 surfaces the fish-school remediation block. It does
+NOT silently absorb the T3 cascade into Claude's own context — same-model
+self-review defeats the cross-family guarantee this skill exists to enforce.
+
+**Cost discipline for auto-fire:** Protocol 8 only reaches T3 on artifacts
+where the classifier reaches HIGH or MEDIUM confidence that the artifact is
+architectural/load-bearing/hard-to-undo. The vast majority of conversational
+turns are T0/T1 and never reach judge-panel. Expected cascade rate: T3 fires
+~5-15% of turns; T4 fires ~1-5%. Token budget is consistent with OPERATIONAL
+DISCIPLINE right-sizing.
 
 ## Relationship to other skills
 
