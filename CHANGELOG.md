@@ -4,6 +4,22 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.1.0] — 2026-04-27
+
+**Codename:** Protocol 10 — Honesty Selector.
+
+### Added
+
+- **Protocol 10 — Honesty Selector** (`co-dialectic/SKILL.md`). Three postures: `honesty grounded` (default, session start), `honesty brutal` (maximum challenge, no softening), `honesty soft` (momentum-first, minor concerns held). Status-line indicator appended for non-default postures (`🔪 honesty:brutal`, `🤝 honesty:soft`). T3+ auto-downgrade: when `honesty soft` is active and the output is a high-stakes artifact, silently upgrades to grounded for that single response.
+- Backwards-compat alias policy for one minor version: `tone:brutal` / `tone:soft` / `tone:grounded` accepted as aliases and immediately remapped.
+
+### Changed
+
+- **calibration-auditor/SKILL.md** (`3.1.0` → `3.1.1`): T3+ auto-downgrade interaction codified; LOW threshold tightened on brutal posture.
+- Version bumped: `3.5.1` → `4.1.0`.
+
+---
+
 ## [3.3.0] — 2026-04-24
 
 **Codename:** Anti-drift. Command rename + swarm reasoning primitive.
