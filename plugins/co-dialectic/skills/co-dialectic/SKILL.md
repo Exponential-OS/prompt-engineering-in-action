@@ -35,7 +35,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only:**
 
-> **Co-Dialectic v3.5.1 active.**
+> **Co-Dialectic v4.1.0 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:
