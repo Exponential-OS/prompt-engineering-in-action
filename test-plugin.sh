@@ -11,9 +11,14 @@ WARN=0
 CHECK_REMOTE=false
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 
-if [ "${1:-}" = "--remote" ]; then
-    CHECK_REMOTE=true
-fi
+CHECK_SMOKE=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --remote)        CHECK_REMOTE=true ;;
+        --smoke-install) CHECK_SMOKE=true ;;
+    esac
+done
 
 pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
@@ -186,6 +191,128 @@ if [ "$CHECK_REMOTE" = true ]; then
     echo "=== 14. Scarf gateway reachable ==="
     SCARF_STATUS=$(curl -fsSL -o /dev/null -w "%{http_code}" "https://thewhyman.gateway.scarf.sh/install.sh" 2>/dev/null || echo "000")
     [ "$SCARF_STATUS" = "200" ] && pass "Scarf gateway (HTTP $SCARF_STATUS)" || warn "Scarf gateway (HTTP $SCARF_STATUS)"
+fi
+
+# -----------------------------------------------
+# 14. Spec / CHANGELOG consistency
+# -----------------------------------------------
+echo ""
+echo "=== 14. Spec / CHANGELOG consistency ==="
+
+# Architecture decisions doc (plugin PRD) must exist
+[ -f "plugins/co-dialectic/ARCHITECTURE-DECISIONS.md" ] \
+    && pass "ARCHITECTURE-DECISIONS.md exists" \
+    || fail "ARCHITECTURE-DECISIONS.md missing"
+
+# CHANGELOG must have an entry for the current version
+grep -q "^\#\# \[${PLG_VER}\]" CHANGELOG.md 2>/dev/null \
+    && pass "CHANGELOG.md has [${PLG_VER}] entry" \
+    || fail "CHANGELOG.md missing [${PLG_VER}] entry"
+
+# Decision-2 compliance: no hardcoded cyborg-substrate paths inside skill source.
+# Patterns must be path-like (tilde-anchored or specific known WIP dirs) to
+# avoid false positives on generic prose like "brain layer" or "WIP/specs/".
+# waky-waky excluded: full hook-callback refactor tracked at anand-career-os#27
+DECISION2=$(grep -rn \
+    -e '~/cyborg/' \
+    -e '~/anand-career-os/' \
+    -e 'brain/identity/' \
+    -e 'brain/network/' \
+    -e 'brain/sessions/' \
+    -e 'brain/projects/' \
+    -e 'WIP/career-os-product' \
+    -e 'WIP/branding-product' \
+    -e 'WIP/prompt-engineering-in-action-product' \
+    plugins/co-dialectic/skills/calibration-auditor/SKILL.md \
+    plugins/co-dialectic/skills/co-dialectic/SKILL.md \
+    plugins/co-dialectic/skills/fish-swarm/SKILL.md \
+    plugins/co-dialectic/skills/hallucination-detector/SKILL.md \
+    plugins/co-dialectic/skills/handoff/SKILL.md \
+    plugins/co-dialectic/skills/judge-panel/SKILL.md \
+    plugins/co-dialectic/skills/unknown-unknown/SKILL.md \
+    plugins/co-dialectic/skills/judge-panel/scripts/ 2>/dev/null \
+    | grep -v '^Binary' \
+    | grep -v 'never references\|does not reference\|must not reference\|❌\|Forbidden\|forbidden' \
+    | head -5 || true)
+[ -z "$DECISION2" ] \
+    && pass "No Decision-2 substrate violations in skill source" \
+    || fail "Decision-2 violation (forbidden hardcoded path in skill): $(echo "$DECISION2" | head -1)"
+
+# -----------------------------------------------
+# 15. Marketplace version sync (auto-update if local repo present)
+# -----------------------------------------------
+echo ""
+echo "=== 15. Marketplace version sync ==="
+MKT_REPO="$HOME/aiprojects/agent-marketplace"
+MKT_FILE="$MKT_REPO/.claude-plugin/marketplace.json"
+
+if [ ! -d "$MKT_REPO" ]; then
+    warn "agent-marketplace not found at $MKT_REPO — skipping sync"
+else
+    MKT_CO_VER=$(python3 -c "
+import json, sys
+data = json.load(open('$MKT_FILE'))
+plugins = {p['name']: p for p in data.get('plugins', [])}
+print(plugins.get('co-dialectic', {}).get('version', ''))
+" 2>/dev/null || echo "")
+
+    if [ -z "$MKT_CO_VER" ]; then
+        fail "Could not read co-dialectic version from $MKT_FILE"
+    elif [ "$MKT_CO_VER" = "$PLG_VER" ]; then
+        pass "agent-marketplace co-dialectic version matches ($PLG_VER)"
+    else
+        echo "  SYNC: marketplace=$MKT_CO_VER → plugin=$PLG_VER — auto-updating..."
+        PLUGIN_DESC=$(python3 -c "import json; print(json.load(open('plugins/co-dialectic/.claude-plugin/plugin.json'))['description'])" 2>/dev/null || echo "")
+        python3 - "$MKT_FILE" "$PLG_VER" "$PLUGIN_DESC" <<'PYEOF'
+import json, sys
+path, new_ver, new_desc = sys.argv[1], sys.argv[2], sys.argv[3]
+data = json.load(open(path))
+for p in data.get('plugins', []):
+    if p['name'] == 'co-dialectic':
+        p['version'] = new_ver
+        if new_desc:
+            p['description'] = new_desc
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PYEOF
+        pass "agent-marketplace updated $MKT_CO_VER → $PLG_VER (commit and push needed)"
+        warn "Remember to commit $MKT_FILE and push agent-marketplace"
+    fi
+fi
+
+# -----------------------------------------------
+# 16. Install smoke test (--smoke-install)
+# -----------------------------------------------
+if [ "$CHECK_SMOKE" = true ]; then
+    echo ""
+    echo "=== 16. Install smoke test ==="
+    TMP_HOME=$(mktemp -d)
+    mkdir -p "$TMP_HOME/.claude"
+    echo "  Temp HOME: $TMP_HOME"
+
+    # Auto-responses: 1=Install, 1=Standard, y=Claude Code, n for rest
+    ANSWERS=$'1\n1\ny\nn\nn\nn\nn\nn\n'
+    if HOME="$TMP_HOME" bash install.sh <<< "$ANSWERS" > /tmp/co-dialectic-smoke.log 2>&1; then
+        pass "install.sh exited 0"
+    else
+        fail "install.sh exited non-zero (see /tmp/co-dialectic-smoke.log)"
+    fi
+
+    # Extract skill names from install.sh PLUGIN_SKILLS array
+    SMOKE_SKILLS=$(sed -n '/PLUGIN_SKILLS=(/,/^)/p' install.sh | grep '"[a-z]' | tr -d '"' | tr -d ' ')
+    SKILL_FAIL=0
+    for skill in $SMOKE_SKILLS; do
+        if [ -f "$TMP_HOME/.claude/skills/$skill/SKILL.md" ]; then
+            pass "Installed: $skill"
+        else
+            fail "Not installed: $skill"
+            SKILL_FAIL=$((SKILL_FAIL + 1))
+        fi
+    done
+    [ "$SKILL_FAIL" -eq 0 ] && pass "All skills landed in temp HOME" || fail "$SKILL_FAIL skill(s) missing after install"
+
+    rm -rf "$TMP_HOME"
 fi
 
 # -----------------------------------------------

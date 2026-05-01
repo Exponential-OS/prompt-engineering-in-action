@@ -36,7 +36,7 @@ If a CLI is INSTALLED but fails (auth, runtime, timeout, non-zero exit), the
 juror returns the CLI error — NO fallback fires. Auth/runtime errors are signals
 to debug the CLI setup, not silently masked via paid API.
 
-Reads model pins from ~/cyborg/.env (no API keys consumed; pins only).
+Reads model pins from $CO_DIALECTIC_ENV (default: ~/.co-dialectic/.env; no API keys consumed; pins only).
 
 Usage:
     python3 judge_panel.py --rubric hallucination --artifact "..."
@@ -105,9 +105,9 @@ def _init_approval_from_env() -> None:
 _init_approval_from_env()
 
 # ---------------------------------------------------------------------------
-# Config — model pins loaded from ~/cyborg/.env (authoritative per P20)
+# Config — model pins loaded from CO_DIALECTIC_ENV (default: ~/.co-dialectic/.env; authoritative per P20)
 
-CYBORG_ENV = Path.home() / "cyborg" / ".env"
+CYBORG_ENV = Path(os.environ.get("CO_DIALECTIC_ENV", str(Path.home() / ".co-dialectic" / ".env")))
 
 
 def _load_env(path: Path) -> dict:

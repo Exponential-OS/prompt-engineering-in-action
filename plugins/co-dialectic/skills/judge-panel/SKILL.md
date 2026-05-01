@@ -155,7 +155,7 @@ juror returns `flags=[API_FALLBACK_NO_KEY]`. **API fallback bills the
 user's pay-per-token API account, not the flat-fee Pro subscription** —
 this is why approval is explicit and per-lane.
 
-### Models used (pinned, read from `~/cyborg/.env`)
+### Models used (pinned, read from `$CO_DIALECTIC_ENV` — default: `~/.co-dialectic/.env`)
 
 | Stage | Model | Family | Role | Notes |
 |---|---|---|---|---|
@@ -176,7 +176,7 @@ the tier boundary inside Google AND remaining cross-family vs. both small
 judges and the Claude author.
 
 **Override the small-OpenAI model** via `JUDGE_PANEL_OPENAI_OAUTH_MODEL`
-(in `~/cyborg/.env` or shell env). When OpenAI ships a ChatGPT-permitted
+(in `$CO_DIALECTIC_ENV` or shell env). When OpenAI ships a ChatGPT-permitted
 mini/nano tier, set the pin and the small-OpenAI cost drops automatically.
 
 **Cross-family guarantee:** the two small judges are from different

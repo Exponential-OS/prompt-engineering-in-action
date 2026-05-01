@@ -53,16 +53,13 @@ On trigger, enumerate candidate adjacencies by scanning these context sources, i
 Read the user's memory index. Candidate paths (skip any that don't exist):
 
 - `~/.claude/agent-memory/*/MEMORY.md` — agent-scoped memory indices
-- `~/anand-career-os/.career-os/memory/MEMORY.md` — Career OS memory
-- `~/anand-career-os/.career-os/memory/identity.md`
-- `~/anand-career-os/.career-os/memory/professional-brand.md`
-- `~/anand-career-os/.career-os/memory/content-distribution-flywheel.md`
+- Workspace-registered memory files via `$CO_DIALECTIC_MEMORY_DIR` (workspace adapter provides canonical paths: identity, professional-brand, content-flywheel, etc.)
 
 ### 2. Active workstreams
 
-Read `~/anand-career-os/workspace.manifest.yaml` to enumerate active WIPs. Each entry is a candidate adjacency.
+Read workspace manifest if provided via `$CO_DIALECTIC_WORKSPACE_MANIFEST`. Each entry is a candidate adjacency.
 
-Also glob `~/anand-career-os/WIP/*-product/` — the folder names alone reveal adjacencies (agencyOS, xOS, co-dialectic, humanOS, familyOS, etc.).
+Also scan `$CO_DIALECTIC_WIP_DIR` if set — the folder names reveal adjacencies (agencyOS, xOS, co-dialectic, humanOS, familyOS, etc.). On a fresh OSS install with no adapter, skip this step gracefully.
 
 ### 3. Current conversation context
 
