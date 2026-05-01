@@ -175,6 +175,41 @@ fetch_skill_extras() {
     esac
 }
 
+download_skills_direct() {
+    # Download all PLUGIN_SKILLS to $1/$skill/SKILL.md without prompting.
+    # Used as the silent fallback when `claude plugin install` is unavailable
+    # or the user declines the plugin path.
+    local target_base="$1"
+    local tool_name="$2"
+    local skill skill_src skill_dir
+    local failed=0
+    for skill in "${PLUGIN_SKILLS[@]}"; do
+        skill_dir="$target_base/$skill"
+        mkdir -p "$skill_dir"
+        if [ "$skill" = "co-dialectic" ] && [ "$SELECTED_VER" = "lite" ]; then
+            skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL-lite.md"
+        else
+            skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL.md"
+        fi
+        if curl -fsSL "$skill_src" -o "$skill_dir/SKILL.md"; then
+            echo "   ✅ $skill_dir/SKILL.md"
+            fetch_skill_extras "$skill" "$skill_dir"
+        else
+            echo "   ❌ failed to fetch $skill/SKILL.md"
+            failed=$((failed + 1))
+        fi
+    done
+    if [ "$failed" -eq 0 ]; then
+        echo "   ✅ Installed ${#PLUGIN_SKILLS[@]} skills to $target_base/"
+        INSTALLED=true
+        INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+    else
+        echo "   ⚠️  Installed with $failed skill download failure(s) — re-run installer to retry."
+        INSTALLED=true
+        INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name-partial"
+    fi
+}
+
 install_plugin() {
     # Fetch all PLUGIN_SKILLS into $target_base/<skill-name>/SKILL.md .
     # For the core 'co-dialectic' skill, honor the earlier lite-vs-full choice
@@ -276,8 +311,30 @@ if [ -d "$HOME/.gemini/antigravity/skills" ]; then
 fi
 
 if [ -d "$HOME/.claude" ]; then
-    mkdir -p "$HOME/.claude/skills"
-    install_plugin "$HOME/.claude/skills" "✅ Detected Claude Code. Install all 6 Co-Dialectic skills here? (For the plugin path use: /plugin install co-dialectic@xos) [Y/n]" "y" "claude_code"
+    if command -v claude > /dev/null 2>&1; then
+        # Claude CLI present — prefer repo-native plugin install; fall back to direct download
+        _use_direct=true
+        if ask_user "✅ Detected Claude Code. Install via 'claude plugin install co-dialectic@xos' (recommended)? [Y/n]" "y"; then
+            claude plugin marketplace add Exponential-OS/agent-marketplace > /dev/null 2>&1 || true
+            if claude plugin install co-dialectic@xos 2>/dev/null; then
+                echo "   ✅ Installed via claude plugin (co-dialectic@xos)"
+                INSTALLED=true
+                INSTALLED_TOOLS="$INSTALLED_TOOLS,claude_code"
+                _use_direct=false
+            else
+                echo "   ⚠️  Plugin install unavailable. Falling back to direct download..."
+            fi
+        else
+            echo "   ℹ️  Skipping plugin install — using direct download..."
+        fi
+        if [ "$_use_direct" = true ]; then
+            mkdir -p "$HOME/.claude/skills"
+            download_skills_direct "$HOME/.claude/skills" "claude_code"
+        fi
+    else
+        mkdir -p "$HOME/.claude/skills"
+        install_plugin "$HOME/.claude/skills" "✅ Detected Claude Code. Install all ${#PLUGIN_SKILLS[@]} skills here? (run 'claude plugin install co-dialectic@xos' if you have the CLI) [Y/n]" "y" "claude_code"
+    fi
     echo ""
 fi
 
