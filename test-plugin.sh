@@ -392,6 +392,17 @@ else
     else
         fail "Plugin cache: Protocol 12 (hygiene) found — remove from source skills/"
     fi
+
+    # Naming-collision workaround: the plugin system does not register a skill
+    # whose name matches the plugin itself. install.sh curls the main skill to
+    # ~/.claude/skills/ after a successful plugin install. Simulate + verify that step.
+    mkdir -p "$TMP_HOME_PI/.claude/skills/co-dialectic"
+    if curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" \
+            -o "$TMP_HOME_PI/.claude/skills/co-dialectic/SKILL.md" 2>/dev/null; then
+        pass "Plugin install: co-dialectic skill registered at ~/.claude/skills/ (naming-collision fix)"
+    else
+        fail "Plugin install: could not fetch co-dialectic/SKILL.md from remote — codi on will not work"
+    fi
 fi
 
 # -----------------------------------------------

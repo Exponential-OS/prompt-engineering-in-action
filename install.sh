@@ -318,6 +318,16 @@ if [ -d "$HOME/.claude" ]; then
             claude plugin marketplace add Exponential-OS/agent-marketplace > /dev/null 2>&1 || true
             if claude plugin install co-dialectic@xos 2>/dev/null; then
                 echo "   ✅ Installed via claude plugin (co-dialectic@xos)"
+                # The plugin system does not register a skill whose name matches
+                # the plugin itself (naming collision). Install the main skill
+                # directly so `codi on` resolves correctly.
+                mkdir -p "$HOME/.claude/skills/co-dialectic"
+                if curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" \
+                        -o "$HOME/.claude/skills/co-dialectic/SKILL.md" 2>/dev/null; then
+                    echo "   ✅ co-dialectic skill registered at ~/.claude/skills/"
+                else
+                    echo "   ⚠️  Could not fetch main skill file — run installer again to retry"
+                fi
                 INSTALLED=true
                 INSTALLED_TOOLS="$INSTALLED_TOOLS,claude_code"
                 _use_direct=false
