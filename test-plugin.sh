@@ -12,11 +12,13 @@ CHECK_REMOTE=false
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 
 CHECK_SMOKE=false
+CHECK_PLUGIN_INSTALL=false
 
 for arg in "$@"; do
     case "$arg" in
-        --remote)        CHECK_REMOTE=true ;;
-        --smoke-install) CHECK_SMOKE=true ;;
+        --remote)          CHECK_REMOTE=true ;;
+        --smoke-install)   CHECK_SMOKE=true ;;
+        --plugin-install)  CHECK_PLUGIN_INSTALL=true ;;
     esac
 done
 
@@ -322,6 +324,72 @@ if [ "$CHECK_SMOKE" = true ]; then
         pass "Protocol 12 (hygiene) correctly absent from fresh install"
     else
         fail "Protocol 12 (hygiene) found in fresh install — stale PLUGIN_SKILLS entry"
+    fi
+fi
+
+# -----------------------------------------------
+# 17. Plugin install sandbox (--plugin-install)
+#     Exercises the `claude plugin install` path in an isolated HOME —
+#     the code path used by `/plugin install co-dialectic@xos`.
+#     Registers the local repo as a temporary marketplace, installs, and
+#     verifies the plugin cache matches what users receive via the CLI.
+# -----------------------------------------------
+if [ "$CHECK_PLUGIN_INSTALL" = true ]; then
+    echo ""
+    echo "=== 17. Plugin install sandbox (claude plugin install) ==="
+
+    if ! command -v claude > /dev/null 2>&1; then
+        warn "claude CLI not found — skipping plugin install sandbox"
+    else
+        TMP_HOME_PI=$(mktemp -d)
+        trap 'rm -rf "$TMP_HOME_PI"' EXIT
+        echo "  Temp HOME: $TMP_HOME_PI"
+
+        REPO_ABS="$(cd "$(dirname "$0")" && pwd)"
+        MKT_NAME=$(python3 -c "import json; print(json.load(open('.claude-plugin/marketplace.json'))['name'])")
+
+        # Register local repo as marketplace
+        if HOME="$TMP_HOME_PI" claude plugin marketplace add "$REPO_ABS" > /tmp/co-dialectic-plugin-install.log 2>&1; then
+            pass "marketplace add local repo (name: $MKT_NAME)"
+        else
+            fail "marketplace add failed (see /tmp/co-dialectic-plugin-install.log)"
+        fi
+
+        # Install plugin from local marketplace
+        if HOME="$TMP_HOME_PI" claude plugin install "co-dialectic@$MKT_NAME" >> /tmp/co-dialectic-plugin-install.log 2>&1; then
+            pass "plugin install co-dialectic@$MKT_NAME"
+        else
+            fail "plugin install failed (see /tmp/co-dialectic-plugin-install.log)"
+        fi
+
+        # Locate the plugin cache for this version
+        PI_CACHE="$TMP_HOME_PI/.claude/plugins/cache/$MKT_NAME/co-dialectic/$PLG_VER/skills"
+
+        # Verify all source skills landed in the plugin cache
+        PI_FAIL=0
+        for skill in $(ls plugins/co-dialectic/skills/); do
+            if [ -f "$PI_CACHE/$skill/SKILL.md" ]; then
+                pass "Plugin cache: $skill/SKILL.md"
+            else
+                fail "Plugin cache: $skill/SKILL.md missing"
+                PI_FAIL=$((PI_FAIL + 1))
+            fi
+        done
+        [ "$PI_FAIL" -eq 0 ] && pass "All skills in plugin cache" || fail "$PI_FAIL skill(s) missing from plugin cache"
+
+        # Verify judge_panel.py hook is present (shipped in source, served via plugin path)
+        if [ -f "$PI_CACHE/judge-panel/scripts/judge_panel.py" ]; then
+            pass "Plugin cache: judge-panel hook (scripts/judge_panel.py)"
+        else
+            fail "Plugin cache: judge-panel hook missing"
+        fi
+
+        # Protocol 12 / hygiene must be absent from the plugin cache
+        if [ ! -d "$PI_CACHE/hygiene" ]; then
+            pass "Plugin cache: Protocol 12 (hygiene) correctly absent"
+        else
+            fail "Plugin cache: Protocol 12 (hygiene) found — remove from source skills/"
+        fi
     fi
 fi
 
