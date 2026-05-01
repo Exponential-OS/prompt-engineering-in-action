@@ -212,8 +212,9 @@ grep -q "^\#\# \[${PLG_VER}\]" CHANGELOG.md 2>/dev/null \
 # Decision-2 compliance: no hardcoded cyborg-substrate paths inside skill source.
 # Patterns must be path-like (tilde-anchored or specific known WIP dirs) to
 # avoid false positives on generic prose like "brain layer" or "WIP/specs/".
-# waky-waky excluded: full hook-callback refactor tracked at anand-career-os#27
-DECISION2=$(grep -rn \
+# waky-waky auto-excluded via --exclude-dir: full hook-callback refactor tracked at anand-career-os#27
+DECISION2_ALL=$(grep -rn \
+    --exclude-dir=waky-waky \
     -e '~/cyborg/' \
     -e '~/anand-career-os/' \
     -e 'brain/identity/' \
@@ -223,20 +224,15 @@ DECISION2=$(grep -rn \
     -e 'WIP/career-os-product' \
     -e 'WIP/branding-product' \
     -e 'WIP/prompt-engineering-in-action-product' \
-    plugins/co-dialectic/skills/calibration-auditor/SKILL.md \
-    plugins/co-dialectic/skills/co-dialectic/SKILL.md \
-    plugins/co-dialectic/skills/fish-swarm/SKILL.md \
-    plugins/co-dialectic/skills/hallucination-detector/SKILL.md \
-    plugins/co-dialectic/skills/handoff/SKILL.md \
-    plugins/co-dialectic/skills/judge-panel/SKILL.md \
-    plugins/co-dialectic/skills/unknown-unknown/SKILL.md \
-    plugins/co-dialectic/skills/judge-panel/scripts/ 2>/dev/null \
+    plugins/co-dialectic/skills/ 2>/dev/null \
     | grep -v '^Binary' \
     | grep -v 'never references\|does not reference\|must not reference\|❌\|Forbidden\|forbidden' \
-    | head -5 || true)
+    || true)
+DECISION2_COUNT=$(echo "$DECISION2_ALL" | grep -c . || true)
+DECISION2=$(echo "$DECISION2_ALL" | head -5)
 [ -z "$DECISION2" ] \
     && pass "No Decision-2 substrate violations in skill source" \
-    || fail "Decision-2 violation (forbidden hardcoded path in skill): $(echo "$DECISION2" | head -1)"
+    || fail "Decision-2: $DECISION2_COUNT violation(s) found (showing up to 5): $(echo "$DECISION2" | head -1)"
 
 # -----------------------------------------------
 # 15. Marketplace version sync (auto-update if local repo present)
@@ -289,6 +285,8 @@ if [ "$CHECK_SMOKE" = true ]; then
     echo "=== 16. Install smoke test ==="
     TMP_HOME=$(mktemp -d)
     mkdir -p "$TMP_HOME/.claude"
+    # Guaranteed cleanup on any exit (success, fail, or unexpected error)
+    trap 'rm -rf "$TMP_HOME"' EXIT
     echo "  Temp HOME: $TMP_HOME"
 
     # Auto-responses: 1=Install, 1=Standard, y=Claude Code, n for rest
@@ -311,8 +309,6 @@ if [ "$CHECK_SMOKE" = true ]; then
         fi
     done
     [ "$SKILL_FAIL" -eq 0 ] && pass "All skills landed in temp HOME" || fail "$SKILL_FAIL skill(s) missing after install"
-
-    rm -rf "$TMP_HOME"
 fi
 
 # -----------------------------------------------
