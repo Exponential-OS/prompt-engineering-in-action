@@ -10,14 +10,14 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.2.0"
+  version: "4.2.1"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 4.2.0
+**Version:** 4.2.1
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -40,7 +40,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only:**
 
-> **Co-Dialectic v4.2.0 active.**
+> **Co-Dialectic v4.2.1 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:

@@ -4,6 +4,24 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.2.1] — 2026-04-30
+
+**Codename:** Naming-collision fix — `claude plugin install co-dialectic@xos` now fully activates `codi on`.
+
+### Fixed
+
+- **Plugin naming-collision workaround.** Claude Code's plugin system does not register a skill whose directory name matches the plugin name. After `claude plugin install`, the main `co-dialectic/SKILL.md` was silently absent from `~/.claude/skills/`, causing `codi on` to fail. `install.sh` now curls the skill directly into `~/.claude/skills/co-dialectic/SKILL.md` immediately after a successful plugin install. The §17 smoke test validates this end-to-end.
+- **`download_skills_direct()` helper.** New prompt-free fallback in `install.sh` for when `claude plugin install` is unavailable or the user opts out. Prevents the ANSWERS-stream token-consumption bug that caused skills to be silently skipped when falling back to direct download.
+- **§17 CI check always-on.** Removed `--plugin-install` flag gate; §17 (plugin install sandbox) runs unconditionally with a `command -v claude` guard.
+
+### Changed
+
+- **`plugin.json` version** bumped `4.2.0` → `4.2.1`.
+- **`install.sh` version** bumped `4.2.0` → `4.2.1`.
+- **`co-dialectic/SKILL.md`** — frontmatter + Protocol 0 welcome banner bumped to `4.2.1`.
+
+---
+
 ## [4.2.0] — 2026-04-30
 
 **Codename:** Protocol 12 removal — clean boundary between codi kernel and workspace adapters.

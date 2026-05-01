@@ -5,10 +5,10 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.2.0"
+VERSION="4.2.1"
 CONFIG_DIR="$HOME/.co-dialectic"
 
-# Co-Dialectic plugin skill inventory (v4.2.0). Shared by install + uninstall.
+# Co-Dialectic plugin skill inventory (v4.2.1). Shared by install + uninstall.
 # Append a new skill name here when a new skill is added to the plugin.
 # Skills that ship executable helpers also need an entry in fetch_skill_extras().
 PLUGIN_SKILLS=(
