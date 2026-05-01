@@ -4,6 +4,31 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.2.0] — 2026-04-30
+
+**Codename:** Protocol 12 removal — clean boundary between codi kernel and workspace adapters.
+
+### Removed
+
+- **Protocol 12 — Hygiene Cycle** (`skills/hygiene/SKILL.md` + `example-session-end.json`) deleted.
+  Root cause: Protocol 12 referenced `~/cyborg/*`, `~/anand-career-os/brain/`, and `git -C ~/cyborg` commands — all thewhyman-specific substrate paths inside a public open-source plugin. Violates Architecture Decision 2 (no cyborg substrate content inside co-dialectic SKILL.md).
+  Hygiene (sweep/codify/reorg/merge/pull) is a workspace-adapter responsibility. Codi emits the `session_end.json` beacon; workspace adapters consume it and run their own hygiene. Codi does not prescribe the substrate.
+
+### Changed
+
+- **Protocol 8 — UX vocabulary cleanup.** Tier labels renamed from raw `T0-T4` notation to plain-English (`Safe → Private → Shared → Significant → Live`) at the user-facing surface. Internal tier classifier unchanged; only the user-visible language updated.
+- **`plugin.json` version** bumped `4.1.0` → `4.2.0`. Description updated to remove hygiene cycle reference and adopt plain-English tier labels.
+- **`install.sh` version** bumped `4.1.0` → `4.2.0`.
+- **`handoff/SKILL.md`** — removed Protocol 12 hygiene-key from multi-protocol-write contract; schema note simplified.
+- **`co-dialectic/SKILL.md` Protocol 4 forward-ref** — removed Protocol 12 hygiene pointer.
+- **`ARCHITECTURE-DECISIONS.md`** — Decision 5 added: documents the removal, the principled boundary, anti-patterns, and the workspace-adapter pattern for future hygiene implementations.
+
+### Architecture
+
+- **Decision 5** codifies the kernel/adapter split: codi captures and emits (Protocol 9 beacon); workspace adapters decide how and where to persist. Any hygiene implementation ships as a workspace-registered hook consuming `session_end.json` — zero codi changes needed.
+
+---
+
 ## [4.1.0] — 2026-04-27
 
 **Codename:** Five-protocol release — Auto-Verify · Auto-Handoff · Honesty Selector · Agent-Swarm · Hygiene.

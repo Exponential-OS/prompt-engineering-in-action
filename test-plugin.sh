@@ -112,8 +112,8 @@ fi
 # -----------------------------------------------
 echo ""
 echo "=== 8. Install script paths ==="
-# Extract download paths from install.sh (lines with $REPO/)
-for path in $(grep -o '\$REPO/[^ "]*' install.sh | sed 's/\$REPO\///' | sort -u); do
+# Extract static download paths from install.sh (lines with $REPO/), skip loop-variable paths (e.g. $skill)
+for path in $(grep -o '\$REPO/[^ "]*' install.sh | sed 's/\$REPO\///' | grep -v '\$' | sort -u); do
     [ -f "$path" ] && pass "$path" || fail "$path missing locally"
 done
 
@@ -162,6 +162,7 @@ STALE=$(grep -rn 'co-dialectic/SKILL' README.md install.sh install.ps1 2>/dev/nu
     | grep -v '\$HOME' \
     | grep -v '\$ClaudePath' \
     | grep -v '\$AntigravityPath' \
+    | grep -v '\$target_base' \
     | grep -v 'gemini/antigravity' \
     | grep -v '\.claude/skills' || true)
 [ -z "$STALE" ] && pass "no stale co-dialectic/ refs" || fail "stale refs found: $STALE"
