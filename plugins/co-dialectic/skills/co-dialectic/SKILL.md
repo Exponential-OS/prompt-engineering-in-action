@@ -10,14 +10,14 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.1.0"
+  version: "4.2.0"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 4.1.0
+**Version:** 4.2.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -32,7 +32,7 @@ These protocols are ALWAYS ACTIVE from the moment this file is loaded. No activa
 
 **Protocol 7: Research-First Toggle** is listed below with all others. Toggle defaults are mode-scoped; session overrides via `codi research on/off`.
 
-**Protocol 8: Auto-Verify by Stakes** is listed below. Default ON. Every substantive output is internally classified T0-T4 and the appropriate verification stack fires automatically before emit. Toggle: `codi verify off`. The user never sees tier labels — only plain-English status messages when verification occurs.
+**Protocol 8: Auto-Verify by Stakes** is listed below. Default ON. Every substantive output is internally classified by stakes (Safe → Private → Shared → Significant → Live) and the appropriate verification stack fires automatically before emit. Toggle: `codi verify off`. The user never sees tier labels — only plain-English status messages when verification occurs.
 
 ### Protocol 0: Initialization / First Contact
 
@@ -40,7 +40,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only:**
 
-> **Co-Dialectic v4.1.0 active.**
+> **Co-Dialectic v4.2.0 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:
@@ -350,7 +350,7 @@ No research gate fires. Codi operates in current mode (may ask human without res
 - `codi verify off` — disable for the session (not recommended; P13 + reputation risk)
 - `codi verify on` — re-enable
 - `codi verify status` — show current artifact stakes in plain English (e.g., "internal/draft", "shared/decision", "irreversible/external"), which verification gates are armed for the current artifact, and any pending confirmation required before emit
-- **Advanced opt-out for T4:** `codi t4-auto on` — skip the T4 explicit-confirm gate for the session. Triggers a RED status line warning: `⚠ T4 auto-confirm enabled — no 'send' required. Biographical claims ship unconfirmed.` Session-scoped only; resets on session end.
+- **Advanced opt-out for Live artifacts:** `codi confirm off` — skip the explicit confirm gate for the session. Alias: `codi yolo`. Backwards-compat: `codi t4-auto on` maps to `codi confirm off` through v4.x. Triggers a RED status line warning: `⚠ confirm gate off — Live artifacts ship without pause. Biographical claims ship unconfirmed.` Session-scoped only; resets on session end.
 - Toggle is session-scoped (same re-derivation pattern as Drive/Cruise/Quiet in Protocol 1). Default ON means every fresh session has verification active without any configuration.
 
 #### Tier classifier (internal — user never sees these labels)
@@ -359,11 +359,11 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 
 | Internal tier | Artifact shape (examples) | What the classifier looks for |
 |---|---|---|
-| **T0** trivial/private | reading a file, simple lookup, trivial Q&A, scratchpad, "what time is it" | Pure read, no external impact, fully reversible in seconds |
-| **T1** private/undo-cheap | internal notes, exploratory research notes, draft skeleton, exploratory Q&A | Private scope, multi-step undo at most, no other agent reads this |
-| **T2** shared/multi-step-undo | code edits to shared files, config changes (settings.json/.env/manifest), PR descriptions, internal docs multiple agents reference | Any file another agent reads or writes; config that affects system behavior; code going into a shared repo |
-| **T3** important-decision/hard-to-undo | architectural/strategic doc, ADR, Constitution edit, significant spec, PRD, public posts (drafts not yet scheduled), hiring/promotion/firing content, long-form article, cross-cyborg coordination doc that agents load | Architecture or strategy that is expensive to reverse; artifacts multiple people or agents will act on; "load-bearing" in the Emergent System sense |
-| **T4** irreversible/external-facing | outgoing communication to a named real human ("draft email to [recruiter name]", "DM [hiring manager]"), public publishing surface ("post on LinkedIn", "publish to Substack"), legal/commitment/signature, production ship ("deploy", "release", "merge to public main"), biographical claim about user (any "I worked at...", "for X years", "led N people", "$Y comp"), subscriber notification trigger, money/financial claim (specific dollar amounts, equity, comp negotiation) | One-way door — sends to real humans, ships to real systems, broadcasts to real audiences, or contains biographical facts about the user (biographical-outreach class — auto-T4) |
+| **Safe** (T0) | reading a file, simple lookup, trivial Q&A, scratchpad, "what time is it" | Pure read, no external impact, fully reversible in seconds |
+| **Private** (T1) | internal notes, exploratory research notes, draft skeleton, exploratory Q&A | Private scope, multi-step undo at most, no other agent reads this |
+| **Shared** (T2) | code edits to shared files, config changes (settings.json/.env/manifest), PR descriptions, internal docs multiple agents reference | Any file another agent reads or writes; config that affects system behavior; code going into a shared repo |
+| **Significant** (T3) | architectural/strategic doc, ADR, Constitution edit, significant spec, PRD, public posts (drafts not yet scheduled), hiring/promotion/firing content, long-form article, cross-cyborg coordination doc that agents load | Architecture or strategy that is expensive to reverse; artifacts multiple people or agents will act on; "load-bearing" in the Emergent System sense |
+| **Live** (T4) | outgoing communication to a named real human ("draft email to [recruiter name]", "DM [hiring manager]"), public publishing surface ("post on LinkedIn", "publish to Substack"), legal/commitment/signature, production ship ("deploy", "release", "merge to public main"), biographical claim about user (any "I worked at...", "for X years", "led N people", "$Y comp"), subscriber notification trigger, money/financial claim (specific dollar amounts, equity, comp negotiation) | One-way door — sends to real humans, ships to real systems, broadcasts to real audiences, or contains biographical facts about the user (biographical-outreach class — auto-Live) |
 
 **Tier confidence thresholds:**
 - HIGH confidence → auto-fire the gate for that tier.
@@ -372,17 +372,17 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 
 **Cross-LLM variance:** Tier classification is prose-inferred by the loading LLM — not by a deterministic parser. Different LLM families loading this SKILL.md (Claude, Gemini, Codex, Llama, Mistral) may classify the same artifact at different tiers due to RLHF gradient and training-distribution differences. Mitigation: the bias-upward rule (LOW confidence → round up) provides partial defense. For T4 biographical claims and other high-stakes irreversible artifacts, treat any uncertain tier as T4 regardless of model. The model-diversity sub-mandate (cross-family review at T4) further mitigates by ensuring no single LLM family's classification dominates ship decisions.
 
-**Biographical-claim auto-T4 rule:** Any output containing claims about the user's career history, tenure, compensation, team size, or professional achievements is AUTOMATICALLY T4, regardless of other signals. These are the "biographical-outreach" class — inherited drafts can contain stale or hallucinated career facts that ship to real humans undetected if not caught. No confidence override.
+**Biographical-claim auto-Live rule:** Any output containing claims about the user's career history, tenure, compensation, team size, or professional achievements is AUTOMATICALLY T4, regardless of other signals. These are the "biographical-outreach" class — inherited drafts can contain stale or hallucinated career facts that ship to real humans undetected if not caught. No confidence override. (Internal: auto-T4)
 
 #### Auto-fire table (what fires at each tier)
 
 | Tier | Fires | User-visible signal |
 |---|---|---|
-| T0 | nothing (calibration-auditor already always-on) | nothing — just the answer |
-| T1 | calibration-auditor only (already always-on) | nothing — just the answer |
-| T2 | + `hallucination-detector` passive scan (via fish-swarm rubric `hallucination-preflight`) | compact footer: `✓ checked` |
-| T3 | + `judge-panel` cross-family cascade (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable — surfaces remediation block, never silently skips) | `✓ reviewed by 2 models` (expandable: `codi verify why`) |
-| T4 | + canonical-claim verifier (dispatched to `career-os.bio-claim-verifier` for biographical claims; `hallucination-detector` full post-flight for general claims) + biographical-claim mandatory precheck against `~/anand-career-os/brain/identity/experience-history.md` + `unknown-unknown` adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit** | `🚀 ready to send — type 'send' to confirm` + RED preflight summary (see T4 flow below) |
+| Safe (T0) | nothing (calibration-auditor already always-on) | nothing — just the answer |
+| Private (T1) | calibration-auditor only (already always-on) | nothing — just the answer |
+| Shared (T2) | + `hallucination-detector` passive scan (via fish-swarm rubric `hallucination-preflight`) | compact footer: `✓ checked` |
+| Significant (T3) | + `judge-panel` cross-family cascade (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable — surfaces remediation block, never silently skips) | `✓ reviewed by 2 models` (expandable: `codi verify why`) |
+| Live (T4) | + canonical-claim verifier (dispatched to `career-os.bio-claim-verifier` for biographical claims; `hallucination-detector` full post-flight for general claims) + biographical-claim mandatory precheck against `~/anand-career-os/brain/identity/experience-history.md` + `unknown-unknown` adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit** | `🚀 ready to send — type 'send' to confirm` + RED preflight summary (see Live flow below) |
 
 **T2 cost target:** ~1-2K tokens / ~0.5s wall-clock (fish-swarm preflight rubric, no escalation on routine artifacts).
 **T3 cost target:** ~5-15K tokens / ~1-3s (cross-family cascade; escalation fires ~10-30% of the time).
@@ -390,7 +390,7 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 
 > **Latency note — CLI vs API path:** Numbers above assume API-path fish (Ollama / Gemini Flash via API). When the fish-swarm dispatches via CLI judges (default for many installs), wall-clock latency increases: T3 = 10-20s (not 1-3s); T4 = 15-30s (not 2-5s). Total system cost still wins over rework cycles and reputation risk per the 3D Execution Axiom — upstream tokens are cheaper than downstream repair loops.
 
-#### T3 dispatch via fish-swarm (FAIL-HARD)
+#### Significant (T3) dispatch via fish-swarm (FAIL-HARD)
 
 T3 cross-family cascade runs through the fish-swarm dispatcher (same judge-panel harness, rubric `spec-coherence` for architectural docs or `hallucination` for factual artifacts — caller picks based on artifact shape). The FAIL-HARD contract from fish-swarm applies: if zero fish are reachable when T3 auto-verify fires, the response is BLOCKED and the fish-school remediation block is shown. The agent does NOT silently absorb the T3 gate into its own context (same-model self-review is a closed loop — the whole point of T3 is cross-family).
 
@@ -406,20 +406,20 @@ Parse `final_verdict` + `final_confidence` + `all_flags`. Surface to user as:
 - `~ reviewed by 2 models — 1 flag` when `pass` with low confidence or flags present
 - `⚠ review flagged — type 'codi verify why' for details` when `final_verdict == "fail"`
 
-#### T4 explicit-confirm flow
+#### Live (T4) explicit-confirm flow
 
-When the tier classifier reaches T4:
+When the tier classifier reaches Live (T4):
 
 1. **Precheck canonical claims.** For biographical claims: diff every factual claim in the draft against `~/anand-career-os/brain/identity/experience-history.md` and `identity.md`. Any claim not matching canonical source → flag in preflight summary. For general claims: run `hallucination-detector` full post-flight scoring.
 
    **TODO (integration point):** dispatch to `career-os.bio-claim-verifier` when available — that skill reads canonical identity files and produces a structured claim-diff table. Until it ships, run hallucination-detector with `--rubric hallucination` as fallback. Mark in output: `(bio-claim verifier: pending career-os integration — using hallucination-detector fallback)`.
 
-2. **Run unknown-unknown adjacency scan.** Before holding for confirmation, run the `unknown-unknown` scan on the T4 artifact. Surface top 3 adjacencies inline in the preflight summary (per Constitution N-dimensional extraction lens — a T4 artifact is the highest-value moment to catch cross-slot opportunities).
+2. **Run unknown-unknown adjacency scan.** Before holding for confirmation, run the `unknown-unknown` scan on the Live artifact. Surface top 3 adjacencies inline in the preflight summary (per Constitution N-dimensional extraction lens — a T4 artifact is the highest-value moment to catch cross-slot opportunities).
 
 3. **Surface RED preflight summary.** Format:
 
    ```
-   🔴 PREFLIGHT — outgoing / ship-ready artifact
+   🔴 PREFLIGHT — Live artifact
 
    Canonical-claim check: [✓ all match | ⚠ N mismatches — see below]
    Hallucination scan: [✓ clean | ⚠ N flags]
@@ -438,11 +438,11 @@ When the tier classifier reaches T4:
 
 6. **On correction.** If the user says anything other than a confirmation signal (asks to fix a claim, changes the text, says "wait"), re-run the preflight on the revised version before re-surfacing the confirmation gate.
 
-**`codi t4-auto on` behavior:** Steps 1-3 still run (precheck and scan always fire). Step 4 is skipped — artifact emits immediately after preflight summary with a RED warning line: `⚠ auto-confirm mode: sent without 'send' gate`. This is an advanced opt-out for workflows where the user has confirmed they understand the risk. It is session-scoped.
+**`codi confirm off` behavior:** Steps 1-3 still run (precheck and scan always fire). Step 4 is skipped — artifact emits immediately after preflight summary with a RED warning line: `⚠ confirm gate off — sent without pause`. This is an advanced opt-out for workflows where the user has confirmed they understand the risk. It is session-scoped. (`codi t4-auto on` maps here for backwards compat.)
 
 #### Composition with other protocols
 
-> Protocols 10 (Honesty Selector) and 11 (Agent-Swarm) are co-located in this same v4.1.0 release. Composition contracts (`honesty soft → grounded auto-downgrade` at T3+, `agent-swarm sub-agent skip-Verify` at T0/T1) are FUNCTIONAL as documented below — not forward specs.
+> Protocols 10 (Honesty Selector) and 11 (Agent-Swarm) are co-located in this same v4.2.0 release. Composition contracts (`honesty soft → grounded auto-downgrade` at T3+, `agent-swarm sub-agent skip-Verify` at T0/T1) are FUNCTIONAL as documented below — not forward specs.
 
 - **Protocol 11 (agent-swarm, v4.x):** Sub-agent outputs skip Verify. Parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the user/world. The seam is always where T4 can fire.
 - **Protocol 10 (honesty, v4.x):** At T3+, auto-verify silently downgrades `honesty soft` → `honesty grounded` for that response, even if the user set soft earlier. Grounded honesty is the minimum at T3 (architectural, load-bearing).
@@ -453,9 +453,9 @@ When the tier classifier reaches T4:
 
 Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). Silent at T0/T1.
 
-- **T2:** Append to response footer: `✓ checked`
-- **T3:** Append to response footer: `✓ reviewed by 2 models`
-- **T4:** Preflight summary replaces footer until `send` confirmation.
+- **Shared (T2):** Append to response footer: `✓ checked`
+- **Significant (T3):** Append to response footer: `✓ reviewed by 2 models`
+- **Live (T4):** Preflight summary replaces footer until `send` confirmation.
 - **Verify OFF:** Append once to first response after disabling: `codi verify: OFF — no auto-verification this session`
 
 **Commands summary:**
@@ -466,8 +466,9 @@ Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). 
 | `codi verify on` | Re-enable |
 | `codi verify status` | Show artifact stakes in plain English, armed verification gates, and any pending confirmation |
 | `codi verify why` | Expand last verification result (flags, judge breakdown) |
-| `codi t4-auto on` | Skip T4 explicit-confirm gate (session-scoped; RED warning) |
-| `send` / `ship it` / `verified` / `confirm` | Confirm a T4-held artifact for emit |
+| `codi confirm off` | Skip confirm gate for Live artifacts (session-scoped; RED warning). Alias: `codi yolo`. Backwards-compat: `codi t4-auto on` |
+| `codi confirm on` | Re-enable confirm gate |
+| `send` / `ship it` / `verified` / `confirm` | Confirm a Live artifact for emit |
 
 #### Anti-patterns
 
@@ -475,8 +476,8 @@ Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). 
 - ❌ Silently skipping T3 dispatch when fish-school is down — FAIL-HARD violation; surface the remediation block.
 - ❌ Lowering the tier because the agent is confident in the output — confidence does NOT lower the tier (EMERGENT SYSTEM IMMUNITY explicit rule).
 - ❌ Treating sub-agent output as verified — parent must run Verify on the synthesized output at the seam.
-- ❌ Skipping biographical-claim auto-T4 rule because the context "looks safe" — any bio claim is T4, period.
-- ❌ Using `codi t4-auto on` as a permanent setting — it is session-scoped by design; never persist this across sessions.
+- ❌ Skipping the biographical-claim auto-Live rule because the context "looks safe" — any bio claim is Live (T4), period.
+- ❌ Using `codi confirm off` as a permanent setting — it is session-scoped by design; never persist this across sessions. (`codi t4-auto on` is a backwards-compat alias.)
 - ❌ Asking "should I verify this?" — Verify is ON by default; the question is which tier fired, not whether to verify.
 
 **Relationship to Ground Zero invariants:** Protocol 8 is this skill's instantiation of EMERGENT SYSTEM IMMUNITY (the T0-T4 pre-action verification cascade) + Independent Verification Gate (cross-family judge-panel at T3+) + FAIL-HARD (BLOCK when no fish available, never silently skip) + Zero-QA-Tax (verification fires before human sees the output, not after). It directly eliminates the biographical-outreach near-miss class (inherited agent drafts with stale career facts shipped to real humans) by making T4 gates automatic rather than human-initiated.
@@ -506,10 +507,10 @@ Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). 
 
 #### T3+ auto-downgrade (Protocol 8 composition)
 
-When `honesty soft` is active AND the output is a T3 or T4 artifact (architecture decision, outreach email, patent spec, significant shipped artifact — anything where soft-pedaling a concern could cause real harm), **auto-downgrade to `honesty grounded` for that single response only**. Do not change the session-level setting. Emit a one-line notice at the top of the response:
+When `honesty soft` is active AND the output is a Significant or Live artifact (architecture decision, outreach email, patent spec, significant shipped artifact — anything where soft-pedaling a concern could cause real harm), **auto-downgrade to `honesty grounded` for that single response only**. Do not change the session-level setting. Emit a one-line notice at the top of the response:
 
 ```
-[Honesty: auto-grounded for this high-stakes response — soft posture suppressed to avoid omitting load-bearing concerns. Type "codi honesty soft" to re-enable.]
+[Honesty: auto-grounded for this Significant/Live response — soft posture suppressed to avoid omitting load-bearing concerns. Type "codi honesty soft" to re-enable.]
 ```
 
 Rationale: the user chose soft for momentum; Protocol 10 ensures soft never hides a concern that could cost a warm path, a patent claim, or an architecture decision.
@@ -536,7 +537,7 @@ See calibration-auditor SKILL.md for full audit-behavior spec per honesty level.
 
 ## Protocol 11 — Agent-Swarm (default ON)
 
-> See repo CHANGELOG entry for v4.1.0 for the full rationale and cost-warning prose.
+> See repo CHANGELOG entry for v4.2.0 for the full rationale and cost-warning prose.
 
 **Toggle:** `codi agent-swarm on/off`. **Default:** ON in ALL modes (Drive/Cruise/Demo/Quiet).
 
@@ -562,7 +563,7 @@ When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE mes
 - MEDIUM → ask: "These N legs look independent — fan out? (or serial)"
 - LOW → serial (safety default)
 
-**Cost cap:** T0/T1 NEVER fan out (cost > value). Hard cap 5 sub-agents per parent task.
+**Cost cap:** Safe/Private artifacts (T0/T1) NEVER fan out (cost > value). Hard cap 5 sub-agents per parent task.
 
 **Status line:** when fan-out happened in last response, show `agent-swarm:active`.
 
