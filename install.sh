@@ -17,7 +17,6 @@ PLUGIN_SKILLS=(
     "fish-swarm"
     "hallucination-detector"
     "handoff"
-    "hygiene"
     "judge-panel"
     "unknown-unknown"
     "waky-waky"
