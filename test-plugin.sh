@@ -309,6 +309,20 @@ if [ "$CHECK_SMOKE" = true ]; then
         fi
     done
     [ "$SKILL_FAIL" -eq 0 ] && pass "All skills landed in temp HOME" || fail "$SKILL_FAIL skill(s) missing after install"
+
+    # Verify judge_panel.py hook landed (fetch_skill_extras downloads it for judge-panel)
+    if [ -f "$TMP_HOME/.claude/skills/judge-panel/scripts/judge_panel.py" ]; then
+        pass "judge-panel hook installed: scripts/judge_panel.py"
+    else
+        fail "judge-panel hook missing: scripts/judge_panel.py not found after install"
+    fi
+
+    # Protocol 12 / hygiene retired in v4.x — assert it is NOT installed on fresh install
+    if [ ! -d "$TMP_HOME/.claude/skills/hygiene" ]; then
+        pass "Protocol 12 (hygiene) correctly absent from fresh install"
+    else
+        fail "Protocol 12 (hygiene) found in fresh install — stale PLUGIN_SKILLS entry"
+    fi
 fi
 
 # -----------------------------------------------
