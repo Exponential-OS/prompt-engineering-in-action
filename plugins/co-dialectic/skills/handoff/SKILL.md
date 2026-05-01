@@ -580,7 +580,7 @@ is the SINGLE canonical file. Multiple protocols contribute fields under
 distinct top-level keys rather than overwriting the file:
 
 - Protocol 9 (auto-handoff / this skill) writes under `"handoff": {...}`
-- Protocol 12 (hygiene cycle) writes under `"hygiene": {...}`
+
 - Future protocols each get their own top-level key
 - Shared session metadata lives at the root level (not nested):
   `session_id`, `schema_version`, `model`, `duration_min`, `msg_count`,
@@ -647,13 +647,12 @@ multi-protocol-write contract — see section 9.5).
 }
 ```
 
-> **Schema note — multi-protocol nested design.** The spec's flat example
+> **Schema note — nested design.** The spec's flat example
 > showed `verify_fires_by_tier`, `agent_swarm_fans`, etc. at the root level.
-> The implementation correctly nests these under the `"handoff"` top-level key
-> per the multi-protocol contract (§ 9.5). This nested design is the
-> **canonical shape** and supersedes the spec's flat example. Each protocol
-> owns exactly one top-level key (`"handoff"`, `"hygiene"`, etc.); shared
-> session metadata lives at root (`session_id`, `schema_version`, `model`,
+> The implementation correctly nests these under the `"handoff"` top-level key.
+> This nested design is the **canonical shape** and supersedes the spec's flat
+> example. Future protocols each get their own top-level key; shared session
+> metadata lives at root (`session_id`, `schema_version`, `model`,
 > `duration_min`, `msg_count`, `ended_reason`).
 
 Field semantics — shared root fields:
@@ -700,21 +699,7 @@ Field semantics — `"handoff"` key (Protocol 9's payload):
 - `ended_reason` (nested) — mirrors root `ended_reason`; included for
   consumers that only read the `handoff` sub-object.
 
-**Sibling protocol keys (example — not written by this skill):**
-
-```json
-{
-  "hygiene": {
-    "reorg_flags_count": 0,
-    "lessons_codified_count": 2,
-    "merges_pushed_count": 1,
-    "pulls_completed_count": 1,
-    "fired_at": "2026-04-27T22:30:00-07:00"
-  }
-}
-```
-
-Each protocol owns exactly its key. The file is the merge surface.
+Each protocol owns exactly its top-level key. The file is the merge surface. Workspace adapters may add their own keys; codi does not prescribe them.
 
 The beacon is INTENTIONALLY content-free. No conversation snippets, no
 unfinished-item titles, no user names. This makes it safe to aggregate

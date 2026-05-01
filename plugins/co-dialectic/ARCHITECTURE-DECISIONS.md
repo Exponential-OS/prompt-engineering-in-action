@@ -186,6 +186,31 @@ Captured in workspace memory at `~/.claude/projects/-Users-anandvallam-anand-car
 
 ---
 
+### Decision 5 — Hygiene (Protocol 12) Is NOT a Codi Responsibility
+
+**Codified 2026-04-30.** Triggering directive:
+
+> *"Cyborg leaked into codi. Remove Protocol 12 from codi."*
+
+**What was removed:** The `skills/hygiene/` skill (Protocol 12 — sweep / codify / reorg / merge / pull) explicitly referenced `~/cyborg/*`, `~/anand-career-os/brain/`, `git -C ~/cyborg`, and other thewhyman-specific substrate paths. This is a direct Decision-2 violation: cyborg substrate content inside a co-dialectic SKILL.md.
+
+**The principled boundary:** Per-conversation hygiene (sweep what was learned, codify to brain, reorg workspace, merge/push brain writes, pull origin) is a **workspace-adapter responsibility**, not a codi kernel responsibility. Codi captures and emits (handoff, telemetry beacon) — the workspace adapter decides how to persist and where. Codi does not know whether "codify" means `~/cyborg/CONSTITUTION.md`, a GitHub Issue, a Notion page, or a Postgres row.
+
+**What survives in codi after removal:**
+- Protocol 9 (Auto-Handoff) — substrate-agnostic capture + emit, unchanged.
+- `session_end.json` beacon — `"handoff"` key only. The `"hygiene"` sibling key is gone; workspace adapters may add their own keys if they implement hygiene on their side.
+- References to "hygiene cycle" in handoff docs that meant "the P9 + P12 combined close" — simplified to "the handoff cycle" (P9 only).
+
+**Anti-patterns this codifies:**
+- ❌ Any codi SKILL.md step that runs `bash ~/cyborg/...` — Decision-2 violation, always.
+- ❌ Any codi SKILL.md step that writes to `~/anand-career-os/brain/` — substrate leak, always.
+- ❌ Any codi protocol that executes `git push origin main` against a specific brain repo — workspace-adapter work, not kernel work.
+- ❌ Restoring Protocol 12 as a built-in codi skill — if hygiene is needed, it ships as a xOS workspace adapter (co-dialectic extension) that codi does not know about.
+
+**If a workspace needs hygiene automation:** implement it as a workspace-registered hook that fires on the `session_end.json` beacon. Codi emits the beacon; the hook does the sweep/codify/reorg/merge/pull. Zero codi changes needed.
+
+---
+
 ## Related
 
 - `~/cyborg/CONSTITUTION.md` — universal how-we-build principles applied (Decision 1)
