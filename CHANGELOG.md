@@ -4,6 +4,26 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.3.0] — 2026-05-04
+
+**Codename:** Fish-mandatory-gate — codi fish-swarm is now a required pre-task gate, not an optional orchestration layer.
+
+### Added
+
+- **`codi-fish-precheck` cyborg rule** (`~/cyborg/rules/codi-fish-precheck/`). Tier router HOW.py fires Haiku as a lightweight fish before any Agent() spawn. T0 → skip. T1-T2 → Haiku pre-check (PASS/WARN/BLOCK). T3-T4 → escalate to Independent Verification Gate. Ships with AUDIT.py, WATCH.py, manifest.json, EXPERIMENTS/ledger.json.
+- **PreToolUse hook on `Agent` tool** in `~/.claude/settings.json`. Every `Agent()` spawn in Claude Code now routes through `codi-fish-precheck` automatically — fish is mandatory, not opt-in.
+- **`json-for-machine-files` cyborg rule** (`~/cyborg/rules/json-for-machine-files/`). BLOCK machine-pattern YAML in agent directories; enforce JSON (jq/jsonpath/stdlib-native) for all agent-managed configs. YAML acceptable only for human-authored configs (GitHub Actions, docker-compose).
+- **`marketplace_managed` flag in workspace.manifest.yaml**. `co-dialectic` and `career-os-plugin` now carry `marketplace_managed: true` + `plugin:` fields, preventing skill-compiler.sh from overwriting marketplace installs from git repos.
+- **skill-compiler.sh marketplace guard** (`~/anand-career-os/ci/skill-compiler.sh`). Checks `marketplace_managed` flag before copying from git repo; emits warning to use `claude plugin install` instead.
+
+### Changed
+
+- **`plugin.json` version** bumped `4.2.1` → `4.3.0`.
+- **`install.sh` version** bumped `4.2.1` → `4.3.0`.
+- **`co-dialectic/SKILL.md`** — frontmatter + Protocol 0 welcome banner bumped to `4.3.0`.
+
+---
+
 ## [4.2.1] — 2026-04-30
 
 **Codename:** Naming-collision fix — `claude plugin install co-dialectic@xos` now fully activates `codi on`.
