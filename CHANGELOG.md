@@ -4,6 +4,30 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.5.0] — 2026-05-05
+
+**Codename:** P4 Four Failure Mode Fixes — semantic gates + agent lifecycle + product hygiene.
+
+### Added
+
+- **Semantic T3 classification** (`claude-code.py`): replaced keyword regex with Haiku API call (`claude-haiku-4-5-20251001`, max_tokens=5, timeout=8s). Keyword logic kept as fail-open fallback. Explicitly names canonical docs (BRIEF.md, CONSTITUTION.md, brain/identity/, campaign masters) as T3 in system prompt. Closes P4 weakness-seam: "Is this T3?" is a semantic question — keyword regex was the wrong gate type.
+- **Background agent lifecycle manager** (`fish/scripts/agent_lifecycle.py`): new script. Commands: `register`, `check-dedup`, `poll`, `status`, `complete`. State: `~/.co-dialectic/agent-lifecycle.json` (atomic writes). Timeout ceiling 10 min → flags as stuck. Capacity error detection. File dedup: BLOCKs spawn when running agent owns overlapping target files.
+- **Worktree isolation → force foreground** (`claude-code.py`): `isolation=worktree` agents now force `run_in_background=False`. Observed failure: worktree agents hung silently for 20+ min with no completion. Worktree git setup (branch creation, lock) can hang; foreground ensures immediate failure visibility.
+- **Runtime-agnostic executor type registry** (`claude-code.py`): `CODI_EXECUTOR_TYPES` env var with three-way logic: unset=Claude Code defaults (`elite-code-writer`, `codex:codex-rescue`), `""`=disable executor special-casing, `"a,b"`=custom runtime list. Removes Claude Code hardcode from product definition.
+- **Fish-swarm dispatch mandate table** (`fish-swarm/SKILL.md`): explicit MUST-spawn table for 7 task patterns. Added whale-inline anti-patterns section with 2026-05-05 observed examples (200-line Rumsfeld audit, gap analysis, prompt-sharpen absorbed inline). Litmus test codified.
+- **Protocol 0 post-compaction re-init** (`co-dialectic/SKILL.md`): detects "previously invoked" in system-reminder, re-fires Protocol 0 + mandatory fish health probe. Fixes codi stopping mid-session after context compaction.
+- **Plugin user-content gate** (`~/cyborg/rules/plugin-user-content-gate/HOW.sh`): structural gate scanning all `plugins/*/SKILL.md` for 10 forbidden user-specific patterns. Exempts legitimate attribution (frontmatter `author:`, `**Author:**`). Exit 0=PASS, 1=BLOCK.
+- **Pre-commit hook** (`.githooks/pre-commit`): wires plugin-user-content-gate into `prompt-engineering-in-action` git commit lifecycle.
+
+### Changed
+
+- **waky-waky SKILL.md**: replaced `~/anand-career-os/` Tier 1-4 hardcoded load paths with Context Registry pattern (`~/.codialectic/context.json`). Added `Context Registry Contract` section with schema. Generalized worked examples to `/path/to/...` placeholders.
+- **handoff SKILL.md**: replaced personal script paths and personal GitHub repo reference in hook JSON example with generic placeholders.
+- **co-dialectic SKILL.md**: removed personal marketing "More from the Author" section from product definition.
+- **Background dedup check** (`claude-code.py`): added file path extraction regex + `agent_lifecycle.py check-dedup` call before every background spawn.
+
+---
+
 ## [4.4.8] — 2026-05-04
 
 **Codename:** Revert OAuth hack — API key only, complexity not justified.
