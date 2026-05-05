@@ -5,14 +5,14 @@
     "email": "thewhyman@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Legacy mirror marketplace — canonical is Exponential-OS/agent-marketplace (@xos). This path still resolves for backwards compatibility."
+    "description": "Legacy mirror marketplace \u2014 canonical is Exponential-OS/agent-marketplace (@xos). This path still resolves for backwards compatibility."
   },
   "plugins": [
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.2.0 — LLM prompt optimizer + auto-verify by stakes (Safe/Private/Shared/Significant/Live) + auto-handoff on closure + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector + research-first mode + fish-swarm orchestration.",
-      "version": "4.2.1",
+      "description": "Co-Dialectic v4.2.0 \u2014 LLM prompt optimizer + auto-verify by stakes (Safe/Private/Shared/Significant/Live) + auto-handoff on closure + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector + research-first mode + fish-swarm orchestration.",
+      "version": "4.4.2",
       "category": "productivity"
     },
     {
@@ -22,7 +22,7 @@
         "url": "https://github.com/Exponential-OS/career-os-plugin.git",
         "sha": "690db081d4a2fd831ef853d86df318c124fbb6d4"
       },
-      "description": "Career OS v0.27.0 — AI-powered career management system. Persistent memory, session capture, git-versioned data, full privacy. outreach-fact-check (T4 immunity) + interviewer-research (panel prep automation).",
+      "description": "Career OS v0.27.0 \u2014 AI-powered career management system. Persistent memory, session capture, git-versioned data, full privacy. outreach-fact-check (T4 immunity) + interviewer-research (panel prep automation).",
       "version": "0.27.0",
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"
