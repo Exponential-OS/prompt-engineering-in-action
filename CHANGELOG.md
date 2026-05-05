@@ -4,6 +4,23 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.6] — 2026-05-04
+
+**Codename:** OAuth-first CI — OIDC/WIF primary path, bearer-token hack fallback.
+
+### Added
+
+- **`judge_panel.py` — OAuth bearer token support**: `_run_gemini_api()` now prefers `GOOGLE_BEARER_TOKEN` (OAuth bearer auth, subscription billing) over `GOOGLE_API_KEY` (pay-per-token). Token source is transparent to the code — works whether token came from OIDC/WIF (proper path) or from the local hook (hack).
+- **`co-dialectic-judge-panel-eval.yml` — OIDC/WIF structure**: CI workflow now has `id-token: write` permission, a WIF auth step (activates when `WIF_IDENTITY_PROVIDER` + `WIF_SERVICE_ACCOUNT` secrets are set), and a bearer token extraction step. OIDC is the proper path; the `GOOGLE_BEARER_TOKEN` secret (from the hack) is the working fallback. `GOOGLE_API_KEY` kept as last resort.
+- **`cyborg/scripts/check-oauth.py`** (SessionStart hook): warns at session start if ADC token is expired. Non-blocking.
+- **`cyborg/scripts/git-push-token-refresh.py`** (PreToolUse/Bash hook, **labeled HACK**): intercepts `git push`, captures local ADC token, writes to `GOOGLE_BEARER_TOKEN` GitHub Secret. Lets CI use subscription billing instead of API billing. Non-blocking — push proceeds even if token unavailable.
+
+### Architecture note
+
+OIDC/WIF is the primary path (no stored secrets, proper keyless auth). The bearer-token hook is explicitly a hack — interim until WIF is configured. WIF setup instructions are inlined in the CI workflow. Once WIF is set up, delete `git-push-token-refresh.py` and the `GOOGLE_BEARER_TOKEN` secret for the Google lane.
+
+---
+
 ## [4.4.5] — 2026-05-04
 
 **Codename:** CI auto-escalate — judge panel eval fires automatically on judge panel code changes.

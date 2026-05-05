@@ -341,27 +341,52 @@ def _ensure_cli(bin_name: str, family: str, model: str) -> Optional[JurorResult]
 # explicitly approved API billing for that lane.
 
 def _run_gemini_api(model: str, prompt: str) -> JurorResult:
-    """Call Google Gemini via REST API (paid fallback, NOT subscription)."""
+    """Call Google Gemini via REST API.
+
+    Auth priority (highest → lowest):
+      1. GOOGLE_BEARER_TOKEN — OAuth bearer token. Two sources:
+           a. OIDC/WIF (proper): GitHub OIDC → GCP Workload Identity Federation
+              generates short-lived creds in CI. Set up WIF + delete the local
+              hook for a fully keyless flow.
+           b. HACK/bearer-token-push-time-refresh: local ADC token captured at
+              push time by cyborg/scripts/git-push-token-refresh.py and written
+              to the GOOGLE_BEARER_TOKEN GitHub Secret. ~1 h TTL; CI runs in 2-5
+              min so it's always fresh. Bills to Google subscription, not API.
+      2. GEMINI_API_KEY / GOOGLE_API_KEY — pay-per-token API billing. Fallback
+         when no bearer token is available.
+    """
     start = time.time()
-    api_key = (os.environ.get("GEMINI_API_KEY")
-               or os.environ.get("GOOGLE_API_KEY")
-               or _ENV.get("GEMINI_API_KEY", "")
-               or _ENV.get("GOOGLE_API_KEY", ""))
-    if not api_key:
-        return JurorResult(
-            model=model, family="google", verdict="error", confidence=0,
-            flags=["API_FALLBACK_NO_KEY"], latency_ms=0,
-            error="API fallback approved but GEMINI_API_KEY / GOOGLE_API_KEY not set",
-        )
+
+    bearer_token = os.environ.get("GOOGLE_BEARER_TOKEN", "").strip()
+    if bearer_token:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {bearer_token}",
+        }
+        auth_flag = "OAUTH_BEARER_USED"
+    else:
+        api_key = (os.environ.get("GEMINI_API_KEY")
+                   or os.environ.get("GOOGLE_API_KEY")
+                   or _ENV.get("GEMINI_API_KEY", "")
+                   or _ENV.get("GOOGLE_API_KEY", ""))
+        if not api_key:
+            return JurorResult(
+                model=model, family="google", verdict="error", confidence=0,
+                flags=["API_FALLBACK_NO_KEY"], latency_ms=0,
+                error="API fallback: neither GOOGLE_BEARER_TOKEN nor GEMINI_API_KEY/GOOGLE_API_KEY set",
+            )
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key,
+        }
+        auth_flag = "API_FALLBACK_USED"
+
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0, "maxOutputTokens": 400},
     }).encode("utf-8")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    req = urllib.request.Request(
-        url, data=body,
-        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-    )
+    req = urllib.request.Request(url, data=body, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=CALL_TIMEOUT_S) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
@@ -398,8 +423,8 @@ def _run_gemini_api(model: str, prompt: str) -> JurorResult:
         tokens_in=_estimate_tokens(prompt), tokens_out=_estimate_tokens(raw),
         latency_ms=latency_ms,
     )
-    if "API_FALLBACK_USED" not in result.flags:
-        result.flags.insert(0, "API_FALLBACK_USED")
+    if auth_flag not in result.flags:
+        result.flags.insert(0, auth_flag)
     return result
 
 
