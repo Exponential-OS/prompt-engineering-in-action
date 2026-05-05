@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.1] — 2026-05-04
+
+**Codename:** CI gate — co-dialectic ships its first GitHub Actions workflow.
+
+### Added
+
+- **`.github/workflows/co-dialectic-ci.yml`**. Triggered on push/PR to `plugins/co-dialectic/**`. Runs: `test-plugin.sh` (17-section suite: structure, JSON validity, SKILL.md format, version consistency across 4 files, marketplace sync, install sandbox), fish gate Python syntax compile checks (`HOW.py` + `hooks/claude-code.py`), fish gate stdin smoke-test with T1 payload. Zero CI → full coverage in one workflow.
+
+---
+
 ## [4.4.0] — 2026-05-04
 
 **Codename:** Self-contained fish — codi ships and wires its own fish gate. No cyborg dependency required.

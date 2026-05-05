@@ -1,0 +1,35 @@
+name: co-dialectic-ci
+
+on:
+  push:
+    paths:
+      - 'plugins/co-dialectic/**'
+      - '.github/workflows/co-dialectic-ci.yml'
+  pull_request:
+    paths:
+      - 'plugins/co-dialectic/**'
+      - '.github/workflows/co-dialectic-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Plugin structure, JSON, SKILL.md, version consistency, marketplace sync
+        run: bash test-plugin.sh
+
+      - name: Fish gate Python syntax
+        run: |
+          python3 -m py_compile plugins/co-dialectic/fish/HOW.py
+          python3 -m py_compile plugins/co-dialectic/fish/hooks/claude-code.py
+
+      - name: Fish gate stdin smoke-test
+        run: |
+          echo '{"task":"ci smoke test","stakes":"T1","context":"github actions"}' | \
+            python3 plugins/co-dialectic/fish/HOW.py -
