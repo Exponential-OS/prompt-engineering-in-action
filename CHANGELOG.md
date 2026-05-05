@@ -4,6 +4,22 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.6.0] — 2026-05-05
+
+**Codename:** Benefit-Forward UX — Doshi audit of all user-facing Protocol surfaces.
+
+### Changed
+
+- **Protocol 0 welcome** (`co-dialectic/SKILL.md`): rewritten benefit-forward. New tagline: "Sharper prompts. Grounded answers. Smarter cost routing — all automatic." Explicitly lists 3 user benefits (↑ Sharper prompts / ✓ Grounded answers / 💰 Cost routing). Explains prompt score (%) and Cal score for new users. Version reference corrected to 4.6.0. Replaces: "You sharpen the AI. The AI sharpens you." (tagline, no benefit statement).
+- **Protocol 3 prompt improvement** (`co-dialectic/SKILL.md`): Drive mode now shows estimated score lift (e.g., `65% → ~88%`) alongside the rewritten prompt. Makes the gain visible, not just the mechanism.
+- **Protocol 8 T2 footer** (`co-dialectic/SKILL.md`): `✓ checked` → `✓ Grounded — no hallucinations detected`. Outcome language replaces jargon.
+- **Protocol 8 T3 footer** (`co-dialectic/SKILL.md`): `✓ reviewed by 2 models` → `✓ 2 independent models agreed — clean`. Outcome + agreement signal replaces process label.
+- **Protocol 8 judge-panel parse signals** (`co-dialectic/SKILL.md`): matching language update for `final_verdict == "pass"` and pass-with-flag cases.
+- **Hints footer new-user tier** (`co-dialectic/SKILL.md`): `(💡 "codi help" · "codi personas" · "Be Jony Ive")` → `(💡 Score improving. "codi help" to explore · "codi personas" to see all experts)`. Benefit-nudge replaces bare command list.
+- **Protocol 11 agent-swarm status** (`co-dialectic/SKILL.md`): `agent-swarm:active` jargon removed → `💰 Routed` (user benefit language; fires once on fan-out, not every turn).
+
+---
+
 ## [4.5.0] — 2026-05-05
 
 **Codename:** P4 Four Failure Mode Fixes — semantic gates + agent lifecycle + product hygiene.
