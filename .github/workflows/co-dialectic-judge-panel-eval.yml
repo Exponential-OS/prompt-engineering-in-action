@@ -2,7 +2,17 @@ name: co-dialectic-judge-panel-eval
 
 # Auto-triggers when judge panel logic or eval corpus changes.
 # Also manually triggerable: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
-# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth) — ~$0.01/run.
+#
+# HACK: Google auth uses a bearer token captured at push time by
+# cyborg/scripts/git-push-token-refresh.py and written to the
+# GOOGLE_BEARER_TOKEN GitHub Secret. Token TTL ~1 hour; CI runs in
+# ~2-5 min — always fresh. Bills to the developer's Google AI Pro
+# subscription, not the Gemini API (pay-per-token).
+#
+# TODO (when ready to go keyless): replace with GitHub OIDC + GCP
+# Workload Identity Federation. Delete GOOGLE_BEARER_TOKEN secret,
+# delete cyborg/scripts/git-push-token-refresh.py, and the SessionStart
+# check-oauth.py hook. See git history for the WIF scaffold.
 
 on:
   push:
@@ -20,51 +30,8 @@ on:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write  # Required for GitHub OIDC token (used by WIF auth step below)
     steps:
       - uses: actions/checkout@v4
-
-      # ── OIDC primary path (Google/Gemini) ─────────────────────────────────
-      # Workload Identity Federation: GitHub OIDC → GCP service account.
-      # No stored API key needed once this is configured.
-      #
-      # Setup (one-time, in GCP Console):
-      #   1. Create Workload Identity Pool + GitHub OIDC provider
-      #   2. Create a service account with "Vertex AI User" or "AI Platform" role
-      #   3. Grant repo permission: principalSet://iam.googleapis.com/...
-      #   4. Add GitHub Secrets: WIF_IDENTITY_PROVIDER + WIF_SERVICE_ACCOUNT
-      #
-      # When both secrets are set, this step mints a short-lived bearer token
-      # and sets GOOGLE_APPLICATION_CREDENTIALS. The step below extracts it
-      # into GOOGLE_BEARER_TOKEN so judge_panel.py can use it directly.
-      - name: Authenticate to Google Cloud (OIDC/WIF)
-        id: gcp-auth
-        if: ${{ env.WIF_IDENTITY_PROVIDER != '' }}
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-        env:
-          WIF_IDENTITY_PROVIDER: ${{ secrets.WIF_IDENTITY_PROVIDER }}
-
-      - name: Extract bearer token from WIF credentials
-        if: steps.gcp-auth.outcome == 'success'
-        run: |
-          TOKEN=$(gcloud auth application-default print-access-token 2>/dev/null || true)
-          if [ -n "$TOKEN" ]; then
-            echo "GOOGLE_BEARER_TOKEN=$TOKEN" >> $GITHUB_ENV
-          fi
-
-      # ── HACK fallback path (Google/Gemini) ────────────────────────────────
-      # If WIF is not configured, GOOGLE_BEARER_TOKEN is populated by
-      # cyborg/scripts/git-push-token-refresh.py — a local hook that captures
-      # the developer's ADC token at push time and writes it to this secret.
-      # Token TTL ~1 hour; CI runs in ~2-5 min → always fresh.
-      # Bills to the developer's Google subscription, not the Gemini API.
-      # Delete this comment block once WIF is configured above.
-      # ─────────────────────────────────────────────────────────────────────
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -78,11 +45,10 @@ jobs:
         run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # GOOGLE_BEARER_TOKEN: set by WIF step (OIDC) or pre-populated by
-          # git-push-token-refresh.py hack. judge_panel.py prefers bearer token
-          # over GOOGLE_API_KEY when set.
+          # HACK: bearer token written by git-push-token-refresh.py at push time.
+          # Bills to Google AI Pro subscription (not API). Delete when WIF is set up.
           GOOGLE_BEARER_TOKEN: ${{ secrets.GOOGLE_BEARER_TOKEN }}
-          # GOOGLE_API_KEY: kept as last-resort fallback if bearer token absent.
+          # Fallback if bearer token not set (API billing, pay-per-token).
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           JUDGE_PANEL_API_FALLBACK_APPROVED: "1"

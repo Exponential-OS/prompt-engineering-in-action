@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.7] — 2026-05-04
+
+**Codename:** Hack-only CI — strip WIF scaffold, keep bearer-token hack clearly labeled.
+
+### Changed
+
+- **`co-dialectic-judge-panel-eval.yml`**: removed WIF/OIDC scaffold (dead weight — no cost saving vs API key). CI now has only the hack path: `GOOGLE_BEARER_TOKEN` (from push-time hook, subscription billing) with `GOOGLE_API_KEY` as fallback. `TODO` comment left in workflow pointing to WIF as the future keyless path.
+
+---
+
 ## [4.4.6] — 2026-05-04
 
 **Codename:** OAuth-first CI — OIDC/WIF primary path, bearer-token hack fallback.

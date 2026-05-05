@@ -5,7 +5,7 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.4.6"
+VERSION="4.4.7"
 CONFIG_DIR="$HOME/.co-dialectic"
 
 # Co-Dialectic plugin skill inventory (v4.3.0). Shared by install + uninstall.
