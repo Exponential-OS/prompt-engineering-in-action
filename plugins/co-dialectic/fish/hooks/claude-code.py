@@ -35,6 +35,7 @@ Fail-open on any error — adapter bugs must never block real work.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import re
 import subprocess
@@ -94,8 +95,65 @@ _TIER_MODEL = {
     "opus": "opus",
 }
 
+# P4 Weakness-Seam Descent (2026-05-05): keyword regex is a structural gate
+# for a semantic violation. "Is this T3?" requires semantic judgment — keyword
+# matching produces false negatives on architectural docs with no T3 keywords
+# (content-flywheel.md rewrites, BRIEF.md additions, ADR edits). Replace with
+# a focused Haiku semantic call. Keyword logic kept as fail-open fallback.
+SEMANTIC_TIER_CLASSIFICATION = True
 
-def _infer_stakes(prompt: str) -> str:
+_SEMANTIC_SYSTEM = (
+    "You classify AI agent task prompts by stakes tier. "
+    "Reply with exactly one of: T1, T2, or T3. No other output.\n"
+    "T1 = read-only, exploratory, fully reversible: grep, read, research, summarize, explain.\n"
+    "T2 = writes to regular code/config files, non-canonical edits, internal notes.\n"
+    "T3 = ANY of: (a) write/edit/add to strategy or architecture documents "
+    "(content-flywheel.md, BRIEF.md, CONSTITUTION.md, SKILL.md, ADR files, "
+    "brain/identity/ files, campaign masters, schema files); "
+    "(b) architectural or schema decisions; "
+    "(c) outreach to real humans (email, DM, post); "
+    "(d) publishing or deploying; "
+    "(e) irreversible or hard-to-undo actions; "
+    "(f) canonical documents that multiple agents read and act on. "
+    "When uncertain between T2 and T3, choose T3."
+)
+_SEMANTIC_MODEL = "claude-haiku-4-5-20251001"
+_SEMANTIC_MAX_TOKENS = 5
+_SEMANTIC_TIMEOUT = 8
+
+
+def _infer_stakes_semantic(prompt: str) -> str | None:
+    """
+    Semantic tier classification via Haiku. Returns T1/T2/T3 or None on failure.
+    Fail-open: any error returns None, caller falls back to keyword logic.
+    """
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return None
+    try:
+        import anthropic  # type: ignore
+        client = anthropic.Anthropic(timeout=_SEMANTIC_TIMEOUT)
+        resp = client.messages.create(
+            model=_SEMANTIC_MODEL,
+            max_tokens=_SEMANTIC_MAX_TOKENS,
+            system=_SEMANTIC_SYSTEM,
+            messages=[{"role": "user", "content": prompt[:400]}],
+        )
+        text = ""
+        for block in getattr(resp, "content", []) or []:
+            t = getattr(block, "text", None)
+            if isinstance(t, str):
+                text += t
+        text = text.strip().upper()[:10]
+        for tier in ("T3", "T2", "T1"):
+            if tier in text:
+                return tier
+        return None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _infer_stakes_keyword(prompt: str) -> str:
+    """Keyword-based fallback. Used when semantic call is disabled or fails."""
     lower = prompt.lower()
     if len(prompt.split()) > 300:
         return "T3"
@@ -112,6 +170,14 @@ def _infer_stakes(prompt: str) -> str:
         if sig in lower:
             return "T1"
     return "T2"
+
+
+def _infer_stakes(prompt: str) -> str:
+    if SEMANTIC_TIER_CLASSIFICATION:
+        result = _infer_stakes_semantic(prompt)
+        if result is not None:
+            return result
+    return _infer_stakes_keyword(prompt)
 
 
 def _recommend_tier(prompt: str, stakes: str) -> str:
