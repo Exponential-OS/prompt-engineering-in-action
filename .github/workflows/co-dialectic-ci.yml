@@ -56,7 +56,13 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
+      - name: Install judge panel dependencies
+        run: pip install anthropic
+
       - name: Judge panel eval (8-case seeded-flaw corpus)
         run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          JUDGE_PANEL_API_FALLBACK_APPROVED: "1"

@@ -4,6 +4,17 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.3] — 2026-05-04
+
+**Codename:** CI judge panel green — API fallback for headless runner + ZeroDivisionError fix.
+
+### Fixed
+
+- **`judge_panel_eval.py` ZeroDivisionError** when `avg_cost_vs_naive_parallel_jury=0` (zero-cost run). Now prints `n/a (zero cost)` instead of crashing.
+- **CI: judge panel eval now passes on GitHub Actions**. Added `pip install anthropic` step + `JUDGE_PANEL_API_FALLBACK_APPROVED=1` + `GOOGLE_API_KEY` / `OPENAI_API_KEY` secrets — enables API-fallback path when `gemini`/`codex` CLIs are not installed on the runner.
+
+---
+
 ## [4.4.2] — 2026-05-04
 
 **Codename:** CI full coverage — install smoke, fish tier breadth, judge panel corpus.

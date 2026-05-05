@@ -157,7 +157,8 @@ def print_summary(results: list[dict], metrics: dict) -> None:
     print(f"Total cost:          ${metrics['total_cost_usd']:.6f}")
     if metrics['avg_cost_vs_naive_parallel_jury'] is not None:
         ratio = metrics['avg_cost_vs_naive_parallel_jury']
-        print(f"Cost vs naive jury:  {ratio:.2%}  ({1/ratio:.1f}× cheaper than parallel Opus jury)")
+        cheaper = f"{1/ratio:.1f}× cheaper than parallel Opus jury" if ratio > 0 else "n/a (zero cost)"
+        print(f"Cost vs naive jury:  {ratio:.2%}  ({cheaper})")
     print()
 
 
