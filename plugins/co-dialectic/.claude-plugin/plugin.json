@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
   "description": "Co-Dialectic v4.6.0 — LLM prompt optimizer + auto-verify by stakes + semantic T3 classification (Haiku API, replaces keyword regex) + background agent lifecycle manager (dedup/timeout/capacity) + worktree-isolation foreground gate + runtime-agnostic executor types (CODI_EXECUTOR_TYPES) + fish-swarm MUST-spawn dispatch mandate + Protocol 0 post-compaction re-init + plugin user-content gate (SKILL.md product hygiene). Cross-family cascade-then-jury review, judge-panel, hallucination detector, fish-swarm orchestration, session handoff. Works with any LLM runtime.",
-  "version": "4.6.1",
+  "version": "4.6.2",
   "author": {
     "name": "Anand Vallamsetla"
   }

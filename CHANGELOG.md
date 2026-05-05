@@ -4,6 +4,23 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.6.2] — 2026-05-05
+
+**Codename:** Compaction Immunity — P0 first, kernel hooks, no more silent disappearing.
+
+### Fixed
+
+- **Compaction survival:** SKILL.md reordered — P0 (init) is now line 22, Metadata moved to bottom. After context compaction, truncated SKILL.md still contains full P0-P3 protocols. Root cause: 700 chars of header/metadata was consuming the truncation budget before any protocol logic.
+- **Spec/code gap closed:** "Protocol 0 post-compaction re-init" was claimed in plugin.json description but relied on Protocol 0 being present after compaction. Now structurally guaranteed by reorder.
+
+### Added
+
+- **`hooks/hooks.json`:** Native plugin hooks — `SessionStart` injects kernel systemMessage; `UserPromptSubmit` re-fires kernel stub every turn (belt + suspenders).
+- **`hooks/scripts/session-start.sh`:** Injects compact kernel on session open.
+- **`hooks/scripts/inject-kernel.sh`:** Fires every message — approves prompt + attempts systemMessage injection. Compaction-immune by construction.
+
+---
+
 ## [4.6.1] — 2026-05-05
 
 **Codename:** Emoji Color System — semantic color via emoji, Doshi + Ive merged.

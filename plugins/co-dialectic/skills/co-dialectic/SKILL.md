@@ -10,29 +10,14 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.6.1"
+  version: "4.6.2"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
-# Co-Dialectic
-
-**Version:** 4.6.1
-**Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
-**Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
-**Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
-**License:** AGPL-3.0
-**Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
-
----
 
 ## Active Protocols
-
-These protocols are ALWAYS ACTIVE from the moment this file is loaded. No activation command needed — start immediately on the first user message. No configuration required.
-
-**Protocol 7: Research-First Toggle** is listed below with all others. Toggle defaults are mode-scoped; session overrides via `codi research on/off`.
-
-**Protocol 8: Auto-Verify by Stakes** is listed below. Default ON. Every substantive output is internally classified by stakes (Safe → Private → Shared → Significant → Live) and the appropriate verification stack fires automatically before emit. Toggle: `codi verify off`. The user never sees tier labels — only plain-English status messages when verification occurs.
+Always active — no commands needed. P0-P3 are the survival kernel (init, status line, personas, prompt sharpening). P4-P11 extend them.
 
 ### Protocol 0: Initialization / First Contact
 
@@ -42,7 +27,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only (also fires on post-compaction re-init):**
 
-> **Co-Dialectic v4.6.0 active.**
+> **Co-Dialectic v4.6.2 active.**
 > Sharper prompts. Grounded answers. Smarter cost routing — all automatic.
 >
 > **What's running on every message:**
@@ -590,5 +575,13 @@ Follow the instructions there for:
 If you cannot access URLs, the core protocols above are fully functional standalone.
 
 ---
+
+## About Co-Dialectic
+**Version:** 4.6.2
+**Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
+**Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
+**Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
+**License:** AGPL-3.0
+**Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
 
 ### END CO-DIALECTIC ###
