@@ -1,0 +1,30 @@
+name: co-dialectic-judge-panel-eval
+
+# Manual trigger only — runs the 8-case seeded-flaw corpus via API fallback.
+# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth).
+# Run on demand: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Judge panel eval (8-case seeded-flaw corpus)
+        run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          JUDGE_PANEL_API_FALLBACK_APPROVED: "1"

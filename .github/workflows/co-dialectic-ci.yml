@@ -37,32 +37,17 @@ jobs:
 
       - name: Fish gate tier coverage (T0, T1, T2, T3)
         run: |
-          # T0 — should fire=false (skip gate entirely)
           echo '{"task":"list files","stakes":"T0","context":"safe read-only op"}' | \
             python3 plugins/co-dialectic/fish/HOW.py - | \
             python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('fired')==False or d.get('verdict') in ('PASS','SKIP','WARN'), f'T0 unexpected: {d}'"
-          # T1 — gate fires, returns valid JSON verdict
           echo '{"task":"ci smoke test","stakes":"T1","context":"github actions"}' | \
             python3 plugins/co-dialectic/fish/HOW.py - | \
             python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T1 no verdict: {d}'"
-          # T2 — gate fires, returns valid JSON verdict
           echo '{"task":"write shared config file","stakes":"T2","context":"shared state"}' | \
             python3 plugins/co-dialectic/fish/HOW.py - | \
             python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T2 no verdict: {d}'"
-          # T3 — gate fires, returns valid JSON verdict
           echo '{"task":"deploy to production","stakes":"T3","context":"live system"}' | \
             python3 plugins/co-dialectic/fish/HOW.py - | \
             python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T3 no verdict: {d}'"
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
-      - name: Install judge panel dependencies
-        run: pip install anthropic
-
-      - name: Judge panel eval (8-case seeded-flaw corpus)
-        run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          JUDGE_PANEL_API_FALLBACK_APPROVED: "1"

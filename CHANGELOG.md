@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.4] — 2026-05-04
+
+**Codename:** CI clean push — judge panel eval moved to on-demand workflow.
+
+### Changed
+
+- **CI restructure**: `co-dialectic-ci.yml` (push-triggered) no longer runs judge panel eval — keeps every push zero-cost. Judge panel eval moved to `co-dialectic-judge-panel-eval.yml` (`workflow_dispatch` only — run manually from Actions tab when needed). Separates "does it build?" from "does the cascade work?", which has API cost.
+
+---
+
 ## [4.4.3] — 2026-05-04
 
 **Codename:** CI judge panel green — API fallback for headless runner + ZeroDivisionError fix.
