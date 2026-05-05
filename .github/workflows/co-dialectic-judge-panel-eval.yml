@@ -1,10 +1,20 @@
 name: co-dialectic-judge-panel-eval
 
-# Manual trigger only — runs the 8-case seeded-flaw corpus via API fallback.
-# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth).
-# Run on demand: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
+# Auto-triggers when judge panel logic or eval corpus changes.
+# Also manually triggerable: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
+# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth) — ~$0.01/run.
 
 on:
+  push:
+    paths:
+      - 'plugins/co-dialectic/skills/judge-panel/**'
+      - 'plugins/co-dialectic/tests/**'
+      - '.github/workflows/co-dialectic-judge-panel-eval.yml'
+  pull_request:
+    paths:
+      - 'plugins/co-dialectic/skills/judge-panel/**'
+      - 'plugins/co-dialectic/tests/**'
+      - '.github/workflows/co-dialectic-judge-panel-eval.yml'
   workflow_dispatch:
 
 jobs:
@@ -28,3 +38,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           JUDGE_PANEL_API_FALLBACK_APPROVED: "1"
+          # CI uses flash for tiebreaker (pro times out >120s in headless env)
+          # and a shorter per-call timeout to fail fast rather than hang.
+          GEMINI_CLI_PREMIUM_MODEL: "gemini-3.1-flash-lite-preview"
+          JUDGE_PANEL_TIMEOUT_S: "30"

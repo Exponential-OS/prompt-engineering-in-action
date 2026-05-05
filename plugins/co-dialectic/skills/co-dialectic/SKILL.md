@@ -17,7 +17,7 @@ metadata:
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 4.4.4
+**Version:** 4.4.5
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))

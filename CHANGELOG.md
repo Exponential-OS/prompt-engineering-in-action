@@ -4,6 +4,17 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.5] — 2026-05-04
+
+**Codename:** CI auto-escalate — judge panel eval fires automatically on judge panel code changes.
+
+### Changed
+
+- **`co-dialectic-judge-panel-eval.yml`**: auto-triggers on push/PR to `skills/judge-panel/**` or `tests/**` (not only on manual dispatch). Path-scoped so it doesn't run on every push — only when judge panel logic or eval corpus changes.
+- **CI tiebreaker model**: uses `gemini-3.1-flash-lite-preview` as tiebreaker in CI (override via `GEMINI_CLI_PREMIUM_MODEL`) — `gemini-3.1-pro-preview` was timing out at 120s in headless runner. Timeout reduced to 30s (`JUDGE_PANEL_TIMEOUT_S=30`) to fail fast rather than hang.
+
+---
+
 ## [4.4.4] — 2026-05-04
 
 **Codename:** CI clean push — judge panel eval moved to on-demand workflow.
