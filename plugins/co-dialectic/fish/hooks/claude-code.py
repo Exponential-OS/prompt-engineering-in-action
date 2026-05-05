@@ -46,11 +46,20 @@ HOW_PY = HOOK_DIR.parent / "HOW.py"
 
 # ── Stakes inference ────────────────────────────────────────────────────────
 # Substring-matched T3 signals (phrase-level — safe from false positives).
+# "migrate" is intentionally excluded here: bare "migrate" is too broad and
+# fires on reversible code/test migrations ("migrate tests to pytest").
+# Irreversible data/infra migrations are captured via _T3_MIGRATE_SIGNALS below.
 _T3_SIGNALS = frozenset([
     "publish", "send", "deploy", "delete", "remove", "drop", "push to",
     "email", "post to linkedin", "linkedin post", "publish linkedin",
     "substack", "tweet", "post to", "notify",
-    "production", "irreversible", "migrate", "overwrite",
+    "production", "irreversible", "overwrite",
+])
+# Data/infra migration phrases that are genuinely irreversible (not code refactoring).
+_T3_MIGRATE_SIGNALS = frozenset([
+    "db migrate", "database migrate", "schema migrate", "data migrate",
+    "migrate database", "migrate schema", "migrate data", "migrate table",
+    "alembic", "flyway", "liquibase", "migration script to prod",
 ])
 # Word-boundary T3 signals — terms that embed in longer words ("force" → "enforcement").
 _T3_WORD_SIGNALS: tuple[str, ...] = ("force", "push")
@@ -91,6 +100,9 @@ def _infer_stakes(prompt: str) -> str:
     if len(prompt.split()) > 300:
         return "T3"
     for sig in _T3_SIGNALS:
+        if sig in lower:
+            return "T3"
+    for sig in _T3_MIGRATE_SIGNALS:
         if sig in lower:
             return "T3"
     for sig in _T3_WORD_SIGNALS:
@@ -164,7 +176,13 @@ def main() -> int:
 
     # Background policy: fire-and-forget for mechanical/synthesis work;
     # whale waits for architectural decisions and irreversible actions.
-    auto_bg = stakes not in ("T3", "T4") and recommended_tier != "opus"
+    # Exception: elite-code-writer spawns are reversible executors (whale already
+    # decomposed the task) — force bg=True so parallel spawns don't serialize.
+    is_code_executor = subagent_type in ("elite-code-writer", "codex:codex-rescue")
+    auto_bg = (
+        is_code_executor
+        or (stakes not in ("T3", "T4") and recommended_tier != "opus")
+    )
 
     # ── Run HOW.py (approach pre-flight) — optional ────────────────────────
     fish_input = json.dumps(
