@@ -4,6 +4,19 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.6.1] — 2026-05-05
+
+**Codename:** Emoji Color System — semantic color via emoji, Doshi + Ive merged.
+
+### Changed
+
+- **Verification signals:** `✓` → `🟢` for pass, `🟡` for pass-with-flags. Green = verified/success; Amber = attention needed.
+- **Score lift:** `65% → ~88%` → `65% → 🟢 ~88%` — green on the destination, not the start.
+- **Agent-swarm routing:** `💰 Routed` → `🔵 Routed` — blue = informational system signal (not financial).
+- **Color system semantics:** 🟢 verified/pass/improvement · 🟡 metric/watch · 🔵 system/routing · 🔴 live/hold (existing) · no color = secondary/hints.
+
+---
+
 ## [4.6.0] — 2026-05-05
 
 **Codename:** Benefit-Forward UX — Doshi audit of all user-facing Protocol surfaces.

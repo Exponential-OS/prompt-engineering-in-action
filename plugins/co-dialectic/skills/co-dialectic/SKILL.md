@@ -10,14 +10,14 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.6.0"
+  version: "4.6.1"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 4.6.0
+**Version:** 4.6.1
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -201,7 +201,7 @@ On EVERY user message:
 
 1. Evaluate: could this prompt be more effective?
 2. If **YES** → check your **Mode**:
-    - If **🛞 Drive** (Default): Rewrite the user's prompt into its sharpest possible version — add specificity, constraints, context, and reasoning depth. Show the improved prompt in a quoted block, then show: (1) what changed and why in one line, (2) estimated score lift (e.g., `65% → ~88%`), then **stop and wait**. Do not answer the question. The user responds:
+    - If **🛞 Drive** (Default): Rewrite the user's prompt into its sharpest possible version — add specificity, constraints, context, and reasoning depth. Show the improved prompt in a quoted block, then show: (1) what changed and why in one line, (2) estimated score lift (e.g., `65% → 🟢 ~88%`), then **stop and wait**. Do not answer the question. The user responds:
       - **y** — answer using the improved prompt
       - **n** — answer using the original prompt as-is
       - **e** — user edits the improved prompt themselves, then you answer using their edited version
@@ -383,8 +383,8 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 |---|---|---|
 | Safe (T0) | nothing (calibration-auditor already always-on) | nothing — just the answer |
 | Private (T1) | calibration-auditor only (already always-on) | nothing — just the answer |
-| Shared (T2) | + `hallucination-detector` passive scan (via fish-swarm rubric `hallucination-preflight`) | compact footer: `✓ Grounded — no hallucinations detected` |
-| Significant (T3) | + `judge-panel` cross-family cascade (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable — surfaces remediation block, never silently skips) | `✓ 2 independent models agreed — clean` (expandable: `codi verify why`) |
+| Shared (T2) | + `hallucination-detector` passive scan (via fish-swarm rubric `hallucination-preflight`) | compact footer: `🟢 Grounded — no hallucinations detected` |
+| Significant (T3) | + `judge-panel` cross-family cascade (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable — surfaces remediation block, never silently skips) | `🟢 2 independent models agreed — clean` (expandable: `codi verify why`) |
 | Live (T4) | + canonical-claim verifier (dispatched to `career-os.bio-claim-verifier` for biographical claims; `hallucination-detector` full post-flight for general claims) + biographical-claim mandatory precheck against the workspace-provided canonical source (`$CO_DIALECTIC_BIO_SOURCE`, default: `experience-history.md` registered by workspace adapter) + `unknown-unknown` adjacency surfacer + **explicit human "send"/"ship it"/"verified" confirmation REQUIRED before emit** | `🚀 ready to send — type 'send' to confirm` + RED preflight summary (see Live flow below) |
 
 **T2 cost target:** ~1-2K tokens / ~0.5s wall-clock (fish-swarm preflight rubric, no escalation on routine artifacts).
@@ -405,8 +405,8 @@ python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
 ```
 
 Parse `final_verdict` + `final_confidence` + `all_flags`. Surface to user as:
-- `✓ 2 independent models agreed — clean` when `final_verdict == "pass"` and `final_confidence ≥ 80`
-- `~ 2 models reviewed — 1 flag` when `pass` with low confidence or flags present
+- `🟢 2 independent models agreed — clean` when `final_verdict == "pass"` and `final_confidence ≥ 80`
+- `🟡 2 models reviewed — 1 flag` when `pass` with low confidence or flags present
 - `⚠ review flagged — type 'codi verify why' for details` when `final_verdict == "fail"`
 
 #### Live (T4) explicit-confirm flow
@@ -456,8 +456,8 @@ When the tier classifier reaches Live (T4):
 
 Protocol 8 adds to Protocol 1's status line only when verification fires (T2+). Silent at T0/T1.
 
-- **Shared (T2):** Append to response footer: `✓ Grounded — no hallucinations detected`
-- **Significant (T3):** Append to response footer: `✓ 2 independent models agreed — clean`
+- **Shared (T2):** Append to response footer: `🟢 Grounded — no hallucinations detected`
+- **Significant (T3):** Append to response footer: `🟢 2 independent models agreed — clean`
 - **Live (T4):** Preflight summary replaces footer until `send` confirmation.
 - **Verify OFF:** Append once to first response after disabling: `codi verify: OFF — no auto-verification this session`
 
@@ -568,7 +568,7 @@ When the parent identifies ≥2 independent legs of work, auto-emit a SINGLE mes
 
 **Cost cap:** Safe/Private artifacts (T0/T1) NEVER fan out (cost > value). Hard cap 5 sub-agents per parent task.
 
-**Status line:** when fan-out dispatched work in last response, show `💰 Routed` in the response footer (once per response, not on every subsequent turn).
+**Status line:** when fan-out dispatched work in last response, show `🔵 Routed` in the response footer (once per response, not on every subsequent turn).
 
 **Composition with Protocol 8 (Auto-Verify):** sub-agent outputs SKIP Verify; the parent runs Verify ONCE on the synthesized top-level output at the seam where it meets the world. Avoids triplicate cost.
 
