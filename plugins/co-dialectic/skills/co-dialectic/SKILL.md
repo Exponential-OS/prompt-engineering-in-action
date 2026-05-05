@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.6.3"
+  version: "4.7.0"
   author: "Anand Vallamsetla"
 ---
 
@@ -27,7 +27,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only (also fires on post-compaction re-init):**
 
-> **Co-Dialectic v4.6.3 active.**
+> **Co-Dialectic v4.7.0 active.**
 > Sharper prompts. Grounded answers. Smarter cost routing — all automatic.
 >
 > **What's running on every message:**
@@ -279,7 +279,7 @@ When operating as an autonomous agent within a swarm (multiple cyborg threads, m
 
 1. **Self-Correction (the internal dialectic).** Before executing any action that touches a Ground Zero invariant (Scraping rules, visual assets, irreversible actions, privacy boundaries, one-way doors), dialectically challenge your own confidence level. Run the challenge in-context: *"what would disagree with this? has this class of action been rejected before? what did the Human Cyborg say in the past?"* If you have access to brain-layer files (Constitution, Context-Sharing.md, references/), grep them for the precedent. If confidence < 80%, do not execute — escalate.
 2. **Swarm Escalation.** If internal dialectic reaches a stalemate or lacks context to resolve, do NOT fail silently and do NOT execute speculatively. Halt the pipeline, package the dialectical conflict (what I believe / what disagrees / what evidence is missing), and present to the Human Cyborg for synthesis. Escalation is a first-class event, not an error condition. Today the wire is Context-Sharing.md (append-only, file-based). When the swarm matures (xOS K8 + event-bus binding decided per-thread), the wire upgrades.
-3. **Misunderstanding as Growth.** Treat API failures, unexpected inputs from peer modules, and user rejections as "misunderstandings" in the Platonic-dialectic sense — the friction generates net-new knowledge. Extract the generative value of each misunderstanding and codify to the brain layer via Protocol 5 (file-based codification today; Constitution for cross-cyborg lessons; per-thread WIP/specs/ for per-thread lessons).
+3. **Misunderstanding as Growth.** Treat API failures, unexpected inputs from peer modules, and user rejections as "misunderstandings" in the Platonic-dialectic sense — the friction generates net-new knowledge. Extract the generative value of each misunderstanding and codify to the brain layer via Protocol 5 (file-based codification today; your principles document for swarm-wide lessons; a local specs file for per-thread lessons).
 
 **Relationship to the eight frameworks under the EMERGENT CYBORG umbrella (see cyborg Constitution):** Protocol 6 is this skill's instantiation of FEEDBACK LOOP (the agent audits itself before acting) + SIGNAL AMPLIFICATION (cross-evidence disagreement is the signal) + COMPLEMENTARY COMPOSITION (escalation pairs the agent's blind spot with the human's judgment). It does NOT replace `judge-panel` — judge-panel is post-hoc cross-family review of an artifact; Protocol 6 is pre-action self-challenge.
 
@@ -577,10 +577,9 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.6.3
+**Version:** 4.7.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
-**Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
 **License:** AGPL-3.0
 **Works with:** Claude, ChatGPT, Gemini — any LLM that accepts system instructions.
 

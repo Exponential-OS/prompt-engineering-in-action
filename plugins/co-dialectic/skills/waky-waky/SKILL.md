@@ -111,7 +111,7 @@ waky-waky discovers workspace paths from `~/.codialectic/context.json`. The work
 
 ```json
 {
-  "constitution_path": "/absolute/path/to/CONSTITUTION.md",
+  "principles_path": "/absolute/path/to/principles.md",
   "identity_path": "/absolute/path/to/identity.md",
   "brand_path": "/absolute/path/to/professional-brand.md",
   "workspace_root": "/absolute/path/to/workspace",
@@ -201,7 +201,7 @@ A workspace bootstrap installer (e.g., xHumanOS) creates `~/.codialectic/hooks/s
 }
 ```
 
-On `waky waky`, codi reads this file and executes both checks. The first BLOCKs on missing MCPs (cyborg's discipline); the second WARNs on prose-only invariants (informational debt). codi itself never references `~/cyborg/` — it just runs whatever `command` and `args` the workspace registered.
+On `waky waky`, codi reads this file and executes both checks. The first BLOCKs on missing MCPs; the second WARNs on prose-only invariants (informational debt). codi itself never references personal workspace paths — it just runs whatever `command` and `args` the workspace registered.
 
 **Boundary:** codi terminal executes hooks; codi knows nothing about specific hook contents. Workspace plug-ins are responsible for registering hooks at install time and for writing checks that produce actionable stderr on failure.
 

@@ -4,6 +4,27 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.7.0] — 2026-05-05
+
+**Codename:** External-Ready — onboarding skill + personal-content clean for first external users.
+
+### Added
+
+- **Onboarding skill** (`skills/onboarding/SKILL.md`): self-explanatory first-time setup. Walks any new user through what Co-Dialectic does, Step 1-4 quickstart, daily command reference, and session personalization. No external docs required. Trigger: "onboard me", "codi setup", "get started", "/co-dialectic-onboarding".
+- **Session-start hint:** kernel message now includes onboarding hint for new users.
+
+### Fixed
+
+- **I1 personal content:** removed `**Author:**` line from SKILL.md body (body copy must be generic; attribution belongs in frontmatter only).
+- **I2 external refs:** 4 references to personal workspace paths removed from shipped SKILL.md files:
+  - `waky-waky/SKILL.md`: `constitution_path` → `principles_path` in context registry schema
+  - `waky-waky/SKILL.md`: `~/cyborg/` reference in boundary explanation
+  - `unknown-unknown/SKILL.md`: `CONSTITUTION.md` → "your principles document"
+  - `co-dialectic/SKILL.md`: `WIP/specs/` → "a local specs file"
+- **Plugin product ship gate now passes** (`bash ~/cyborg/rules/plugin-product-ship-gate/HOW.sh`).
+
+---
+
 ## [4.6.3] — 2026-05-05
 
 **Codename:** Self-Healing Skill Sync — plugin keeps userSettings skill current automatically.

@@ -89,7 +89,7 @@ After scanning, emit a bulleted adjacency map. Be specific — name the files an
 
 This insight also touches:
   • Brand — sharpens "Start with Why" identity (.career-os/memory/identity.md)
-  • Framework — worth codifying in CONSTITUTION.md as a P<X> litmus test
+  • Framework — worth codifying in your principles document as a litmus test
   • Product feature — slots into Co-Dialectic plugin #9 (Cross-Pollinator) or AgencyOS specialist
   • Marketing hook — candidate LinkedIn post for co-dialectic/03_CONTENT/
   • Relationship — relevant to <name> (see .career-os/memory/people/<slug>.md)
