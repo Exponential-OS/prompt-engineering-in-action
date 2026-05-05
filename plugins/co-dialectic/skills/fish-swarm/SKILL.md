@@ -172,21 +172,27 @@ fish-swarm gates.
 
 **Per v4.1 Protocol 11a, fish-swarm is now the AUTO-ROUTING TARGET for mechanical sub-tasks (when `codi agent-swarm on`, default). Activation surface expanded from explicit-only to: explicit OR auto-routed by Protocol 11.**
 
-**Always, for these patterns** (these are pure T0-T2 mechanical orchestration):
+**Dispatch mandate table — ALWAYS dispatch these patterns, NEVER absorb inline (Seam 3 fix — 2026-05-05):**
 
-- User pasted a vague prompt and the model is about to ask clarifying
-  questions → first invoke `prompt-sharpen` and offer the sharpened version
-- User's prompt spans a clear domain → invoke `persona-detect` and adopt
-  the persona before generating
-- The model is about to emit a draft response containing words like
-  "great", "absolutely", "perfect", "amazing" → invoke `calibration-scan`
-  on the draft, strip flagged phrases, regenerate
-- The user's prompt asks about a fact, citation, current date, recent
-  event, legal/medical/financial claim → invoke `hallucination-preflight`,
-  fire the recommended grounding action, THEN respond
-- The model has produced a T0-T2 artifact (internal note, draft, exploratory
-  output) and the next action is "ship it" → invoke `t0t2-jury` for a
-  one-line verdict
+The whale absorbing these patterns inline is the #1 token-burn failure mode (observed 2026-05-05: whale did 200-line Rumsfeld audits, gap analysis, prompt sharpening all inline — zero fish dispatched). The mandate is structural: if the task matches a row below, the whale MUST spawn an `Agent()` call with the rubric, not inline-generate.
+
+| Task pattern | Rubric | Spawn or inline? |
+|---|---|---|
+| User pasted vague prompt → whale about to ask clarifying questions | `prompt-sharpen` | **MUST spawn** — offer sharpened version from fish |
+| User prompt spans clear domain | `persona-detect` | **MUST spawn** — adopt persona from fish verdict |
+| Whale draft contains "great", "absolutely", "perfect", "amazing", "excellent" | `calibration-scan` | **MUST spawn** — strip flagged phrases, regenerate |
+| User asks about a fact, citation, current date, recent event, legal/medical/financial claim | `hallucination-preflight` | **MUST spawn** — fire grounding action, THEN respond |
+| T0-T2 artifact ready to ship | `t0t2-jury` | **MUST spawn** — one-line pass/fail before emitting |
+| Audit/gap-analysis task ≤200 lines | `t0t2-jury` | **MUST spawn** — not an inline Rumsfeld audit |
+| Pattern-match/scan across a document section | `t0t2-jury` | **MUST spawn** — mechanical scan, not whale reasoning |
+
+**Whale-inline anti-pattern** (observed, from session 2026-05-05):
+- ❌ Whale doing a 200-line Rumsfeld audit of content-flywheel.md inline — should have been `t0t2-jury` dispatch
+- ❌ Whale doing gap analysis of social distribution engine inline — should have been `t0t2-jury` dispatch
+- ❌ Whale absorbing prompt-sharpening turn without calling `prompt-sharpen` rubric
+- ❌ Whale doing persona detection from topic keywords without calling `persona-detect`
+
+**Litmus test before any inline analysis:** "Is this a pattern-match, scan, or mechanical judgment task? If yes — dispatch to fish, do NOT inline."
 
 **Never, for these patterns** (T3-T4 — whale's job):
 

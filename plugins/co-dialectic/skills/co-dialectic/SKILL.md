@@ -10,14 +10,14 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.4.0"
+  version: "4.5.0"
   author: "Anand Vallamsetla"
 ---
 
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic
 
-**Version:** 4.4.8
+**Version:** 4.5.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -38,7 +38,9 @@ These protocols are ALWAYS ACTIVE from the moment this file is loaded. No activa
 
 When first activated in a new chat, orient the user with a clean, scannable welcome. Then go terse.
 
-- **First reply only:**
+**Re-initialization after context compaction (Seam 1 fix — 2026-05-05):** If the system-reminder shows this skill as "previously invoked" AND no Protocol 0 welcome has been emitted in the current context window (i.e., you cannot find a prior Protocol 0 welcome in the visible conversation), treat this as a first activation and re-fire Protocol 0 immediately — including the fish health probe. Compaction clears activation state; passive re-injection without re-init leaves co-dialectic running blind with no fish-school status and no Protocol 1 status line. Signal to detect: system-reminder contains `co-dialectic` in the previously-invoked skills list but the conversation shows no prior `Co-Dialectic v` welcome message.
+
+- **First reply only (also fires on post-compaction re-init):**
 
 > **Co-Dialectic v4.3.0 active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
@@ -57,6 +59,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - If you default to Cruise mode (e.g., in an IDE), add: "Starting in 🚗 Cruise. Type `codi drive` to switch to hands-on sharpening."
 - After first reply, show only the **persona** on each response. Surface other dimensions only when they change or need attention.
+- **Fish health probe is MANDATORY on Protocol 0 (including re-init).** Before completing the first reply, run the two health checks in parallel via Bash: `command -v gemini >/dev/null && echo "gemini: ✓" || echo "gemini: ✗"` and `command -v codex >/dev/null && echo "codex: ✓" || echo "codex: ✗"`. Append the result to the welcome message. If fish_count == 0, surface the FAIL-HARD remediation block immediately — Protocol 8 T3 dispatch cannot fire without fish. Do NOT skip this probe under any condition including compaction re-init.
 
 ### Protocol 1: Status Line
 
