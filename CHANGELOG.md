@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.6.3] — 2026-05-05
+
+**Codename:** Self-Healing Skill Sync — plugin keeps userSettings skill current automatically.
+
+### Fixed
+
+- **Stale userSettings skill:** `session-start.sh` now checks `~/.claude/skills/co-dialectic/SKILL.md` version against the plugin cache version. If stale (or missing), it overwrites from plugin cache. `claude plugin update` now fully propagates — `/co-dialectic` skill invocation always loads the current version.
+
+---
+
 ## [4.6.2] — 2026-05-05
 
 **Codename:** Compaction Immunity — P0 first, kernel hooks, no more silent disappearing.
