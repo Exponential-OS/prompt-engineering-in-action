@@ -22,6 +22,7 @@ The name is the thesis. A monologue between you and one model is a closed loop w
 
 ## What it does
 
+- **Mandatory pre-task gate (fish)** — every agent task is intercepted before it starts, stakes are inferred (T0–T4: Safe/Private/Shared/Significant/Live), and the response strategy is calibrated automatically. Auto-wired into Claude Code's PreToolUse hook on install; no user action required.
 - **Prompt sharpening** — vague prompts are rewritten into specific ones before the model answers.
 - **Persona detection** — ten expert lenses (architecture, design, debugging, product, positioning, career, productivity, data, writing, mindset) auto-activate based on what you're asking.
 - **Hallucination detector** — pre-flight risk classification (legal, medical, factual) plus post-flight scoring; high-risk claims get flagged before they ship.
@@ -80,6 +81,7 @@ Co-dialectic is a **terminal layer**: it works standalone in any LLM that accept
 | Skill | Role |
 |---|---|
 | `co-dialectic` (core) | Prompt sharpening, persona detection, per-prompt quality scoring, context-health monitoring |
+| `fish` | Mandatory pre-task gate — stakes inference (T0–T4) + response calibration; wired as PreToolUse hook |
 | `calibration-auditor` | Sycophancy scanner |
 | `hallucination-detector` | Risk classification + post-flight scoring |
 | `judge-panel` | Cross-family cascade-then-jury verification |
@@ -98,9 +100,9 @@ Domain-specific applications — career coaching, team campaign engines, family 
 
 ## Roadmap
 
-**v3.5.0 (this release)** — hook-callback extension surface, demo-ready packaging. The shipping surface is the marketplace plug-in for IDE / CLI runtimes (Claude Code, Cursor, Cowork). Web users today have a copy-paste path: paste the SKILL.md content as a system prompt on any web AI chat app — codi behaviors operate immediately.
+**v4.4.0 (current)** — self-contained fish gate. The mandatory pre-task gate now ships inside the plugin and auto-wires its PreToolUse hook into Claude Code on install. No manual hook configuration. Uninstall removes the hook cleanly. Also ships: stakes-calibrated response strategy (T0–T4), session handoff codification, research-first mode, honesty selector (brutal/grounded/soft), agent-swarm default-on.
 
-**Beyond v3.5 — user-driven.** Direction is determined by beta-tester signal: installs, retention, friction reports, and feature requests. New surface areas (browser extensions, IDE-specific extensions, etc.) are evaluated when demand justifies the engineering cost. No commitments; no version pins.
+**Beyond v4.4 — user-driven.** Direction is determined by beta-tester signal: installs, retention, friction reports, and feature requests. Runtime adapters for Gemini and Codex (the fish gate equivalents for those runtimes) are next when those platforms support equivalent hook surfaces. No commitments; no version pins.
 
 **Want to drive the roadmap?** [Open an issue](https://github.com/thewhyman/anand-career-os/issues) with what's missing, what feels rough, what you'd pay for.
 
