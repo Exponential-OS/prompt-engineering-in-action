@@ -4,6 +4,20 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.2] — 2026-05-04
+
+**Codename:** CI full coverage — install smoke, fish tier breadth, judge panel corpus.
+
+### Added
+
+- **CI: install smoke test** (`--smoke-install`). Full `install.sh` run in a temp `$HOME`; verifies every skill lands at `~/.claude/skills/`, judge-panel hook present, hygiene skill correctly absent.
+- **CI: fish gate tier coverage**. T0 (skip), T1, T2, T3 each exercised independently — confirms tier-routing code paths all return valid JSON verdicts.
+- **CI: judge panel eval**. Runs `tests/judge_panel_eval.py` against the 8-case seeded-flaw corpus with `ANTHROPIC_API_KEY` secret. Catches cascade regressions.
+- **CI: Claude CLI install step**. `npm install -g @anthropic-ai/claude-code` on ubuntu runner — enables section 17 (plugin install sandbox) which was previously warning/skipping.
+- **GitHub Actions secret**: `ANTHROPIC_API_KEY` set on `Exponential-OS/prompt-engineering-in-action`.
+
+---
+
 ## [4.4.1] — 2026-05-04
 
 **Codename:** CI gate — co-dialectic ships its first GitHub Actions workflow.
