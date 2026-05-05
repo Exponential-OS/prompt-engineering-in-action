@@ -17,10 +17,17 @@ This adapter:
   1. Infers stakes tier (T1/T2/T3) from prompt keywords.
   2. Recommends a MiroFish model tier (haiku/sonnet/opus) via pre-spawn
      classification — the advisor-model routing layer.
-  3. Calls HOW.py for approach pre-flight (PASS/WARN/BLOCK).
-  4. Merges the model recommendation into HOW.py's JSON output and
-     injects updatedInput.model so Claude Code auto-sets the right model
+  3. Auto-sets run_in_background based on tier:
+       haiku/sonnet at T1-T2 → True  (mechanical/synthesis, fire-and-forget)
+       opus or T3+ → False            (architectural/irreversible, whale waits)
+     Caller-set run_in_background is always respected.
+  4. Calls HOW.py for approach pre-flight (PASS/WARN/BLOCK).
+  5. Merges the model recommendation into HOW.py's JSON output and
+     injects updatedInput so Claude Code auto-sets model + threading
      on every Agent() spawn — no manual selection required.
+
+HOW.py is optional: if missing, advisor routing (model + background)
+still fires. Only the pre-flight check is skipped.
 
 Fail-open on any error — adapter bugs must never block real work.
 """
@@ -142,7 +149,8 @@ def main() -> int:
 
     prompt = (tool_input.get("prompt") or "").strip()
     subagent_type = tool_input.get("subagent_type", "")
-    existing_model = tool_input.get("model", "")  # respect explicit caller override
+    existing_model = tool_input.get("model", "")
+    existing_bg = tool_input.get("run_in_background")  # None = caller did not set it
 
     if not prompt:
         return 0
@@ -150,11 +158,15 @@ def main() -> int:
     stakes = _infer_stakes(prompt)
     recommended_tier = _recommend_tier(prompt, stakes)
 
-    # If caller already specified a model, respect it — don't override.
-    # Advisor routing only fires when the caller left model unset.
+    # Respect explicit caller overrides — only inject when caller left them unset.
     apply_model = not bool(existing_model)
+    apply_bg = existing_bg is None
 
-    # ── Run HOW.py (approach pre-flight) ───────────────────────────────────
+    # Background policy: fire-and-forget for mechanical/synthesis work;
+    # whale waits for architectural decisions and irreversible actions.
+    auto_bg = stakes not in ("T3", "T4") and recommended_tier != "opus"
+
+    # ── Run HOW.py (approach pre-flight) — optional ────────────────────────
     fish_input = json.dumps(
         {
             "task": prompt[:600],
@@ -164,41 +176,37 @@ def main() -> int:
         ensure_ascii=False,
     )
 
-    if not HOW_PY.exists():
-        return 0  # HOW.py missing — fail open
+    payload: dict = {}
+    exit_code = 0
 
-    # Capture HOW.py stdout so we can enrich it before passing to Claude Code.
-    result = subprocess.run(
-        [sys.executable, str(HOW_PY), "-"],
-        input=fish_input,
-        text=True,
-        capture_output=True,
-    )
-    exit_code = result.returncode
+    if HOW_PY.exists():
+        result = subprocess.run(
+            [sys.executable, str(HOW_PY), "-"],
+            input=fish_input,
+            text=True,
+            capture_output=True,
+        )
+        exit_code = result.returncode
+        how_out = result.stdout.strip()
+        try:
+            payload = json.loads(how_out) if how_out else {}
+        except json.JSONDecodeError:
+            payload = {}
+    # HOW.py missing → advisor routing still fires, pre-flight skipped.
 
-    # ── Parse and enrich HOW.py output ────────────────────────────────────
-    how_out = result.stdout.strip()
-    try:
-        payload = json.loads(how_out) if how_out else {}
-    except json.JSONDecodeError:
-        payload = {}
-
-    # Build the advisor routing annotation.
+    # ── Build advisor routing annotation ───────────────────────────────────
     tier_note = (
         f"[MiroFish] recommended model: {recommended_tier} "
-        f"(stakes={stakes}, apply={apply_model}). "
+        f"(stakes={stakes}, apply_model={apply_model}, bg={auto_bg if apply_bg else existing_bg}). "
         f"Whale decompose → fish execute at {recommended_tier} tier."
     )
-
-    # Merge tier note into systemMessage.
     existing_msg = payload.get("systemMessage", "")
     payload["systemMessage"] = (
         f"{existing_msg}\n{tier_note}" if existing_msg else tier_note
     )
 
-    # Inject updatedInput.model so Claude Code auto-sets the model on the
-    # Agent() call — the advisor-model dispatch that makes MiroFish automatic.
-    if apply_model:
+    # ── Inject updatedInput (model + run_in_background) ───────────────────
+    if apply_model or apply_bg:
         hook_specific = payload.get("hookSpecificOutput") or {}
         if not isinstance(hook_specific, dict):
             hook_specific = {}
@@ -206,7 +214,10 @@ def main() -> int:
         updated_input = hook_specific.get("updatedInput") or {}
         if not isinstance(updated_input, dict):
             updated_input = {}
-        updated_input["model"] = _TIER_MODEL[recommended_tier]
+        if apply_model:
+            updated_input["model"] = _TIER_MODEL[recommended_tier]
+        if apply_bg:
+            updated_input["run_in_background"] = auto_bg
         hook_specific["updatedInput"] = updated_input
         payload["hookSpecificOutput"] = hook_specific
 
