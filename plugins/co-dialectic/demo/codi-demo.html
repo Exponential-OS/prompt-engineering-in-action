@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Co-Dialectic v4.6.1 Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #080c14;
+    color: #e6edf3;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .frame {
+    display: none;
+    width: 900px;
+    flex-direction: column;
+  }
+  .frame.active { display: flex; }
+
+  /* Window chrome */
+  .window-bar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px 10px 0 0;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+  .window-title { margin: 0 auto; color: #8b949e; font-size: 12px; }
+
+  /* Terminal */
+  .terminal {
+    background: #0d1117;
+    padding: 24px 28px 32px;
+    min-height: auto;
+    border: 1px solid #30363d;
+    border-top: none;
+  }
+
+  /* Caption bar */
+  .caption {
+    background: #e8f3ff;
+    border: 1px solid #30363d;
+    border-top: 3px solid #58a6ff;
+    border-radius: 0 0 10px 10px;
+    padding: 18px 32px;
+    font-size: 17px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #1a2332;
+    line-height: 1.5;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+  .caption strong { color: #58a6ff; }
+
+  /* ---- Shared components ---- */
+  .prompt { color: #8b949e; margin-bottom: 16px; }
+  .prompt span { color: #58a6ff; }
+
+  .status-line {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 6px; padding: 4px 12px; margin-bottom: 16px; font-size: 13px;
+  }
+  .status-persona { color: #e6edf3; font-weight: 600; }
+  .status-dot { color: #30363d; }
+  .status-score { color: #d29922; font-weight: 600; }
+  .status-cal { color: #8b949e; }
+
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #8b949e; margin-bottom: 14px;
+  }
+
+  .welcome-title { color: #58a6ff; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .welcome-tagline { color: #e6edf3; margin-bottom: 18px; }
+
+  .benefit-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; padding: 8px 12px;
+    border-radius: 6px; background: #161b22; border-left: 3px solid transparent;
+  }
+  .benefit-row.green { border-left-color: #3fb950; }
+  .benefit-row.blue  { border-left-color: #58a6ff; }
+  .benefit-title { color: #e6edf3; font-weight: 600; }
+  .benefit-desc  { color: #8b949e; }
+
+  .score-block {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 6px; padding: 12px 16px; margin-bottom: 16px;
+  }
+  .score-line { color: #8b949e; margin-bottom: 6px; }
+  .score-key  { color: #8b949e; font-size: 12px; line-height: 1.8; }
+  .score-key .num { color: #d29922; font-weight: 600; }
+
+  .commands { color: #8b949e; font-size: 13px; }
+  .commands span { color: #58a6ff; }
+
+  .user-msg { margin-bottom: 12px; display: flex; gap: 8px; }
+  .user-label { color: #8b949e; }
+  .user-text  { color: #e6edf3; }
+
+  .improved-block {
+    background: #161b22; border: 1px solid #30363d;
+    border-left: 3px solid #58a6ff; border-radius: 6px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .improved-label { color: #8b949e; font-size: 12px; margin-bottom: 8px; }
+  .improved-text  { color: #e6edf3; line-height: 1.7; }
+
+  .lift-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+  .why-label { color: #8b949e; }
+  .why-text  { color: #e6edf3; }
+  .score-before { color: #8b949e; }
+  .score-after  { color: #3fb950; font-weight: 700; }
+
+  .yne { color: #8b949e; margin-top: 10px; font-size: 13px; }
+  .yne span { color: #58a6ff; font-weight: 600; }
+
+  .response-body {
+    color: #e6edf3; line-height: 1.7; margin-bottom: 16px;
+    padding: 12px 0; border-bottom: 1px solid #21262d;
+  }
+
+  .verify-pass {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: #3fb950; font-size: 13px; padding: 4px 0;
+  }
+  .routed-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #58a6ff; font-size: 13px; padding: 4px 0; margin-top: 8px;
+  }
+
+  .verify-hold {
+    background: #1a0a0a; border: 1px solid #6e3030;
+    border-radius: 6px; padding: 14px 16px; margin-top: 12px;
+  }
+  .verify-hold-title { color: #f85149; font-weight: 700; margin-bottom: 8px; }
+  .verify-hold-row { color: #8b949e; font-size: 13px; line-height: 1.8; }
+  .verify-hold-row .ok   { color: #3fb950; }
+  .verify-hold-row .warn { color: #d29922; }
+  .verify-hold-cta { color: #58a6ff; margin-top: 10px; font-size: 13px; }
+
+  .footer-hint {
+    color: #8b949e; font-size: 12px; margin-top: 20px;
+    border-top: 1px solid #21262d; padding-top: 12px;
+  }
+  .footer-hint span { color: #58a6ff; }
+
+  hr.divider { border: none; border-top: 1px solid #21262d; margin: 16px 0; }
+
+  /* Title frame */
+  .title-frame {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 480px; text-align: center;
+  }
+  .title-main { font-size: 34px; font-weight: 700; color: #58a6ff; margin-bottom: 10px; }
+  .title-tagline { font-size: 16px; color: #e6edf3; margin-bottom: 36px; }
+  .title-pills { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .pill-green { background: #0f2a14; color: #3fb950; border: 1px solid #236128; }
+  .pill-blue  { background: #0a1929; color: #58a6ff; border: 1px solid #1f4068; }
+  .pill-amber { background: #2a1f00; color: #d29922; border: 1px solid #5a4000; }
+  .pill-red   { background: #2a0a0a; color: #f85149; border: 1px solid #6e2020; }
+
+  /* ---- Hook slides ---- */
+  .hook-slide {
+    width: 900px;
+    height: 640px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 72px 80px;
+    background: radial-gradient(ellipse at 22% 55%, #0e1a2e 0%, #080c14 70%);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hook-slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 80px; right: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(88,166,255,0.35), transparent);
+  }
+  .hook-step {
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 12px;
+    color: #58a6ff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 44px;
+  }
+  .hook-headline {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-size: 62px;
+    font-weight: 900;
+    line-height: 1.08;
+    color: #e6edf3;
+  }
+  .hook-headline .wrong {
+    text-decoration: line-through;
+    text-decoration-thickness: 3px;
+    color: #3a404a;
+  }
+  .hook-headline .right {
+    color: #58a6ff;
+  }
+  .hook-sub {
+    margin-top: 28px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 18px;
+    color: #8b949e;
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 560px;
+  }
+  .hook-wordmark {
+    position: absolute;
+    bottom: 36px; left: 80px;
+    font-family: 'SF Mono', monospace;
+    font-size: 11px;
+    color: #3a404a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const f = new URLSearchParams(window.location.search).get('f') || '1';
+    document.querySelectorAll('.frame').forEach(el => el.classList.remove('active'));
+    const t = document.getElementById('f' + f);
+    if (t) t.classList.add('active');
+  });
+</script>
+</head>
+<body>
+
+<!-- HOOK A: Stop search engine -->
+<div id="fa" class="frame">
+  <div class="hook-slide">
+    <div class="hook-step">STEP 01 · 03</div>
+    <div class="hook-headline">
+      Stop using AI<br>
+      as a <span class="wrong">search engine.</span>
+    </div>
+    <div class="hook-wordmark">Co-Dialectic · thewhyman.com</div>
+  </div>
+</div>
+
+<!-- HOOK B: Stop assistant/boss -->
+<div id="fb" class="frame">
+  <div class="hook-slide">
+    <div class="hook-step">STEP 02 · 03</div>
+    <div class="hook-headline">
+      Stop using it as<br>
+      <span class="wrong">an assistant.</span><br>
+      <span class="wrong">Or a boss.</span>
+    </div>
+    <div class="hook-wordmark">Co-Dialectic · thewhyman.com</div>
+  </div>
+</div>
+
+<!-- HOOK C: Co-thinking partner -->
+<div id="fc" class="frame">
+  <div class="hook-slide">
+    <div class="hook-step">STEP 03 · 03</div>
+    <div class="hook-headline">
+      Use it as a<br>
+      <span class="right">co-thinking</span><br>
+      <span class="right">partner.</span>
+    </div>
+    <div class="hook-sub">Co-Dialectic — the operating system for your thinking.</div>
+    <div class="hook-wordmark">Co-Dialectic · thewhyman.com</div>
+  </div>
+</div>
+
+<!-- FRAME 1: Title -->
+<div id="f1" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">co-dialectic — demo</div>
+  </div>
+  <div class="terminal">
+    <div class="title-frame">
+      <div class="title-main">Co-Dialectic v4.6.1</div>
+      <div class="title-tagline">Sharper prompts. Grounded answers. Smarter cost routing.</div>
+      <div class="title-pills">
+        <div class="pill pill-green">🟢 Verified / Pass</div>
+        <div class="pill pill-amber">🟡 Watch / Flags</div>
+        <div class="pill pill-blue">🔵 System / Routing</div>
+        <div class="pill pill-red">🔴 Live / Hold</div>
+      </div>
+    </div>
+  </div>
+  <div class="caption">Each color means <strong>exactly one thing</strong>. You'll see them fire in real interactions below.</div>
+</div>
+
+<!-- FRAME 2: Protocol 0 -->
+<div id="f2" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">First contact</div>
+  </div>
+  <div class="terminal">
+    <div class="prompt"><span>›</span> codi on</div>
+    <div class="section-label">Welcome</div>
+    <div class="welcome-title">Co-Dialectic v4.6.1 active.</div>
+    <div class="welcome-tagline">Sharper prompts. Grounded answers. Smarter cost routing — all automatic.</div>
+    <div style="margin-bottom:18px">
+      <div class="benefit-row green">
+        <span style="min-width:20px">↑</span>
+        <div><span class="benefit-title">Sharper prompts</span> <span class="benefit-desc">— your phrasing improved before every response</span></div>
+      </div>
+      <div class="benefit-row green">
+        <span style="min-width:20px">✓</span>
+        <div><span class="benefit-title">Grounded answers</span> <span class="benefit-desc">— hallucinations caught before Significant and Live artifacts reach you</span></div>
+      </div>
+      <div class="benefit-row blue">
+        <span style="min-width:20px">💰</span>
+        <div><span class="benefit-title">Cost routing</span> <span class="benefit-desc">— cheap work goes to cheap models; premium reasoning fires only when it matters</span></div>
+      </div>
+    </div>
+    <div class="score-block">
+      <div class="score-line">Your score appears on every response:</div>
+      <div style="font-size:15px;margin-bottom:8px">📦 Product (Doshi) · <span style="color:#d29922;font-weight:700">88%</span> · Cal: 96%</div>
+      <div class="score-key">
+        ↳ <span class="num">88%</span> = how effective your prompt was — goes up as you improve<br>
+        ↳ Cal: 96% = how deeply the expert is thinking for your task
+      </div>
+    </div>
+    <div class="commands">Type <span>`codi help`</span> · <span>`codi fish status`</span> to explore.</div>
+  </div>
+  <div class="caption">On first activation, codi shows <strong>what's running</strong> and explains the scores — no guessing.</div>
+</div>
+
+<!-- FRAME 3: Protocol 3 -->
+<div id="f3" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Prompt improvement</div>
+  </div>
+  <div class="terminal">
+    <div class="status-line">
+      <span class="status-persona">🔗 Career (Hoffman)</span>
+      <span class="status-dot">·</span>
+      <span class="status-score">45%</span>
+      <span class="status-dot">·</span>
+      <span class="status-cal">Cal: 94%</span>
+    </div>
+    <div class="user-msg"><span class="user-label">You:</span><span class="user-text">make my linkedin better</span></div>
+    <div class="section-label">Sharper version</div>
+    <div class="improved-block">
+      <div class="improved-label">IMPROVED PROMPT</div>
+      <div class="improved-text">
+        "Review my LinkedIn headline and About section for a <span style="color:#58a6ff">[Senior PM]</span> search.<br>
+        Identify the 2 highest-impact changes. Prioritize recruiters<br>
+        skimming in under 10 seconds."
+      </div>
+    </div>
+    <div class="lift-row">
+      <span class="why-label">↑ Why:</span>
+      <span class="why-text">added target role, scope, and a measurable success criterion</span>
+    </div>
+    <div class="lift-row">
+      <span class="why-label">Score lift:</span>
+      <span class="score-before">45%</span>
+      <span style="color:#8b949e"> → </span>
+      <span class="score-after">🟢 ~82%</span>
+    </div>
+    <div class="yne"><span>y</span> answer with this &nbsp;·&nbsp; <span>n</span> use original &nbsp;·&nbsp; <span>e</span> edit yourself</div>
+  </div>
+  <div class="caption">Vague prompt detected. codi rewrites it and shows <strong>exactly how much better</strong> the new version is.</div>
+</div>
+
+<!-- FRAME 4: T2 Verification -->
+<div id="f4" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Hallucination check — automatic</div>
+  </div>
+  <div class="terminal">
+    <div class="status-line">
+      <span class="status-persona">✍️ Writing (Orwell)</span>
+      <span class="status-dot">·</span>
+      <span class="status-score">78%</span>
+      <span class="status-dot">·</span>
+      <span class="status-cal">Cal: 96%</span>
+    </div>
+    <div class="response-body">
+      The three most common LinkedIn headline mistakes are: leading with your job title instead of your value proposition, using generic keywords that every candidate shares, and omitting the specific problem you solve for your reader. A strong headline answers "who do I help and how" in under 10 words...
+    </div>
+    <div class="verify-pass">🟢 Grounded — no hallucinations detected</div>
+    <hr class="divider">
+    <div class="footer-hint">(💡 Score improving. <span>`codi help`</span> to explore · <span>`codi personas`</span> to see all experts)</div>
+  </div>
+  <div class="caption">Every answer is silently checked for false claims. <strong>🟢 means it passed</strong> — no action needed from you.</div>
+</div>
+
+<!-- FRAME 5: T3 Verification -->
+<div id="f5" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Cross-model review — significant artifact</div>
+  </div>
+  <div class="terminal">
+    <div class="status-line">
+      <span class="status-persona">🏗️ Architecture (Jeff Dean)</span>
+      <span class="status-dot">·</span>
+      <span class="status-score">82%</span>
+      <span class="status-dot">·</span>
+      <span class="status-cal">Cal: 97%</span>
+    </div>
+    <div class="response-body">
+      For a multi-tenant SaaS at 10K requests/sec, the primary architectural decision is between a shared-schema with row-level tenant isolation versus a schema-per-tenant model. Shared-schema wins on operational cost (single migration path, no N-schema fan-out); schema-per-tenant wins on blast radius containment and compliance boundaries. At your scale, shared-schema with a tenant_id index on every hot table and a dedicated read replica per enterprise tier is the right call...
+    </div>
+    <div class="verify-pass">🟢 2 independent models agreed — clean</div>
+    <hr class="divider">
+    <div class="footer-hint">(💡 <span>`codi verify why`</span> to see judge breakdown · <span>`codi honesty brutal`</span> to stress-test)</div>
+  </div>
+  <div class="caption">For important decisions, <strong>two separate AI models review independently</strong>. Both agreed — you can act on this.</div>
+</div>
+
+<!-- FRAME 6: T4 Live Hold -->
+<div id="f6" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Live artifact — hold before send</div>
+  </div>
+  <div class="terminal">
+    <div class="status-line">
+      <span class="status-persona">🔗 Career (Hoffman)</span>
+      <span class="status-dot">·</span>
+      <span class="status-score">88%</span>
+      <span class="status-dot">·</span>
+      <span class="status-cal">Cal: 96%</span>
+    </div>
+    <div class="verify-hold">
+      <div class="verify-hold-title">🔴 PREFLIGHT — Live artifact</div>
+      <div class="verify-hold-row">
+        Canonical-claim check: <span class="warn">⚠ 1 mismatch</span><br>
+        &nbsp;&nbsp;"led a team of 12" — canonical: <span class="ok">8 direct reports (2022–2024)</span><br>
+        Hallucination scan: <span class="ok">✓ clean</span><br>
+        Cross-family review: <span class="ok">🟢 2 models agreed</span><br>
+        Adjacencies surfaced: network connection at target company
+      </div>
+      <div class="verify-hold-cta">🚀 ready to send — type 'send' to confirm<br>
+        <span style="color:#8b949e;font-size:12px">or 'codi verify why' for full flag details</span>
+      </div>
+    </div>
+  </div>
+  <div class="caption">Before sending to a real person, codi <strong>catches a factual error</strong> — "12 reports" vs your actual "8". Nothing ships without your confirm.</div>
+</div>
+
+<!-- FRAME 7: Cost Routing -->
+<div id="f7" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Cost routing — fish-swarm</div>
+  </div>
+  <div class="terminal">
+    <div class="status-line">
+      <span class="status-persona">⚡ Productivity (Ferriss)</span>
+      <span class="status-dot">·</span>
+      <span class="status-score">85%</span>
+      <span class="status-dot">·</span>
+      <span class="status-cal">Cal: 95%</span>
+    </div>
+    <div class="response-body">
+      The single highest-leverage change to your week is time-blocking your deep work before checking email. Every inbound message is someone else's priority queue injected into yours. A 90-minute protected block before 10am, with notifications off, will produce more output than 4 hours of reactive work...
+    </div>
+    <div class="routed-badge">🔵 Routed — 3 sub-tasks dispatched to efficient models</div>
+    <div class="verify-pass" style="margin-top:8px">🟢 Grounded — no hallucinations detected</div>
+    <hr class="divider">
+    <div class="footer-hint">(💡 <span>`codi fish status`</span> to see what's running · <span>`codi cruise`</span> for auto-execute mode)</div>
+  </div>
+  <div class="caption">Routine work is automatically routed to cheaper models. <strong>Premium reasoning only fires when it matters.</strong></div>
+</div>
+
+<!-- FRAME 8: Score Progression -->
+<div id="f8" class="frame">
+  <div class="window-bar">
+    <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+    <div class="window-title">Your prompt score over time</div>
+  </div>
+  <div class="terminal">
+    <div class="prompt"><span>›</span> codi status</div>
+    <div class="section-label">Session average trend</div>
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="color:#8b949e;width:55px;font-size:12px">Day 1</div>
+        <div style="background:#21262d;border-radius:4px;height:18px;width:200px;overflow:hidden">
+          <div style="background:#30363d;height:100%;width:45%"></div></div>
+        <div style="color:#8b949e;font-size:13px">45% <span style="font-size:11px">finding the rhythm</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="color:#8b949e;width:55px;font-size:12px">Day 3</div>
+        <div style="background:#21262d;border-radius:4px;height:18px;width:200px;overflow:hidden">
+          <div style="background:#d29922;height:100%;width:72%"></div></div>
+        <div style="color:#d29922;font-size:13px;font-weight:600">72% <span style="color:#8b949e;font-size:11px;font-weight:400">learning is visible</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="color:#8b949e;width:55px;font-size:12px">Day 7</div>
+        <div style="background:#21262d;border-radius:4px;height:18px;width:200px;overflow:hidden">
+          <div style="background:#388bfd;height:100%;width:85%"></div></div>
+        <div style="color:#58a6ff;font-size:13px;font-weight:600">85% <span style="color:#8b949e;font-size:11px;font-weight:400">patterns internalized</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="color:#8b949e;width:55px;font-size:12px">Day 10</div>
+        <div style="background:#21262d;border-radius:4px;height:18px;width:200px;overflow:hidden">
+          <div style="background:#3fb950;height:100%;width:93%"></div></div>
+        <div style="color:#3fb950;font-size:13px;font-weight:600">93% <span style="color:#8b949e;font-size:11px;font-weight:400">near-fluent</span></div>
+      </div>
+    </div>
+    <div style="color:#8b949e;font-size:13px;border-top:1px solid #21262d;padding-top:14px">
+      The AI improves your prompts → you learn the patterns → your prompts improve the AI's outputs → repeat.
+    </div>
+    <hr class="divider">
+    <div class="footer-hint">(💡 <span>`codi drive`</span> for hands-on sharpening · <span>`codi honesty brutal`</span> to stress-test)</div>
+  </div>
+  <div class="caption">The score isn't decoration — it's a <strong>learning curve made visible</strong>. Most users hit 85%+ by day 7.</div>
+</div>
+
+</body>
+</html>
