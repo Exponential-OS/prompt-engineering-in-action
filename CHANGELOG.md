@@ -4,6 +4,22 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.0] — 2026-05-04
+
+**Codename:** Self-contained fish — codi ships and wires its own fish gate. No cyborg dependency required.
+
+### Added
+
+- **`fish/` directory in plugin** (`plugins/co-dialectic/fish/`). HOW.py (Haiku pre-task gate engine) + `hooks/claude-code.py` (Claude Code PreToolUse adapter) now ship inside the plugin itself. Previously these lived only in `~/cyborg/rules/codi-fish-precheck/` — a cyborg-layer staging path not available on fresh installs.
+- **`install.sh` fish gate wiring**. Both install paths (marketplace via `claude plugin install` and direct download) now call `install_fish_gate()` + `wire_agent_hook()` after skill install. Files land at `~/.claude/skills/co-dialectic/fish/`; the Agent PreToolUse hook is merged into `~/.claude/settings.json` via stdlib Python — no jq dependency.
+- **`unwire_agent_hook()`** in uninstall path. Cleanly removes the fish gate hook from `~/.claude/settings.json` on uninstall.
+
+### How it works
+
+`install.sh` → downloads `fish/HOW.py` + `fish/hooks/claude-code.py` → wires `PreToolUse → Agent → python3 ~/.claude/skills/co-dialectic/fish/hooks/claude-code.py` into `~/.claude/settings.json`. Every subsequent `Agent()` spawn in Claude Code reads the actual task from `tool_input.prompt` (stdin JSON), infers stakes (T1/T2/T3), and runs Haiku as the fish before the sub-agent executes.
+
+---
+
 ## [4.3.0] — 2026-05-04
 
 **Codename:** Fish-mandatory-gate — codi fish-swarm is now a required pre-task gate, not an optional orchestration layer.

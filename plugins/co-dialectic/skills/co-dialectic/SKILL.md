@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.3.0"
+  version: "4.4.0"
   author: "Anand Vallamsetla"
 ---
 

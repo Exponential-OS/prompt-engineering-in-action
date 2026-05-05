@@ -5,7 +5,7 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.3.0"
+VERSION="4.4.0"
 CONFIG_DIR="$HOME/.co-dialectic"
 
 # Co-Dialectic plugin skill inventory (v4.3.0). Shared by install + uninstall.
@@ -107,6 +107,9 @@ if [ "$MENU_CHOICE" = "2" ]; then
         fi
     done
     
+    # 2b. Remove fish gate hook from ~/.claude/settings.json
+    unwire_agent_hook
+
     # 3. Remove standalone files — iterate the plugin's skill inventory so
     #    older installs (single co-dialectic skill) AND v3.2+ installs (all 6
     #    sibling skills) both get fully cleaned up.
@@ -173,6 +176,127 @@ fetch_skill_extras() {
             fi
             ;;
     esac
+}
+
+# -----------------------------------------
+# FISH GATE INSTALL + HOOK WIRING
+# -----------------------------------------
+FISH_INSTALL_DIR="$HOME/.claude/skills/co-dialectic/fish"
+FISH_HOOK_CMD="python3 $HOME/.claude/skills/co-dialectic/fish/hooks/claude-code.py"
+
+install_fish_gate() {
+    # Downloads HOW.py + hooks/claude-code.py into the installed skill dir.
+    # These are the runtime primitives; the hook wiring happens in wire_agent_hook().
+    local failed=0
+    mkdir -p "$FISH_INSTALL_DIR/hooks"
+
+    if curl -fsSL "$REPO/plugins/co-dialectic/fish/HOW.py" \
+            -o "$FISH_INSTALL_DIR/HOW.py" 2>/dev/null; then
+        chmod +x "$FISH_INSTALL_DIR/HOW.py"
+        echo "   ✅ fish/HOW.py (pre-task gate engine)"
+    else
+        echo "   ⚠️  failed to fetch fish/HOW.py"
+        failed=$((failed + 1))
+    fi
+
+    if curl -fsSL "$REPO/plugins/co-dialectic/fish/hooks/claude-code.py" \
+            -o "$FISH_INSTALL_DIR/hooks/claude-code.py" 2>/dev/null; then
+        chmod +x "$FISH_INSTALL_DIR/hooks/claude-code.py"
+        echo "   ✅ fish/hooks/claude-code.py (Claude Code PreToolUse adapter)"
+    else
+        echo "   ⚠️  failed to fetch fish/hooks/claude-code.py"
+        failed=$((failed + 1))
+    fi
+
+    return $failed
+}
+
+wire_agent_hook() {
+    # Merges the Agent PreToolUse hook into ~/.claude/settings.json via Python stdlib.
+    # Idempotent — skips if already wired to this path.
+    local settings="$HOME/.claude/settings.json"
+    if [ ! -f "$settings" ]; then
+        echo "   ℹ️  ~/.claude/settings.json not found — skipping hook wiring"
+        return
+    fi
+
+    python3 - "$settings" "$FISH_HOOK_CMD" << 'PYEOF'
+import json, sys, os
+
+settings_path = sys.argv[1]
+hook_cmd      = sys.argv[2]
+
+try:
+    with open(settings_path) as f:
+        settings = json.load(f)
+except (OSError, json.JSONDecodeError) as e:
+    print(f"   ⚠️  Could not read {settings_path}: {e}")
+    sys.exit(0)
+
+new_entry = {
+    "matcher": "Agent",
+    "hooks": [{"type": "command", "command": hook_cmd, "timeout": 25}]
+}
+
+hooks    = settings.setdefault("hooks", {})
+pretool  = hooks.setdefault("PreToolUse", [])
+
+# Idempotency: skip if any Agent matcher already points to our fish adapter.
+already = any(
+    e.get("matcher") == "Agent" and
+    any("co-dialectic/fish/hooks/claude-code.py" in h.get("command", "")
+        for h in e.get("hooks", []))
+    for e in pretool
+)
+
+if already:
+    print("   ✅ Fish gate hook already wired in ~/.claude/settings.json")
+    sys.exit(0)
+
+pretool.append(new_entry)
+
+try:
+    with open(settings_path, "w") as f:
+        json.dump(settings, f, indent=2)
+    print("   ✅ Fish gate hook wired → ~/.claude/settings.json (PreToolUse → Agent)")
+except OSError as e:
+    print(f"   ⚠️  Could not write {settings_path}: {e}")
+PYEOF
+}
+
+unwire_agent_hook() {
+    # Removes the co-dialectic fish gate hook from ~/.claude/settings.json.
+    local settings="$HOME/.claude/settings.json"
+    [ -f "$settings" ] || return
+
+    python3 - "$settings" << 'PYEOF'
+import json, sys
+
+settings_path = sys.argv[1]
+try:
+    with open(settings_path) as f:
+        settings = json.load(f)
+except (OSError, json.JSONDecodeError):
+    sys.exit(0)
+
+pretool = settings.get("hooks", {}).get("PreToolUse", [])
+before  = len(pretool)
+settings["hooks"]["PreToolUse"] = [
+    e for e in pretool
+    if not (
+        e.get("matcher") == "Agent" and
+        any("co-dialectic/fish/hooks/claude-code.py" in h.get("command", "")
+            for h in e.get("hooks", []))
+    )
+]
+
+if len(settings["hooks"]["PreToolUse"]) < before:
+    with open(settings_path, "w") as f:
+        json.dump(settings, f, indent=2)
+    print("   ✅ Fish gate hook removed from ~/.claude/settings.json")
+else:
+    print("   ℹ️  Fish gate hook not found in ~/.claude/settings.json")
+PYEOF
 }
 
 download_skills_direct() {
@@ -328,6 +452,13 @@ if [ -d "$HOME/.claude" ]; then
                 else
                     echo "   ⚠️  Could not fetch main skill file — run installer again to retry"
                 fi
+                # Fish gate: download HOW.py + adapter and wire the PreToolUse hook
+                echo "   ⬇️  Installing fish gate (pre-task approach checker)..."
+                if install_fish_gate; then
+                    wire_agent_hook
+                else
+                    echo "   ⚠️  Fish gate install incomplete — hook not wired"
+                fi
                 INSTALLED=true
                 INSTALLED_TOOLS="$INSTALLED_TOOLS,claude_code"
                 _use_direct=false
@@ -340,6 +471,12 @@ if [ -d "$HOME/.claude" ]; then
         if [ "$_use_direct" = true ]; then
             mkdir -p "$HOME/.claude/skills"
             download_skills_direct "$HOME/.claude/skills" "claude_code"
+            echo "   ⬇️  Installing fish gate (pre-task approach checker)..."
+            if install_fish_gate; then
+                wire_agent_hook
+            else
+                echo "   ⚠️  Fish gate install incomplete — hook not wired"
+            fi
         fi
     else
         mkdir -p "$HOME/.claude/skills"
