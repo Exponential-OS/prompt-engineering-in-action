@@ -4,6 +4,19 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.4.8] — 2026-05-04
+
+**Codename:** Revert OAuth hack — API key only, complexity not justified.
+
+### Reverted
+
+- **`judge_panel.py`**: removed `GOOGLE_BEARER_TOKEN` bearer token path — `generativelanguage.googleapis.com` does not accept ADC/user OAuth tokens (returns `ACCESS_TOKEN_SCOPE_INSUFFICIENT`). API key is the only supported path for this endpoint.
+- **`co-dialectic-judge-panel-eval.yml`**: back to API key only (`GOOGLE_API_KEY`). Removed `GOOGLE_BEARER_TOKEN`. Cost ~$0.01/run; not worth the complexity.
+- **`cyborg/scripts/check-oauth.py`** and **`git-push-token-refresh.py`**: deleted. Hook mechanism confirmed non-functional for this API.
+- **`~/.claude/settings.json`**: removed SessionStart `check-oauth` hook and PreToolUse `git-push-token-refresh` hook.
+
+---
+
 ## [4.4.7] — 2026-05-04
 
 **Codename:** Hack-only CI — strip WIF scaffold, keep bearer-token hack clearly labeled.

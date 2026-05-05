@@ -2,17 +2,7 @@ name: co-dialectic-judge-panel-eval
 
 # Auto-triggers when judge panel logic or eval corpus changes.
 # Also manually triggerable: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
-#
-# HACK: Google auth uses a bearer token captured at push time by
-# cyborg/scripts/git-push-token-refresh.py and written to the
-# GOOGLE_BEARER_TOKEN GitHub Secret. Token TTL ~1 hour; CI runs in
-# ~2-5 min — always fresh. Bills to the developer's Google AI Pro
-# subscription, not the Gemini API (pay-per-token).
-#
-# TODO (when ready to go keyless): replace with GitHub OIDC + GCP
-# Workload Identity Federation. Delete GOOGLE_BEARER_TOKEN secret,
-# delete cyborg/scripts/git-push-token-refresh.py, and the SessionStart
-# check-oauth.py hook. See git history for the WIF scaffold.
+# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth) — ~$0.01/run.
 
 on:
   push:
@@ -45,10 +35,6 @@ jobs:
         run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # HACK: bearer token written by git-push-token-refresh.py at push time.
-          # Bills to Google AI Pro subscription (not API). Delete when WIF is set up.
-          GOOGLE_BEARER_TOKEN: ${{ secrets.GOOGLE_BEARER_TOKEN }}
-          # Fallback if bearer token not set (API billing, pay-per-token).
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           JUDGE_PANEL_API_FALLBACK_APPROVED: "1"
