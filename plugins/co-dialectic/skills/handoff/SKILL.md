@@ -283,7 +283,7 @@ dependencies.
 
 **Worked example — careeros workspace adapter:**
 
-The careeros workspace registers a hook that consumes the handoff JSON and
+A workspace plug-in registers a hook that consumes the handoff JSON and
 creates a GitHub Issue per `unfinished_items[]` entry. Example contents of
 `~/.codialectic/hooks/session_end.json`:
 
@@ -291,15 +291,15 @@ creates a GitHub Issue per `unfinished_items[]` entry. Example contents of
 {
   "hooks": [
     {
-      "name": "careeros-gh-issues",
-      "command": "/Users/anandvallam/anand-career-os/scripts/handoff-to-issues.sh",
+      "name": "workspace-gh-issues",
+      "command": "/path/to/workspace/scripts/handoff-to-issues.sh",
       "args": [],
       "required": true,
       "timeout_seconds": 60
     },
     {
-      "name": "careeros-handoff-md",
-      "command": "/Users/anandvallam/anand-career-os/scripts/handoff-to-md.sh",
+      "name": "workspace-handoff-md",
+      "command": "/path/to/workspace/scripts/handoff-to-md.sh",
       "args": [],
       "required": false,
       "timeout_seconds": 10
@@ -309,14 +309,14 @@ creates a GitHub Issue per `unfinished_items[]` entry. Example contents of
 ```
 
 The first adapter is required: it parses stdin JSON and creates one issue
-per unfinished item via `gh issue create --repo thewhyman/anand-career-os`.
+per unfinished item via `gh issue create --repo your-org/your-repo`.
 If `gh` fails or the network is down, handoff BLOCKs and the user knows
 immediately. The second adapter is best-effort: it appends a markdown
 summary to a local HANDOFF.md as a backup; failure WARNs but does not
 block.
 
-Codi-handoff itself never references `~/anand-career-os/`, never knows
-about GitHub Issues, never imports the careeros substrate. It pipes JSON to
+Codi-handoff itself never references any workspace-specific paths, never knows
+about GitHub Issues, never imports the workspace substrate. It pipes JSON to
 the registered command and reports the exit code.
 
 **Boundary:** codi captures and emits; the workspace adapter persists.

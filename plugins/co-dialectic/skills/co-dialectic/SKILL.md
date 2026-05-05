@@ -591,8 +591,4 @@ If you cannot access URLs, the core protocols above are fully functional standal
 
 ---
 
-## More from the Author
-
-**[thewhyman.com](https://thewhyman.com)** — Anand Vallamsetla's AI hub: techniques, philosophy, and tools.
-
 ### END CO-DIALECTIC ###

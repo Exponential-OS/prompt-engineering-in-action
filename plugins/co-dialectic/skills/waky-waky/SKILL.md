@@ -29,32 +29,30 @@ Activate ONLY when the user explicitly utters one of these trigger phrases. Do n
 
 ## What to do
 
-On trigger, load the FULL context set below. Read each file (silently — no need to dump contents to the user). Then confirm with a compact status line showing what loaded and what was skipped.
+On trigger, read `~/.codialectic/context.json` to discover workspace-specific paths (see Context Registry Contract below). Then load the FULL context set below — silently, no need to dump file contents to the user. Confirm with a compact status line showing what loaded and what was skipped.
 
-### Tier 1 — Constitution + Identity (ALWAYS load)
+If no context registry exists (fresh install), skip all path-dependent tiers and report `Context registry: not found — Tier 1-4 paths skipped`.
 
-1. `~/cyborg/CONSTITUTION.md` — governance, all application principles (currently P0-P22), eight Ground Zero frameworks, personas
-2. `~/anand-career-os/.career-os/memory/identity.md` — who Anand is
-3. `~/anand-career-os/.career-os/memory/professional-brand.md` — brand statement
+### Tier 1 — Constitution + Core Identity (ALWAYS attempt)
+
+1. `{context.constitution_path}` — governance, all application principles, eight Ground Zero frameworks, personas. Fallback: `$CODI_CONSTITUTION_PATH` if set; otherwise skip and note missing.
+2. `{context.identity_path}` — who the user is
+3. `{context.brand_path}` — brand statement
 
 ### Tier 2 — Active state (load if present)
 
-4. `~/anand-career-os/NEXT_SESSION_HANDOFF.md` — root cross-agent relay
-5. `~/anand-career-os/.career-os/memory/career-strategy.md` — active career arc (if exists)
-6. `~/anand-career-os/workspace.manifest.yaml` — workstream routing map
+4. `{context.workspace_root}/NEXT_SESSION_HANDOFF.md` — root cross-agent relay
+5. `{context.workspace_root}/{context.strategy_rel_path}` — active career/work arc (if configured)
+6. `{context.workspace_root}/workspace.manifest.yaml` — workstream routing map
 
 ### Tier 3 — Per-WIP handoffs (glob-load)
 
-7. `~/anand-career-os/WIP/*/NEXT_SESSION_HANDOFF.md` — every per-workstream handoff
-8. `~/anand-career-os/WIP/*-product/NEXT_SESSION_HANDOFF.md` — every per-product handoff
+7. `{context.workspace_root}/WIP/*/NEXT_SESSION_HANDOFF.md` — every per-workstream handoff
+8. `{context.workspace_root}/WIP/*-product/NEXT_SESSION_HANDOFF.md` — every per-product handoff
 
 ### Tier 4 — Recently referenced (conversation-aware)
 
-If the user mentions a person, company, or WIP by name in the trigger utterance, also load:
-
-- `~/anand-career-os/.career-os/memory/people/<slug>.md`
-- `~/anand-career-os/.career-os/memory/companies/<slug>.md`
-- `~/anand-career-os/WIP/<name>/` — relevant specs
+If the user mentions a person, company, or WIP by name in the trigger utterance, also load from paths configured in the context registry's `people_dir`, `companies_dir`, and `wip_dir` (if set).
 
 Skip any file that does not exist. Never fabricate contents for a missing file.
 
@@ -62,7 +60,7 @@ Skip any file that does not exist. Never fabricate contents for a missing file.
 
 After context loads, run any pre-flight hooks the workspace has registered, BEFORE confirming readiness. Per FAIL-HARD INVARIANT (applied universally — codi's own discipline, not specific to any plug-in): soft warnings on session-start drift = hidden variance that surfaces mid-task. Better to fail loud at session start.
 
-**Architectural correction (2026-04-27):** codi is standalone OSS — it must not hardcode any environment-specific paths (no `~/cyborg/`, no `~/anand-career-os/`, no thewhyman-specific tooling). The previous v3.4.0 implementation invoked `~/cyborg/rules/fail-hard/HOW.sh` directly, which broke fresh installs. The fix: HOOK-CALLBACK inversion. Workspaces register hooks; codi reads + executes them; codi knows nothing about underlying tools. See architectural-correction memory at `~/.claude/projects/-Users-anandvallam-anand-career-os/memory/feedback_codi_xos_bidirectional_standalone.md`.
+**Architectural correction (2026-04-27):** codi is standalone OSS — it must not hardcode any environment-specific paths. The previous v3.4.0 implementation invoked workspace-specific validation scripts directly, which broke fresh installs. The fix: HOOK-CALLBACK inversion. Workspaces register hooks; codi reads + executes them; codi knows nothing about underlying tools or user-specific paths.
 
 **Step 1 — Read the hook registry:**
 
@@ -104,6 +102,29 @@ If a hook BLOCKed (exited non-zero with `required: true`), add one remediation l
 If a hook WARNed (`required: false` and exited non-zero), surface the same line prefixed with `⚠ WARN` instead of `⚠️`, and proceed.
 
 Then wait for the user. Do NOT auto-summarize the handoff — the user will direct the next action. Summarizing unasked = P13 violation (sacred time) and a Calibration Auditor flag (performative warmth).
+
+## Context Registry Contract
+
+waky-waky discovers workspace paths from `~/.codialectic/context.json`. The workspace bootstrap installer (xHumanOS, xTeamOS, or any workspace plug-in) writes this file at install time. If the file does not exist, all path-dependent tiers are skipped.
+
+**Schema:**
+
+```json
+{
+  "constitution_path": "/absolute/path/to/CONSTITUTION.md",
+  "identity_path": "/absolute/path/to/identity.md",
+  "brand_path": "/absolute/path/to/professional-brand.md",
+  "workspace_root": "/absolute/path/to/workspace",
+  "strategy_rel_path": ".memory/career-strategy.md",
+  "people_dir": ".memory/people",
+  "companies_dir": ".memory/companies",
+  "wip_dir": "WIP"
+}
+```
+
+All fields are optional. waky-waky skips any tier whose configured path is missing or does not resolve to an existing file. The bootstrap installer is responsible for writing this file with correct absolute paths for the user's machine.
+
+Env var override: if `CODI_CONSTITUTION_PATH` is set, it overrides `context.constitution_path`.
 
 ## Hook Registration Contract
 
@@ -147,11 +168,11 @@ If `~/.codialectic/hooks/session_start.json` does not exist, waky-waky skips the
 
 **Worked example — standalone OSS install (default):**
 
-User installs codi on a fresh Claude Code via the marketplace. No hooks file is created. `waky waky` loads tier 1-3 context (or skips files that don't exist on a non-Anand machine), reports `Pre-flight hooks: none registered`, and waits for direction. Zero environment-specific dependencies.
+User installs codi on a fresh Claude Code via the marketplace. No context registry or hooks file is created. `waky waky` skips Tier 1-4 (no paths registered), reports `Context registry: not found — Tier 1-4 paths skipped` and `Pre-flight hooks: none registered`, and waits for direction. Zero environment-specific dependencies.
 
-**Worked example — Cyborg-installed environment (Anand's setup):**
+**Worked example — bootstrap-installed environment:**
 
-The Cyborg plug-in installation creates `~/.codialectic/hooks/session_start.json` with workspace-specific checks. Example contents:
+A workspace bootstrap installer (e.g., xHumanOS) creates `~/.codialectic/hooks/session_start.json` with workspace-specific checks. Example contents:
 
 ```json
 {
@@ -160,7 +181,7 @@ The Cyborg plug-in installation creates `~/.codialectic/hooks/session_start.json
       "name": "mcp-availability",
       "command": "bash",
       "args": [
-        "/Users/anandvallam/cyborg/rules/fail-hard/HOW.sh",
+        "/path/to/cyborg/rules/fail-hard/HOW.sh",
         "{\"target_mode\":\"mcp-availability\"}"
       ],
       "required": true,
@@ -170,7 +191,7 @@ The Cyborg plug-in installation creates `~/.codialectic/hooks/session_start.json
       "name": "constitution-coherence",
       "command": "bash",
       "args": [
-        "/Users/anandvallam/cyborg/rules/fail-hard/HOW.sh",
+        "/path/to/cyborg/rules/fail-hard/HOW.sh",
         "{\"target_mode\":\"constitution\"}"
       ],
       "required": false,
