@@ -39,7 +39,8 @@ HOW_PY = HOOK_DIR.parent / "HOW.py"
 # ── Stakes inference ────────────────────────────────────────────────────────
 _T3_SIGNALS = frozenset([
     "publish", "send", "deploy", "delete", "remove", "drop", "push to",
-    "email", "linkedin", "substack", "tweet", "post to", "notify",
+    "email", "post to linkedin", "linkedin post", "publish linkedin",
+    "substack", "tweet", "post to", "notify",
     "production", "irreversible", "migrate", "overwrite", "force",
 ])
 _T1_SIGNALS = frozenset([

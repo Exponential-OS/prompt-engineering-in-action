@@ -4,8 +4,8 @@ description: >
   Whale-spawns-fish orchestration dispatcher. Routes T0-T2 orchestration tasks
   (prompt sharpening, persona detection, calibration scanning, hallucination
   pre-flight, lightweight jury) AWAY from the active premium model (whale =
-  Sonnet/Opus/Claude) and TO cheap-fish (Gemini Flash via OAuth, GPT-nano via
-  codex CLI, local Ollama models if installed). Fixes the token-burn bug where
+  Sonnet/Opus/Claude) and TO cheap-fish (Gemini Flash via OAuth, GPT-5.4 via
+  codex CLI). Fixes the token-burn bug where
   premium reasoning capacity was being spent on mechanical orchestration.
   FAIL-HARD: if no fish are reachable, BLOCKS — never silently falls back to
   whale. Activate when the user says "fish swarm", "spawn fish", "delegate to
@@ -13,7 +13,7 @@ description: >
   needs a T0-T2 verdict on prompt-sharpen / persona-detect / calibration-scan
   / hallucination-preflight / t0t2-jury.
 metadata:
-  version: "3.5.1"
+  version: "3.5.2"
   author: "Anand Vallamsetla"
   tier: "core"
   plugin_number: 9
@@ -46,8 +46,8 @@ FAIL-HARD discipline so the whale never silently absorbs the cost.
 
 | Tier | Status | Examples |
 |---|---|---|
-| **Local** (free) | Primary if Ollama is up | DeepSeek-R1 7B, Llama 3.1 8B, Mistral 7B, Phi-4 |
-| **Cheap OAuth CLI** | Fallback if Ollama down | Gemini Flash Lite (`gemini` CLI), GPT-5.4 via codex CLI (OAuth) |
+| **Local** (free) | Disabled — enable when local LLM installed | DeepSeek-R1 7B, Llama 3.1 8B, Mistral 7B, Phi-4 via Ollama |
+| **Cheap OAuth CLI** | Primary | Gemini Flash Lite (`gemini` CLI), GPT-5.4 via codex CLI (OAuth) |
 | **Premium API** | NEVER | gpt-4o, claude-* anything, gemini-pro |
 | **Active session model (whale)** | NEVER for orchestration | Sonnet, Opus, Haiku |
 
@@ -105,21 +105,22 @@ explicit user-invoked judge-panel runs, not background orchestration.
 ## Health check — fires at session start (and on demand)
 
 When co-dialectic activates, fish-swarm probes the fish-school and reports
-inline. The probe is three independent checks; all run in parallel.
+inline. The probe is two independent checks; all run in parallel.
 
 ```bash
-# 1. Ollama (local, free)
-curl -s --max-time 2 http://localhost:11434/api/tags
-
-# 2. Gemini OAuth CLI
+# 1. Gemini OAuth CLI
 command -v gemini >/dev/null && gemini --version >/dev/null 2>&1
 
-# 3. Codex OAuth CLI (OpenAI via ChatGPT subscription)
+# 2. Codex OAuth CLI (OpenAI via ChatGPT subscription)
 command -v codex >/dev/null && codex --version >/dev/null 2>&1
 ```
 
 The active model runs these directly via Bash (no separate script needed).
 A passing probe is exit 0 + non-empty body. Tally the count.
+
+Note: Local Ollama is excluded until a local LLM is installed. To re-enable,
+add `curl -s --max-time 2 http://localhost:11434/api/tags` as check #3 and
+restore the 3-fish status entries below.
 
 ## Status line (codi conversation surface)
 
@@ -128,8 +129,7 @@ transition during the session:
 
 | Fish count | Status line |
 |---|---|
-| 3 (Ollama + Gemini + codex) | `🐟 Fish school: full — local + Gemini Flash + GPT-5.4 active` |
-| 2 (any two of three) | `🐟 Fish school: 2 active — <which-two>` |
+| 2 (Gemini + codex) | `🐟 Fish school: full — Gemini Flash + GPT-5.4 active` |
 | 1 (only one reachable) | `⚠ Fish school: degraded — only <which-one> active` |
 | 0 (NONE reachable) | `❌ Fish school: unavailable — orchestration BLOCKED — see remediation` |
 
@@ -152,17 +152,11 @@ endpoint is reachable.
 
 Remediation (any one restores the school):
 
-  1. Local Ollama (free, recommended):
-       brew install ollama
-       ollama serve &
-       ollama pull deepseek-r1:7b
-       ollama pull llama3.1:8b
-
-  2. Gemini OAuth CLI (free with Gemini Pro subscription):
+  1. Gemini OAuth CLI (free with Gemini Pro subscription):
        npm i -g @google/generative-ai-cli   # or vendor instructions
        gcloud auth login
 
-  3. OpenAI Codex CLI (free with ChatGPT Plus / Pro subscription):
+  2. OpenAI Codex CLI (free with ChatGPT Plus / Pro subscription):
        brew install codex                   # or vendor install
        codex login
 
@@ -210,12 +204,11 @@ harness, same cascade, different rubrics, different escalation thresholds.
 ## How to verify fish-school is healthy (one command)
 
 ```bash
-( curl -s --max-time 2 http://localhost:11434/api/tags >/dev/null && echo "ollama: ✓" || echo "ollama: ✗" ) ; \
 ( command -v gemini >/dev/null && echo "gemini: ✓" || echo "gemini: ✗" ) ; \
 ( command -v codex >/dev/null && echo "codex: ✓" || echo "codex: ✗" )
 ```
 
-Three lines. Any one ✓ = fish-swarm is operational. Zero ✓ = BLOCKED per
+Two lines. Any one ✓ = fish-swarm is operational. Zero ✓ = BLOCKED per
 FAIL-HARD.
 
 ## Smoke test — verify the skill end-to-end
