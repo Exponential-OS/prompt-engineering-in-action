@@ -92,7 +92,10 @@ def _exit_for(verdict: str) -> int:
         return 0
     if verdict == VERDICT_BLOCK:
         return 1
-    return 2  # WARN (or anything unknown) — fail open
+    # WARN → exit 0 (not 2). Claude Code PreToolUse treats exit 2 as "hook error",
+    # not as a warn/pass-through. Warnings are surfaced via systemMessage in the
+    # JSON payload on stdout, which Claude Code reads and injects into context.
+    return 0
 
 
 def _parse_fish_text(text: str) -> tuple[str, str]:
@@ -276,28 +279,34 @@ def main() -> int:
             0,
         )
 
-    # T3, T4: out of scope for fish — escalate.
+    # T3, T4: fish passes through (exit 0 = allow). A systemMessage injects the
+    # escalation instruction so the agent knows to invoke the judge panel.
+    # Exit 2 is NOT valid for PreToolUse — Claude Code treats it as "hook error".
     if stakes in ESCALATE_TIERS:
         msg = (
-            f"{stakes} task detected — escalate to social-content-readiness-check "
-            "or independent-verification-gate instead of fish."
+            f"[co-dialectic fish] {stakes} task — fish passes through. "
+            "BEFORE proceeding, invoke the judge panel (independent-verification-gate) "
+            "for cross-family review. Do not skip this step."
         )
         return _emit_and_log(
             {
-                "verdict": VERDICT_WARN,
+                "verdict": VERDICT_PASS,
                 "fired": False,
                 "rule_slug": SLUG,
                 "tier": stakes,
                 "reasons": [msg],
-                "next_action": "escalate-to-ivg-or-readiness-check",
+                "next_action": "ship",
+                "systemMessage": msg,
             },
-            {"verdict": VERDICT_WARN, "fired": False, "tier": stakes, "reason": "escalate"},
-            2,
+            {"verdict": VERDICT_PASS, "fired": False, "tier": stakes, "reason": "t3-pass-through"},
+            0,
         )
 
     # T1, T2: fire the fish.
     fish_verdict, fish_reasoning, telemetry = _run_fish(task, extra_context)
 
+    fish_label = telemetry.get("model") or "haiku"
+    reason_line = f"fish ({fish_label}) → {fish_verdict}: {fish_reasoning}"
     payload = {
         "verdict": fish_verdict,
         "fired": True,
@@ -306,7 +315,7 @@ def main() -> int:
         "fish_verdict": fish_verdict,
         "fish_reasoning": fish_reasoning,
         "fish_model": telemetry.get("model"),
-        "reasons": [f"fish ({telemetry.get('model') or 'haiku'}) → {fish_verdict}: {fish_reasoning}"],
+        "reasons": [reason_line],
         "next_action": {
             VERDICT_PASS: "ship",
             VERDICT_WARN: "review-warning-then-proceed",
@@ -314,6 +323,10 @@ def main() -> int:
         }.get(fish_verdict, "proceed"),
         "telemetry": telemetry,
     }
+    # Inject systemMessage for WARN/BLOCK so Claude Code surfaces the verdict
+    # in context (exit codes alone don't carry the reasoning to the agent).
+    if fish_verdict in (VERDICT_WARN, VERDICT_BLOCK):
+        payload["systemMessage"] = f"[co-dialectic fish] {reason_line}"
     log_extra = {
         "verdict": fish_verdict,
         "fired": True,
