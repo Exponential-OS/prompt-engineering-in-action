@@ -95,6 +95,30 @@ _TIER_MODEL = {
     "opus": "opus",
 }
 
+# ── Runtime-agnostic executor type registry ─────────────────────────────────
+# "Executor" agents are pure mechanical code/task runners that the whale has
+# already decomposed — they should always run in background so parallel
+# spawns don't serialize. Defaults are Claude Code-specific subagent types.
+#
+# OTHER RUNTIMES: set CODI_EXECUTOR_TYPES to a comma-separated list of your
+# runtime's equivalent executor agent type names, or "" to disable.
+# Examples:
+#   ChatGPT plugin:  CODI_EXECUTOR_TYPES="code_interpreter,tool_executor"
+#   Gemini CLI:      CODI_EXECUTOR_TYPES="code-runner"
+#   Generic API:     CODI_EXECUTOR_TYPES=""   (disables; stakes-based logic only)
+#
+# This env var is the only runtime-specific configuration point in this hook.
+_DEFAULT_EXECUTOR_TYPES: frozenset[str] = frozenset(["elite-code-writer", "codex:codex-rescue"])
+_env_executor_types = os.environ.get("CODI_EXECUTOR_TYPES")  # None = not set
+if _env_executor_types is None:
+    EXECUTOR_TYPES: frozenset[str] = _DEFAULT_EXECUTOR_TYPES   # unset → Claude Code defaults
+elif _env_executor_types == "":
+    EXECUTOR_TYPES = frozenset()                                # "" → disable executor special-casing
+else:
+    EXECUTOR_TYPES = frozenset(
+        t.strip() for t in _env_executor_types.split(",") if t.strip()
+    )                                                           # "a,b" → custom runtime list
+
 # P4 Weakness-Seam Descent (2026-05-05): keyword regex is a structural gate
 # for a semantic violation. "Is this T3?" requires semantic judgment — keyword
 # matching produces false negatives on architectural docs with no T3 keywords
@@ -255,10 +279,10 @@ def main() -> int:
     else:
         # Background policy: fire-and-forget for mechanical/synthesis work;
         # whale waits for architectural decisions and irreversible actions.
-        # Exception: elite-code-writer spawns are reversible executors (whale
-        # already decomposed the task) — force bg=True so parallel spawns
-        # don't serialize.
-        is_code_executor = subagent_type in ("elite-code-writer", "codex:codex-rescue")
+        # Executor agents (already-decomposed mechanical runners) always bg
+        # so parallel spawns don't serialize. Executor type list is runtime-
+        # configurable via CODI_EXECUTOR_TYPES env var (see module top).
+        is_code_executor = bool(subagent_type) and subagent_type in EXECUTOR_TYPES
         auto_bg = (
             is_code_executor
             or (stakes not in ("T3", "T4") and recommended_tier != "opus")
