@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -37,12 +38,15 @@ HOOK_DIR = pathlib.Path(__file__).resolve().parent
 HOW_PY = HOOK_DIR.parent / "HOW.py"
 
 # ── Stakes inference ────────────────────────────────────────────────────────
+# Substring-matched T3 signals (phrase-level — safe from false positives).
 _T3_SIGNALS = frozenset([
     "publish", "send", "deploy", "delete", "remove", "drop", "push to",
     "email", "post to linkedin", "linkedin post", "publish linkedin",
     "substack", "tweet", "post to", "notify",
-    "production", "irreversible", "migrate", "overwrite", "force",
+    "production", "irreversible", "migrate", "overwrite",
 ])
+# Word-boundary T3 signals — terms that embed in longer words ("force" → "enforcement").
+_T3_WORD_SIGNALS: tuple[str, ...] = ("force", "push")
 _T1_SIGNALS = frozenset([
     "read", "research", "search", "analyze", "summarize", "explain",
     "list", "show", "find", "grep", "check", "look", "review",
@@ -81,6 +85,9 @@ def _infer_stakes(prompt: str) -> str:
         return "T3"
     for sig in _T3_SIGNALS:
         if sig in lower:
+            return "T3"
+    for sig in _T3_WORD_SIGNALS:
+        if re.search(r"\b" + sig + r"\b", lower):
             return "T3"
     for sig in _T1_SIGNALS:
         if sig in lower:
