@@ -229,6 +229,7 @@ def main() -> int:
     subagent_type = tool_input.get("subagent_type", "")
     existing_model = tool_input.get("model", "")
     existing_bg = tool_input.get("run_in_background")  # None = caller did not set it
+    isolation = tool_input.get("isolation", "")
 
     if not prompt:
         return 0
@@ -240,15 +241,68 @@ def main() -> int:
     apply_model = not bool(existing_model)
     apply_bg = existing_bg is None
 
-    # Background policy: fire-and-forget for mechanical/synthesis work;
-    # whale waits for architectural decisions and irreversible actions.
-    # Exception: elite-code-writer spawns are reversible executors (whale already
-    # decomposed the task) — force bg=True so parallel spawns don't serialize.
-    is_code_executor = subagent_type in ("elite-code-writer", "codex:codex-rescue")
-    auto_bg = (
-        is_code_executor
-        or (stakes not in ("T3", "T4") and recommended_tier != "opus")
-    )
+    # ── Worktree isolation → force foreground (2026-05-05) ─────────────────
+    # Worktree agents that run in the background hang silently with no
+    # completion notification — observed failure: both agents stuck at 08:50
+    # with no update for 20+ minutes. Worktree setup (branch creation, git
+    # checkout) can hit permission/lock issues that cause silent hangs.
+    # Force foreground so the whale sees failure immediately.
+    worktree_forced_fg = False
+    if isolation == "worktree" and apply_bg:
+        auto_bg = False
+        apply_bg = True  # we ARE setting it — to False
+        worktree_forced_fg = True
+    else:
+        # Background policy: fire-and-forget for mechanical/synthesis work;
+        # whale waits for architectural decisions and irreversible actions.
+        # Exception: elite-code-writer spawns are reversible executors (whale
+        # already decomposed the task) — force bg=True so parallel spawns
+        # don't serialize.
+        is_code_executor = subagent_type in ("elite-code-writer", "codex:codex-rescue")
+        auto_bg = (
+            is_code_executor
+            or (stakes not in ("T3", "T4") and recommended_tier != "opus")
+        )
+
+    # ── Background agent registration + dedup check (2026-05-05) ──────────
+    # When auto_bg=True, register with agent_lifecycle.py before spawn.
+    # If a running agent already targets the same files → BLOCK with a clear
+    # message so the whale can wait, kill, or re-dispatch.
+    # Fail-open: lifecycle script missing or erroring never blocks real work.
+    _effective_bg = auto_bg if apply_bg else bool(existing_bg)
+    lifecycle_block_msg: str = ""
+    if _effective_bg:
+        lifecycle_script = HOOK_DIR.parent / "scripts" / "agent_lifecycle.py"
+        if lifecycle_script.exists():
+            # Extract file paths from prompt (simple regex — structural check)
+            file_pattern = re.compile(
+                r"(?:/[\w.\-]+)+\.(?:py|md|json|yaml|sh|ts|js|txt|csv)"  # any absolute path
+                r"|~(?:/[\w.\-]+)+"  # tilde paths
+                r"|[\w.\-]+\.(?:py|md|json|yaml|sh|ts|js|txt)"  # relative filenames
+            )
+            extracted_files = list(dict.fromkeys(file_pattern.findall(prompt)))[:10]
+
+            if extracted_files:
+                try:
+                    dedup_result = subprocess.run(
+                        [sys.executable, str(lifecycle_script), "check-dedup",
+                         "--files"] + extracted_files,
+                        text=True, capture_output=True, timeout=5,
+                    )
+                    dedup_out = json.loads(dedup_result.stdout.strip() or "{}")
+                    if dedup_out.get("verdict") == "BLOCK":
+                        conflicts = dedup_out.get("conflicting_agents", [])
+                        conflict_ids = ", ".join(
+                            c.get("agent_id", "?") for c in conflicts
+                        )
+                        lifecycle_block_msg = (
+                            f"[fish lifecycle] BLOCK — file conflict with running agent(s): "
+                            f"{conflict_ids}. Files: {extracted_files}. "
+                            f"Wait for those agents to complete or call "
+                            f"`agent_lifecycle.py complete --agent-id <id>` to clear."
+                        )
+                except Exception:  # noqa: BLE001
+                    pass  # fail-open
 
     # ── Run HOW.py (approach pre-flight) — optional ────────────────────────
     fish_input = json.dumps(
@@ -284,10 +338,19 @@ def main() -> int:
         f"(stakes={stakes}, apply_model={apply_model}, bg={auto_bg if apply_bg else existing_bg}). "
         f"Whale decompose → fish execute at {recommended_tier} tier."
     )
+    if worktree_forced_fg:
+        tier_note += " [worktree→foreground: isolation=worktree forces run_in_background=False to prevent silent hangs]"
+    if lifecycle_block_msg:
+        tier_note = lifecycle_block_msg + "\n" + tier_note
+
     existing_msg = payload.get("systemMessage", "")
     payload["systemMessage"] = (
         f"{existing_msg}\n{tier_note}" if existing_msg else tier_note
     )
+
+    # Surface lifecycle BLOCK as exit 1 so PreToolUse can halt the spawn.
+    if lifecycle_block_msg:
+        exit_code = 1
 
     # ── Inject updatedInput (model + run_in_background) ───────────────────
     if apply_model or apply_bg:
