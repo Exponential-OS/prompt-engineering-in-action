@@ -14,17 +14,43 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ---
 
-## Try Now
+## See it in 61 seconds
 
-Pick the install path that matches your environment:
+https://www.linkedin.com/feed/update/urn:li:ugcPost:7459275180486610945/
 
-**Claude Code or Cowork plugin user (recommended — gets all 6 skills)**
+---
+
+## Which tool is this for?
+
+There are several Anthropic products — here's exactly where co-dialectic works:
+
+| Tool | What it is | Install path |
+|---|---|---|
+| **Claude Code** | AI assistant in your terminal (`claude` command) | ✅ Plugin install (recommended) — see below |
+| **Claude.ai** | Browser chat at claude.ai | Web-AI gift prompt — see below |
+| **Cursor / Windsurf / Cline** | AI-powered code editors | One-line shell install — see below |
+| **Claude API** | Direct API access | Shell install or manual SKILL.md |
+
+---
+
+## Install
+
+Pick the path that matches your tool:
+
+**Claude Code — plugin install (recommended, gets all 6 skills)**
+
+Type these inside the Claude Code chat window (not in your terminal):
 ```
 /plugin marketplace add Exponential-OS/agent-marketplace
 /plugin install co-dialectic@xos
 ```
+If `/plugin` doesn't appear: update Claude Code → `brew upgrade claude-code` or `npm install -g @anthropic-ai/claude-code@latest`, then restart.
 
-**Any other local-AI tool (Cursor, Windsurf, Antigravity, Cline, Aider) — one-line install**
+After installing, open a new session and say: **help me set up co-dialectic**
+
+---
+
+**Cursor / Windsurf / Cline / Aider / other local AI tools — one-line install**
 - **macOS/Linux:** `curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash`
 - **Windows:** `Invoke-RestMethod -Uri https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression`
 
