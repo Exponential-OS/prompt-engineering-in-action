@@ -82,18 +82,43 @@ The onboarding skill walks you through everything interactively.
 
 **Commands** — type naturally, no special syntax needed:
 
-| What you want | Say |
+**Discover**
+| What you want | Command |
 |---|---|
-| See all commands | `codi help` |
-| Auto-execute (no pause-to-approve) | `codi cruise` |
-| Hands-on sharpening (y/n/e on every prompt) | `codi drive` |
-| Stress-test your thinking | `codi tone critical` |
-| Balanced, evidence-based (default) | `codi tone grounded` |
-| Encouraging, momentum mode | `codi tone cheerleader` |
-| See prompt quality + context health + session stats | `codi status` |
+| Show all commands | `codi help` |
+| Prompt quality + context health + session stats | `codi status` |
 | List all 10 expert personas | `codi personas` |
-| Silent mode (just a footer, no status header) | `codi quiet` |
+| Check swarm/judge status | `codi fish status` |
+
+**Mode**
+| What you want | Command |
+|---|---|
+| Auto-execute (no approval pauses) | `codi cruise` |
+| Hands-on prompt sharpening (y/n/e) | `codi drive` |
+| Silent — footer only, saves tokens in IDEs | `codi quiet` |
+| Back to normal from quiet | `codi on` |
+
+**Honesty**
+| What you want | Command |
+|---|---|
+| Stress-test — challenge assumptions, flag weak spots first | `codi honesty brutal` |
+| Balanced, evidence-based (default) | `codi honesty grounded` |
+| Encouraging — celebrate progress, momentum mode | `codi honesty soft` |
+
+**Verification**
+| What you want | Command |
+|---|---|
+| Expand last verification result (judge breakdown) | `codi verify why` |
+| Show which gates are armed for current artifact | `codi verify status` |
+| Disable auto-verify this session | `codi verify off` |
+
+**Session**
+| What you want | Command |
+|---|---|
 | Save session DNA for next conversation | `codi handoff` |
+| Analyze prompts and name your patterns | `codi review` |
+| Steel-man the opposite view on every output | `wildcard on` |
+| Disable research-before-answer this session | `codi research off` |
 
 ---
 
