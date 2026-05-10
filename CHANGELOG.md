@@ -4,6 +4,14 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.8.1] — 2026-05-10 — Ghost-Buster (fixup)
+
+### Fixed
+
+- **Session-start poll fallback bug:** `|| echo '{}'` fired when `poll` exited 2 (WARN = stuck agents found), replacing real output with `{}` and reporting 0 stuck. Changed to `; true` so POLL_OUT always carries the actual poll result.
+
+---
+
 ## [4.8.0] — 2026-05-10 — Ghost-Buster
 
 ### Fixed
