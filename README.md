@@ -80,45 +80,55 @@ The onboarding skill walks you through everything interactively.
 
 ---
 
-**Commands** — type naturally, no special syntax needed:
+**Full command reference** — type `codi help` anytime to see this inside your session.
 
-**Discover**
-| What you want | Command |
+**Mode toggles**
+| Command | Effect |
 |---|---|
-| Show all commands | `codi help` |
-| Prompt quality + context health + session stats | `codi status` |
-| List all 10 expert personas | `codi personas` |
-| Check swarm/judge status | `codi fish status` |
+| `codi drive` | Pause on every prompt — shows improvement + score lift, waits for y/n/e |
+| `codi cruise` | Answer immediately — improvement tip appended at end |
+| `codi quiet` | Silent mode — full tracking, micro-footer only (saves tokens in IDEs) |
+| `codi on` / `codi off-demo` | Resume normal mode |
+| `codi demo` | Cruise + Quiet + grounded — for live demos |
 
-**Mode**
-| What you want | Command |
+**Honesty posture**
+| Command | Effect |
 |---|---|
-| Auto-execute (no approval pauses) | `codi cruise` |
-| Hands-on prompt sharpening (y/n/e) | `codi drive` |
-| Silent — footer only, saves tokens in IDEs | `codi quiet` |
-| Back to normal from quiet | `codi on` |
+| `codi honesty brutal` | 🔪 Stress-test — challenge assumptions, flag weak spots first |
+| `codi honesty grounded` | Default — balanced, evidence-based |
+| `codi honesty soft` | 🤝 Momentum mode — strengths first, gaps second |
 
-**Honesty**
-| What you want | Command |
+**Personas**
+| Command | Effect |
 |---|---|
-| Stress-test — challenge assumptions, flag weak spots first | `codi honesty brutal` |
-| Balanced, evidence-based (default) | `codi honesty grounded` |
-| Encouraging — celebrate progress, momentum mode | `codi honesty soft` |
+| `codi personas` | List all available personas |
+| `"Be Jony Ive for this"` | Activate a named persona |
+| `"Ive + Jobs for this pitch"` | Multi-persona fusion |
 
-**Verification**
-| What you want | Command |
+**Wildcard Mode** *(new in v4.9.0)*
+| Command | Effect |
 |---|---|
-| Expand last verification result (judge breakdown) | `codi verify why` |
-| Show which gates are armed for current artifact | `codi verify status` |
-| Disable auto-verify this session | `codi verify off` |
+| `wildcard on` / `codi wildcard` / `🃏` | Appends steel-man of opposite position on strategic outputs |
+| `wildcard off` | Deactivate |
 
-**Session**
-| What you want | Command |
+**Fish swarm** *(background agents)*
+| Command | Effect |
 |---|---|
-| Save session DNA for next conversation | `codi handoff` |
-| Analyze prompts and name your patterns | `codi review` |
-| Steel-man the opposite view on every output | `wildcard on` |
-| Disable research-before-answer this session | `codi research off` |
+| `codi fish status` | Show active/stuck background agents |
+| `codi fish` | Trigger T3 dispatch — spawns cross-family judge panel |
+
+**Prompt sharpening** *(in Drive mode, after every prompt)*
+| Response | Effect |
+|---|---|
+| `y` | Answer using the improved prompt |
+| `n` | Answer using your original prompt |
+| `e` | You edit the improved prompt, then answer |
+
+**Reading your score line:** `⚡ Productivity (Tim Ferriss) · 88% · Cal: 96%`
+- **88%** — how effective your prompt was (goes up as you improve)
+- **Cal: 96%** — how deeply the expert persona is operating at declared caliber
+
+**Context health:** 🟡 = 40–70% (working) · 🔴 = >70% (auto-handoff triggered)
 
 ---
 
