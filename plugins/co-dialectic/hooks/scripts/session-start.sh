@@ -26,7 +26,7 @@ fi
 LIFECYCLE_SCRIPT="${CLAUDE_PLUGIN_ROOT}/fish/scripts/agent_lifecycle.py"
 LIFECYCLE_MSG=""
 if [ -f "${LIFECYCLE_SCRIPT}" ]; then
-    POLL_OUT=$(python3 "${LIFECYCLE_SCRIPT}" poll --timeout-min 10 2>/dev/null || echo '{}')
+    POLL_OUT=$(python3 "${LIFECYCLE_SCRIPT}" poll --timeout-min 10 2>/dev/null; true)
     STUCK_COUNT=$(echo "${POLL_OUT}" | python3 -c "
 import sys, json
 try:
