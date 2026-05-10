@@ -6,7 +6,7 @@
 
 ## Repo Structure
 
-- **This repo is PUBLIC** (`github.com/thewhyman/prompt-engineering-in-action`). Only code, skills, installer, README, and open-source docs belong here.
+- **This repo is PUBLIC** (`github.com/Exponential-OS/prompt-engineering-in-action`). Only code, skills, installer, README, and open-source docs belong here.
 - **Marketing strategy, campaign docs, and private content go in `anand-career-os` (private repo)** at `WIP/co-dialectic/03_CONTENT/`. Never commit strategy to this public repo.
 - **Handoff doc:** `anand-career-os/WIP/co-dialectic/NEXT_SESSION_HANDOFF_co-dialectic.md`
 
@@ -25,10 +25,10 @@ Generic distribution principles live in the Constitution (P16 Content Flywheel).
 
 ## Plugin System
 
-- **Marketplace name is `thewhyman`** — must match README install command: `/plugin install co-dialectic@thewhyman`. Never rename without updating README.
+- **Marketplace name is `thewhyman`** — must match README install command: `/plugin install co-dialectic@xos`. Never rename without updating README.
 - **marketplace.json:** Keep minimal — only fields that working plugins use: `name`, `owner`, `plugins[]` with `name`, `source`, `description`, `version`, `category`. No `metadata.pluginRoot`, no `tags`, no `homepage`.
 - **plugin.json:** Keep minimal — only: `name`, `description`, `version`, `author`. No `homepage`, `repository`, `license`, `keywords`.
-- **Install path:** `/plugin marketplace add thewhyman/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
+- **Install path:** `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@xos`
 
 ## SKILL / README Architecture (v2.2+)
 
@@ -52,7 +52,7 @@ Generic distribution principles live in the Constitution (P16 Content Flywheel).
 
 ## Git
 
-- **Committer:** `Anand Vallamsetla <avallam@thewhyman.com>`
+- **Committer:** `Anand Vallamsetla <avallam@xos.com>`
 - **thewhyman.com:** limit to 1 mention across SKILL files (footer hub only). Use GitHub repo URL for all technical CTAs/nudges.
 
 ## 10 Personas (v2.1.0)
