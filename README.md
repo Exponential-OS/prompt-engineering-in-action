@@ -71,27 +71,48 @@ Your AI will walk you through it.
 ---
 
 <details open>
-<summary><h2>Make It Yours</h2></summary>
+<summary><h2>How to Use It</h2></summary>
 
-Tell your AI how you like to communicate — one sentence is enough:
+**First 60 seconds:** After installing, open a new session and say:
+> `help me set up co-dialectic`
+
+The onboarding skill walks you through everything interactively.
+
+---
+
+**Commands** — type naturally, no special syntax needed:
+
+| What you want | Say |
+|---|---|
+| See all commands | `codi help` |
+| Auto-execute (no pause-to-approve) | `codi cruise` |
+| Hands-on sharpening (y/n/e on every prompt) | `codi drive` |
+| Stress-test your thinking | `codi tone critical` |
+| Balanced, evidence-based (default) | `codi tone grounded` |
+| Encouraging, momentum mode | `codi tone cheerleader` |
+| See prompt quality + context health + session stats | `codi status` |
+| List all 10 expert personas | `codi personas` |
+| Silent mode (just a footer, no status header) | `codi quiet` |
+| Save session DNA for next conversation | `codi handoff` |
+
+---
+
+**Set your communication style** — one sentence shapes every response:
 
 > *"Be direct but fun. Use analogies from unexpected places. Challenge me when I'm wrong."*
-
-> *"Explain things gently. Use analogies. Celebrate small wins."*
 
 > *"Short answers. No analogies. Show me code, data, or trade-offs."*
 
 > *"Don't give me answers. Ask me questions that lead me there."*
 
-> *"Give me the bottom line first, then supporting data. Bullet points, not paragraphs. Flag risks explicitly. I have 30 seconds to decide — make it count."*
+> *"Give me the bottom line first, then supporting data. I have 30 seconds to decide — make it count."*
 
-> *"Brainstorm freely. Throw out wild ideas — I'll filter. Use metaphors and visual thinking. Connect dots between unrelated fields. Energy over precision."*
+> *"Brainstorm freely. Throw out wild ideas — I'll filter. Use metaphors and visual thinking."*
 
-**Mix and match** — combine elements from multiple styles:
-
-> *"I want short, precise answers with unexpected analogies. Make me laugh when you can."*
-
+Mix and match:
 > *"Start gentle when I'm learning something new, then switch to direct when I say 'got it, let's build.'"*
+
+Your first personalization is your first flywheel turn.
 
 </details>
 
