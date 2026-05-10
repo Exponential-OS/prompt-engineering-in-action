@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.8.0] — 2026-05-10 — Ghost-Buster
+
+### Fixed
+
+- **Fish lifecycle registration gap:** `claude-code.py` PreToolUse hook now calls `register` after every successful background spawn (previously only called `check-dedup`, so the registry stayed empty and stuck agents were never tracked). Each spawn gets a unique `fish_id` (UUID-based) injected into the agent's prompt as a completion contract: `python3 agent_lifecycle.py complete --agent-id <id>`.
+- **Session-start orphan sweep:** `session-start.sh` now calls `agent_lifecycle.py poll --timeout-min 10` at session start and surfaces stuck agent count in the kernel `systemMessage`. Agents that timed out in a prior session are detected on the next `waky waky` / session open.
+- **Root cause addressed:** the 2026-05-09 ghost agents (3 idle agents burning tokens with no task) were caused by this registration gap — agents were spawned as background, the registry was empty, `poll` never ran, and compaction dropped any notification handlers. These two changes close the loop.
+
+---
+
 ## [4.7.0] — 2026-05-05
 
 **Codename:** External-Ready — onboarding skill + personal-content clean for first external users.

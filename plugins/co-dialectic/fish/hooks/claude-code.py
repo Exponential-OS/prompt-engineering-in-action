@@ -40,6 +40,8 @@ import pathlib
 import re
 import subprocess
 import sys
+import time
+import uuid
 
 
 HOOK_DIR = pathlib.Path(__file__).resolve().parent
@@ -288,16 +290,21 @@ def main() -> int:
             or (stakes not in ("T3", "T4") and recommended_tier != "opus")
         )
 
-    # ── Background agent registration + dedup check (2026-05-05) ──────────
-    # When auto_bg=True, register with agent_lifecycle.py before spawn.
-    # If a running agent already targets the same files → BLOCK with a clear
-    # message so the whale can wait, kill, or re-dispatch.
+    # ── Background agent registration + dedup check (2026-05-10) ──────────
+    # When auto_bg=True:
+    #   1. Check for file conflicts (check-dedup) — BLOCK if another agent owns same files.
+    #   2. If no conflict, generate a fish_id and register the agent (register).
+    #      fish_id is injected into the agent's prompt as a completion contract so the
+    #      agent knows its own ID and session-start sweeps can find stuck agents.
     # Fail-open: lifecycle script missing or erroring never blocks real work.
     _effective_bg = auto_bg if apply_bg else bool(existing_bg)
     lifecycle_block_msg: str = ""
+    fish_id: str = ""
+    _lifecycle_script: pathlib.Path | None = None
     if _effective_bg:
         lifecycle_script = HOOK_DIR.parent / "scripts" / "agent_lifecycle.py"
         if lifecycle_script.exists():
+            _lifecycle_script = lifecycle_script
             # Extract file paths from prompt (simple regex — structural check)
             file_pattern = re.compile(
                 r"(?:/[\w.\-]+)+\.(?:py|md|json|yaml|sh|ts|js|txt|csv)"  # any absolute path
@@ -306,8 +313,9 @@ def main() -> int:
             )
             extracted_files = list(dict.fromkeys(file_pattern.findall(prompt)))[:10]
 
-            if extracted_files:
-                try:
+            try:
+                # Step 1: dedup — only check when files are identifiable
+                if extracted_files:
                     dedup_result = subprocess.run(
                         [sys.executable, str(lifecycle_script), "check-dedup",
                          "--files"] + extracted_files,
@@ -323,10 +331,22 @@ def main() -> int:
                             f"[fish lifecycle] BLOCK — file conflict with running agent(s): "
                             f"{conflict_ids}. Files: {extracted_files}. "
                             f"Wait for those agents to complete or call "
-                            f"`agent_lifecycle.py complete --agent-id <id>` to clear."
+                            f"`python3 {lifecycle_script} complete --agent-id <id>` to clear."
                         )
-                except Exception:  # noqa: BLE001
-                    pass  # fail-open
+
+                # Step 2: register — only when no block was raised
+                if not lifecycle_block_msg:
+                    fish_id = f"fish-{uuid.uuid4().hex[:8]}-{int(time.time())}"
+                    reg_files = extracted_files or [f"agent-{fish_id}"]
+                    subprocess.run(
+                        [sys.executable, str(lifecycle_script), "register",
+                         "--agent-id", fish_id,
+                         "--files"] + reg_files +
+                        ["--description", prompt[:200]],
+                        text=True, capture_output=True, timeout=5,
+                    )
+            except Exception:  # noqa: BLE001
+                pass  # fail-open
 
     # ── Run HOW.py (approach pre-flight) — optional ────────────────────────
     fish_input = json.dumps(
@@ -389,6 +409,15 @@ def main() -> int:
             updated_input["model"] = _TIER_MODEL[recommended_tier]
         if apply_bg:
             updated_input["run_in_background"] = auto_bg
+        # Delivery contract: append fish_id to prompt so the agent knows its
+        # lifecycle ID and session-start sweeps can detect it if it goes silent.
+        if fish_id and _lifecycle_script:
+            complete_cmd = f"python3 {_lifecycle_script} complete --agent-id {fish_id}"
+            updated_input["prompt"] = (
+                prompt
+                + f"\n\n[fish:{fish_id}] On task completion, signal the lifecycle manager: "
+                + complete_cmd
+            )
         hook_specific["updatedInput"] = updated_input
         payload["hookSpecificOutput"] = hook_specific
 

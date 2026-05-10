@@ -22,4 +22,22 @@ if [ "${USER_VERSION}" != "${PLUGIN_VERSION}" ]; then
     cp "${PLUGIN_SKILL}" "${USER_SKILL}"
 fi
 
-printf '{"systemMessage":"Co-Dialectic v%s loaded. Status line REQUIRED on every response: {Icon} {Domain} ({Name}) · {X}%%. Default persona: ⚡ Productivity (Tim Ferriss). Default mode: 🛞 Drive. New user? Type /co-dialectic-onboarding. Protocols absent? Type /co-dialectic."}\n' "${PLUGIN_VERSION}"
+# Orphan sweep: poll lifecycle registry for stuck/timed-out agents from prior sessions.
+LIFECYCLE_SCRIPT="${CLAUDE_PLUGIN_ROOT}/fish/scripts/agent_lifecycle.py"
+LIFECYCLE_MSG=""
+if [ -f "${LIFECYCLE_SCRIPT}" ]; then
+    POLL_OUT=$(python3 "${LIFECYCLE_SCRIPT}" poll --timeout-min 10 2>/dev/null || echo '{}')
+    STUCK_COUNT=$(echo "${POLL_OUT}" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(len(d.get('stuck', [])))
+except Exception:
+    print(0)
+" 2>/dev/null || echo "0")
+    if [ "${STUCK_COUNT}" != "0" ]; then
+        LIFECYCLE_MSG=" ⚠️ ${STUCK_COUNT} background agent(s) timed out from a prior session — check status: python3 ${LIFECYCLE_SCRIPT} status"
+    fi
+fi
+
+printf '{"systemMessage":"Co-Dialectic v%s loaded. Status line REQUIRED on every response: {Icon} {Domain} ({Name}) · {X}%%. Default persona: ⚡ Productivity (Tim Ferriss). Default mode: 🛞 Drive. New user? Type /co-dialectic-onboarding. Protocols absent? Type /co-dialectic.%s"}\n' "${PLUGIN_VERSION}" "${LIFECYCLE_MSG}"
