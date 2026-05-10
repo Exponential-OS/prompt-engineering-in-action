@@ -4,6 +4,14 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.9.0] — 2026-05-10 — Wildcard Mode
+
+### Added
+
+- **🃏 Wildcard Mode** (`wildcard on` / `codi wildcard` / `wildcard off`): overlay toggle that appends a steel-man of the opposite position at the end of strategic and open-ended outputs. Fires on: strategy, architecture, product/career recommendations. Does not fire on mechanical tasks, factual lookups, or prompt-sharpening turns. Anti-pattern explicitly enforced: hedges and "of course there are tradeoffs" non-answers are rejected in favor of arguments the agent could defend for 60 seconds.
+
+---
+
 ## [4.8.1] — 2026-05-10 — Ghost-Buster (fixup)
 
 ### Fixed

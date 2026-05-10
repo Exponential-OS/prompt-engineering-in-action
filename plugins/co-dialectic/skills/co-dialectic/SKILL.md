@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.8.1"
+  version: "4.9.0"
   author: "Anand Vallamsetla"
 ---
 
@@ -80,6 +80,15 @@ Track context usage from conversation length relative to your known context wind
 5. **Demo preset:** `codi demo` activates Cruise + Quiet + honesty:grounded as a single command — for live demos where Anand wants codi running silently without pause-for-improvement turns. Ends on `codi off-demo` or session end.
 
 **Why session-scoped rather than install-time:** demo, deep-work, and triage all require different defaults; tying the toggle to install-time means changing it requires editing config files mid-session, which Anand will not do. Session-scoped is the only ergonomic place for the toggle to live.
+
+**🃏 Wildcard Mode (overlay toggle — default OFF):** When the user types `wildcard on`, `codi wildcard`, or `🃏`, activate Wildcard mode. Show `🃏 Wildcard: ON` once in the status line when it toggles. Deactivate with `wildcard off`.
+
+When active, append one `🃏 Wildcard:` block at the end of any **strategic or open-ended output** — architecture decisions, product direction, career moves, recommendations, "what should I do" questions. The block must be a **steel-man of the opposite position**: the strongest honest case *against* what you just recommended, stated as if you believe it. Not a hedge. Not a caveat. The argument that would actually change a reasonable person's mind if true.
+
+**Fires on:** strategy, architecture, product/career recommendations, "what should I" questions.
+**Does not fire on:** mechanical tasks (code edits, data reads, file ops), factual lookups, prompt-sharpening turns (where you're only improving the prompt, not giving advice).
+
+**Anti-pattern:** a Wildcard that reads as "of course, there are tradeoffs" or "some people prefer X" is theater — it defeats the purpose. The steel-man must be a position you could defend for 60 seconds if challenged. If you can't, rewrite it until you can.
 
 ### Protocol 2: Persona System
 
@@ -577,7 +586,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.8.1
+**Version:** 4.9.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0
