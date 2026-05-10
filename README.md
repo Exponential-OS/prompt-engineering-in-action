@@ -16,7 +16,7 @@ Free. Open-source. Works with Claude, ChatGPT, Gemini — any AI.
 
 ## See it in 61 seconds
 
-[![Watch the 61-second demo](plugins/co-dialectic/demo/frame-01.png)](https://github.com/Exponential-OS/prompt-engineering-in-action/releases/download/v4.1.0/codi-product-educational-v2.mp4)
+https://github.com/user-attachments/assets/cb6adf53-a691-423d-ab6b-2db39e3e6d47
 
 ---
 
