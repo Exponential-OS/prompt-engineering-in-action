@@ -1,123 +1,178 @@
-# Co-Dialectic — A Universal AI Conversation Layer
+# Co-Dialectic — Smarter AI Conversations, Automatically
 
-**Make every AI conversation 5× more reliable.**
-Free. Open source. Two-minute install.
-Works in Claude Code, Cowork, ChatGPT, Gemini, and any LLM that accepts a system prompt.
-No infrastructure. No subscriptions required.
-
-```
-/plugin marketplace add Exponential-OS/agent-marketplace
-/plugin install co-dialectic@xos
-```
+**Make every AI conversation sharper, more honest, and more reliable.**
+Free. Open source. Works in Claude Code.
 
 ---
 
-## Why co-dialectic exists
+## See it in 61 seconds
 
-Most people use AI the way they once used search: type a question, accept the first answer, move on. That worked for Google because the cost of a wrong link was a second click. With LLMs the cost is a confidently wrong answer that looks correct, sounds authoritative, and shapes a real decision before anyone notices the error.
+https://www.linkedin.com/feed/update/urn:li:ugcPost:7459275180486610945/
 
-The standard fixes — write better prompts, double-check the output, ask a colleague — all put the burden on the human. Co-dialectic moves the burden to the conversation layer. Before your prompt reaches the model, it gets sharpened. Before the answer reaches you, it gets audited. When the stakes are high, a second model from a different family reviews the first one's work. The user does nothing differently. The reliability floor moves up.
+Or watch the local file: [demo/codi-product-educational-v2.mp4](demo/codi-product-educational-v2.mp4)
 
-The name is the thesis. A monologue between you and one model is a closed loop with shared blind spots. A dialectic across multiple models, personas, and verifiers is an open loop where errors have somewhere to surface.
+---
 
-## What it does
+## Which Claude product is this for?
 
-- **Mandatory pre-task gate (fish)** — every agent task is intercepted before it starts, stakes are inferred (T0–T4: Safe/Private/Shared/Significant/Live), and the response strategy is calibrated automatically. Auto-wired into Claude Code's PreToolUse hook on install; no user action required.
-- **Prompt sharpening** — vague prompts are rewritten into specific ones before the model answers.
-- **Persona detection** — ten expert lenses (architecture, design, debugging, product, positioning, career, productivity, data, writing, mindset) auto-activate based on what you're asking.
-- **Hallucination detector** — pre-flight risk classification (legal, medical, factual) plus post-flight scoring; high-risk claims get flagged before they ship.
-- **Cross-family judge panel** — two cheap judges from different model families review first; if they disagree, an expensive tiebreaker resolves. Catches what same-family review structurally cannot.
-- **Calibration auditor** — scans every draft for sycophancy ("Great question," "You're absolutely right") and rewrites it out before delivery.
-- **Unknown-unknown surfacer** — for any insight, asks "what adjacent slot could this also fit?" Prevents the most common form of single-frame thinking.
-- **Session continuity** — context, identity, and active threads restore at session start, so a fresh conversation picks up where the last one ended.
+There are several Claude products — it can be confusing. Here is exactly where this plugin works:
 
-## Install (60 seconds, no infrastructure)
+| Claude product | What it is | Does co-dialectic work here? |
+|---|---|---|
+| **Claude Code** | AI coding assistant that runs in your terminal | ✅ Yes — this is what the plugin is for |
+| **Claude.ai** | Browser-based chat at claude.ai | See [manual install](#manual-install-no-plugin-system) below |
+| **Claude API** | Direct API access for developers | See [manual install](#manual-install-no-plugin-system) below |
+| **Claude in IDEs** | Cursor, VS Code, JetBrains extensions | See [manual install](#manual-install-no-plugin-system) below |
+
+**If you use Claude Code**: the plugin system below is for you.
+**If you use anything else**: skip to the [manual install section](#manual-install-no-plugin-system).
+
+---
+
+## Install in Claude Code (2 minutes)
+
+Claude Code has a plugin system. You type commands directly into the Claude Code chat window — these are not terminal shell commands.
+
+### Step 1: Open Claude Code
+
+Start Claude Code in your terminal:
+
+```bash
+claude
+```
+
+If you don't have Claude Code: [install it here](https://docs.anthropic.com/en/docs/claude-code/quickstart).
+
+### Step 2: Add the marketplace
+
+Inside the Claude Code chat, type this exactly:
 
 ```
 /plugin marketplace add Exponential-OS/agent-marketplace
+```
+
+This registers the co-dialectic plugin catalog. Nothing is installed yet.
+
+### Step 3: Install co-dialectic
+
+Still inside Claude Code, type:
+
+```
 /plugin install co-dialectic@xos
 ```
 
-That's it. Open Claude Code or Cowork; co-dialectic activates on every conversation.
+Done. Co-Dialectic activates on every conversation going forward.
 
-For cross-family verification (judge panel), add credentials for one or more of:
+### Step 4: Get a guided tour
 
-- **ChatGPT Plus** — run `codex login` once
-- **Gemini Pro** — run `gemini auth login` once
-- **Local LLMs (free, no auth)** — `ollama pull deepseek-r1:7b`
+In a new Claude Code session, type:
 
-Any one is sufficient. Two or more activates the cascade.
+```
+help me set up co-dialectic
+```
 
-## Demo: feel the difference in two minutes
+Co-Dialectic will walk you through what it does and how to use it.
 
-### Demo 1 — Prompt sharpening
+---
 
-Type: *"Help me with my resume."*
+### "I don't see the /plugin command"
 
-Without co-dialectic, you get a generic resume rewrite. With it, the prompt is rewritten to surface what's missing — target role, current resume, what's not landing — and you see both versions side by side. You learn the prompt pattern; next time you write the better version yourself.
+If you type `/plugin` and nothing happens:
 
-### Demo 2 — Hallucination detection
+1. **Update Claude Code** — the plugin system was added in a recent version.
+   - Homebrew: `brew upgrade claude-code`
+   - npm: `npm install -g @anthropic-ai/claude-code@latest`
+2. **Restart your terminal** and run `claude` again.
+3. Try `/plugin` again — it should appear now.
 
-Type a claim that mixes truth and fiction — for example, *"Summarize Berkeley Haas's 2024 case study on AI-assisted teaching, the one by Professor Chatman."* The model would normally fabricate a confident-sounding summary. Co-dialectic flags the unsupported assertion before the answer ships, and asks whether you want it to search rather than confabulate.
+If you're on a **company-managed machine** where your employer controls Claude Code settings, the plugin system may be disabled by your IT/security team. In that case, use the manual install below.
 
-### Demo 3 — Cross-family verification
+---
 
-Ask a contested question — economic forecasts, medical guidance, contested historical claims. Co-dialectic runs the answer past Anthropic, OpenAI, and Google models in parallel and shows you where they agree, where they diverge, and which claims survived all three. You see the consensus and the disagreement.
+## Manual install (no plugin system)
 
-## How it stays cheap
+This works for: Claude.ai, the API, IDE extensions, enterprise Claude Code where `/plugin` is blocked, or anyone who prefers it.
 
-The cost ceiling is the reason most "verified AI" tools stay in research labs. Co-dialectic uses a cascade-then-jury pattern:
+**Grab the skill file:**
 
-- **Local models** (DeepSeek 7B via Ollama and similar) handle routine checks at zero marginal cost.
-- **Cheap-API fallback** (Gemini Flash, GPT-nano) handles second-tier checks for sub-cent.
-- **Premium APIs** fire only when the cheap judges disagree or the artifact is high-stakes.
+The core skill is a single Markdown file:
+[`skills/co-dialectic/SKILL.md`](skills/co-dialectic/SKILL.md)
 
-In testing on an eight-case seeded-flaw corpus, the cascade caught 100% of injected errors at $0.00295 total — 7.5× cheaper than running a naive parallel jury of premium models, with identical accuracy. Full eval at [`tests/RESULTS.md`](tests/RESULTS.md).
+**Add it to your Claude session:**
 
-## Architecture
+Copy the contents of `SKILL.md` and paste it into your system prompt, or into a project instruction file (e.g., `.claude/CLAUDE.md` for Claude Code, or the custom instructions field in Claude.ai).
 
-Co-dialectic is a **terminal layer**: it works standalone in any LLM that accepts a system prompt. There is no server, no account, no telemetry. The plugin installs six composable skills, each with its own activation triggers, each independently enable-able.
+That's it. The skill activates on every message once it's in your context.
 
-| Skill | Role |
+For the full skill set (judge panel, hallucination detector, calibration auditor), add each skill's `SKILL.md` from the `skills/` folder individually.
+
+---
+
+## What it does
+
+Three things run automatically on every message — no commands needed:
+
+**↑ Sharper prompts** — vague questions get rewritten into specific ones before the model answers. You see the improved version and approve it. Over time you internalize the pattern and start writing better prompts yourself.
+
+**✓ Grounded answers** — hallucinations are caught before high-stakes output reaches you. Stakes are inferred automatically (routine vs. significant vs. live). Verification depth scales with the stakes.
+
+**💰 Cost routing** — cheap work goes to cheap models. Premium reasoning (cross-family judge panel, hallucination deep-check) fires only when it matters. In testing on an eight-case seeded-flaw corpus: 100% error detection at $0.00295 total.
+
+Every response shows your score:
+
+```
+⚡ Productivity (Ferriss) · 88% · Cal: 96%
+```
+
+88% = how effective your prompt was. It goes up as you improve.
+
+---
+
+## Skills included
+
+| Skill | What it does |
 |---|---|
-| `co-dialectic` (core) | Prompt sharpening, persona detection, per-prompt quality scoring, context-health monitoring |
-| `fish` | Mandatory pre-task gate — stakes inference (T0–T4) + response calibration; wired as PreToolUse hook |
-| `calibration-auditor` | Sycophancy scanner |
-| `hallucination-detector` | Risk classification + post-flight scoring |
-| `judge-panel` | Cross-family cascade-then-jury verification |
-| `unknown-unknown` | Adjacency surfacer (Rumsfeld matrix) |
-| `waky-waky` | Session-continuity ritual |
+| `co-dialectic` | Core: prompt sharpening, expert personas, per-prompt scoring, context health |
+| `fish-swarm` | Pre-task gate: stakes inference (T0–T4) + response calibration, auto-wired as PreToolUse hook |
+| `calibration-auditor` | Scans for sycophancy ("Great question!") and rewrites it out |
+| `hallucination-detector` | Risk classification + post-flight scoring for high-risk claims |
+| `judge-panel` | Cross-family cascade verification: two cheap judges first, premium tiebreaker if they disagree |
+| `unknown-unknown` | For any insight: "what adjacent slot could this also fit?" Prevents single-frame thinking |
+| `waky-waky` | Session continuity: context, identity, and active threads restore at session start |
+| `onboarding` | Guided first-run walkthrough (trigger: "help me set up co-dialectic") |
 
-The skills compose. They also stand alone — if you only want the calibration auditor, install only that. The plugin is a coherent set, not a monolith.
+---
 
-Co-dialectic is independent of every other system. It does not require an account at thewhyman.com, and it does not assume any other plugin is installed. It composes optionally with xOS — a premium kernel for advanced reasoning workflows — but neither needs the other to function.
+## Cross-family verification: optional but powerful
 
-Full design notes: [`docs/PROTOCOL.md`](../../docs/PROTOCOL.md).
+For the judge panel, add at least one other AI model:
+
+- **Gemini**: run `gemini auth login` once
+- **ChatGPT**: run `codex login` once
+- **Local models (free)**: `ollama pull deepseek-r1:7b`
+
+Any one is enough. Two or more activates the cascade.
+
+---
 
 ## What's not in the open-source tier
 
-Domain-specific applications — career coaching, team campaign engines, family operating systems — live in the xOS premium tier. Co-dialectic itself is the universal conversation layer underneath those products and is fully open-source under AGPL-3.0. You can use, modify, and self-host it. If you ship a derivative as a network service, AGPL requires you to publish your modifications.
+Domain-specific applications — career coaching, team campaign engines, family operating systems — live in the xOS premium tier. Co-Dialectic is the universal conversation layer underneath all of them, fully open-source under AGPL-3.0.
 
-## Roadmap
-
-**v4.4.0 (current)** — self-contained fish gate. The mandatory pre-task gate now ships inside the plugin and auto-wires its PreToolUse hook into Claude Code on install. No manual hook configuration. Uninstall removes the hook cleanly. Also ships: stakes-calibrated response strategy (T0–T4), session handoff codification, research-first mode, honesty selector (brutal/grounded/soft), agent-swarm default-on.
-
-**Beyond v4.4 — user-driven.** Direction is determined by beta-tester signal: installs, retention, friction reports, and feature requests. Runtime adapters for Gemini and Codex (the fish gate equivalents for those runtimes) are next when those platforms support equivalent hook surfaces. No commitments; no version pins.
-
-**Want to drive the roadmap?** [Open an issue](https://github.com/thewhyman/anand-career-os/issues) with what's missing, what feels rough, what you'd pay for.
+---
 
 ## Contributing
 
-Issues and pull requests welcome at [`thewhyman/anand-career-os`](https://github.com/thewhyman/anand-career-os). Reproducible eval harness at [`tests/`](tests/) — run your own corpus through the cascade before deciding whether the reliability claims hold for your domain.
+Issues and pull requests: [github.com/Exponential-OS/prompt-engineering-in-action](https://github.com/Exponential-OS/prompt-engineering-in-action)
 
-## License and acknowledgements
+If you hit a wall installing, [open an issue](https://github.com/Exponential-OS/prompt-engineering-in-action/issues) — we want to know about broken paths.
 
-AGPL-3.0. Built on the Claude Code platform. Indebted to the prompt-engineering, LLM-eval, and AI-safety research communities — particularly the literature on cross-model verification, constitutional AI, and dialectic reasoning.
+---
+
+## License
+
+AGPL-3.0. See [LICENSE](../../LICENSE).
 
 ## Author
 
 **Anand Vallamsetla** — [thewhyman.com](https://thewhyman.com) · [linkedin.com/in/thewhyman](https://linkedin.com/in/thewhyman)
-
----
-
-**License:** AGPL-3.0. See [LICENSE](../../LICENSE) at the repo root.
