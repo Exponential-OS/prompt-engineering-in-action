@@ -1,6 +1,8 @@
 .DS_Store
 .superset/
 .career-os/
+brain/
+sessions/
 *handoff*
 NEXT_SESSION_HANDOFF.md
 handoff.md
