@@ -60,27 +60,6 @@ After installing, open a new session and say: **help me set up co-dialectic**
 
 Your AI will walk you through it.
 
----
-
-## What's new in v4.1.0 (2026-04-27)
-
-Five new protocols shipped (Auto-Verify · Auto-Handoff · Honesty Selector · Agent-Swarm · Hygiene):
-
-- **Protocol 8 — Auto-Verify by Stakes:** T0-T4 stakes-tier classifier with auto-fire cascade. T2 = passive scan; T3 = cross-family judge-panel (Gemini Flash Lite + GPT-5.4 via fish-swarm; FAIL-HARD if no fish reachable); T4 = full cascade + canonical-claim verifier + unknown-unknown adjacency surfacer + explicit human "send"/"ship it"/"verified" confirmation. Default ON. Toggle: `codi verify on/off/status/why`.
-- **Protocol 9 — Auto-Handoff on Closure:** auto-fires on session-closing words. Writes a canonical session-end beacon at `~/.codialectic/hooks/session_end.json` (multi-protocol top-level keys).
-- **Protocol 10 — Honesty Selector:** three postures (`brutal` 🔪 / `grounded` default / `soft` 🤝). Replaces old "tone" terminology; tone-aliases retained for one minor version.
-- **Protocol 11 — Agent-Swarm Default-On:** auto-on at session start (replaces "fish swarm" naming at the user surface). Sub-agent outputs skip Verify; parent runs Verify ONCE on the synthesized seam.
-- **Protocol 12 — Hygiene Cycle:** per-conversation immune cycle (sweep + codify + reorg + merge + pull). Operationalizes EMERGENT SYSTEM IMMUNITY at unit-of-work granularity.
-
-See [CHANGELOG.md](CHANGELOG.md) for the full v4.1.0 entry.
-
-## What's New in v3.2.0 (2026-04-24)
-
-- **`judge-panel`** — cross-family cascade-then-jury review. Two cheap cross-family judges (Gemini Flash + GPT-nano) run first; one expensive tiebreaker escalates only on disagreement. The Defense-in-Depth Part 2 "jury beats judge" thesis as a runnable skill. [Eval results](plugins/co-dialectic/tests/RESULTS.md): 100% accuracy on an 8-case seeded-flaw corpus, ~0.04¢ per check, 7.5× cheaper than a naive parallel Opus jury.
-- **`hallucination-detector`** — pre-flight risk-domain classification (legal / medical / factual / citation) + post-flight scoring that delegates to `judge-panel`.
-- Six composable skills in total — core + 5 runtime guardrails, AGPL-3.0.
-- **[Phase 2 Protocol spec (`docs/PROTOCOL.md`)](docs/PROTOCOL.md)** — portable agent-agnostic contract: the JSON shape `judge-panel` emits, the six-skill composition diagram, the minimum surfaces any runtime needs to expose to claim "Co-Dialectic-compatible." The moat is the protocol shape; the reference implementation is reproducible.
-
 ## What You Get
 
 1. **Never lose your conversation** — context health monitoring (🟢/🟡/🔴) auto-saves your session before quality drops. Recovers from chat crashes.
@@ -91,7 +70,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full v4.1.0 entry.
 
 ---
 
-<details>
+<details open>
 <summary><h2>Make It Yours</h2></summary>
 
 Tell your AI how you like to communicate — one sentence is enough:
@@ -116,7 +95,7 @@ Tell your AI how you like to communicate — one sentence is enough:
 
 </details>
 
-<details>
+<details open>
 <summary><h2>The Flywheel — Your Progress Over 10 Days</h2></summary>
 
 **Day 1:** You correct the AI. It saves broad principles, not keyword patches.
@@ -211,6 +190,34 @@ This library grows through practice. If you discover a technique that works, sub
 4. Why it compounds
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+</details>
+
+<details>
+<summary><h2>What's New — Release Notes</h2></summary>
+
+**v4.9.0 (2026-05-10) — Wildcard Mode**
+`wildcard on` toggle appends a steel-man of the opposite position on strategy, architecture, and product/career outputs. Forces genuine challenge instead of hedging. Does not fire on mechanical tasks or factual lookups.
+
+**v4.8.0 (2026-05-10) — Ghost-Buster**
+Fixed fish lifecycle registration gap: background agents now register on spawn and get a completion contract. Session-start sweeps orphaned agents from prior sessions. Closes the root cause of ghost agents burning tokens silently.
+
+**v4.7.0 (2026-05-05) — External-Ready**
+Shipped onboarding skill for first-time users. Removed all personal workspace paths from shipped SKILL.md files. Plugin product ship gate passes for external distribution.
+
+**v4.6.x (2026-05-05) — Compaction Immunity + Emoji Color System**
+SKILL.md reordered so P0 survives context truncation. Native hooks inject kernel on every session start and every turn — compaction-immune by construction. Semantic color system: 🟢 verified · 🟡 watch · 🔵 routing · 🔴 live/hold.
+
+**v4.5.0 (2026-05-05) — Semantic Gates + Agent Lifecycle**
+Replaced keyword regex T3 classification with Haiku LLM call (correct gate type for a semantic decision). Shipped `agent_lifecycle.py` — dedup, timeout ceiling, capacity check, orphan detection. Fish-swarm dispatch mandate table with explicit MUST-spawn cases.
+
+**v4.1.0 (2026-04-27) — Five New Protocols**
+Auto-Verify by Stakes (T0-T4 cascade) · Auto-Handoff on session close · Honesty Selector (brutal/grounded/soft) · Agent-Swarm default-on · Hygiene Cycle per conversation.
+
+**v3.2.0 (2026-04-24) — Cross-Family Judge Panel**
+`judge-panel`: two cheap cross-family judges first, expensive tiebreaker only on disagreement. 100% accuracy on 8-case seeded-flaw corpus at $0.00295 total — 7.5× cheaper than naive parallel jury. `hallucination-detector`: pre-flight risk classification + post-flight scoring.
+
+[Full CHANGELOG →](CHANGELOG.md)
 
 </details>
 
