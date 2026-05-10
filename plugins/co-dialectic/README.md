@@ -7,9 +7,7 @@ Free. Open source. Works in Claude Code.
 
 ## See it in 61 seconds
 
-https://www.linkedin.com/feed/update/urn:li:ugcPost:7459275180486610945/
-
-Or watch the local file: [demo/codi-product-educational-v2.mp4](demo/codi-product-educational-v2.mp4)
+[![Watch the 61-second demo](demo/frame-01.png)](https://github.com/Exponential-OS/prompt-engineering-in-action/releases/download/v4.1.0/codi-product-educational-v2.mp4)
 
 ---
 
