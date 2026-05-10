@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# .githooks/pre-commit — plugin-user-content-gate
-#
-# Blocks commits that introduce user-specific content into plugin SKILL.md
-# files. Product definitions must be generic; user config belongs in
-# bootstrap adapters (~/.codialectic/context.json, workspace CLAUDE.md).
+# .githooks/pre-commit — two gates
+#   1. leak-and-virgin-install: block private files / credentials from public commit
+#   2. plugin-user-content-gate: block user-specific content in SKILL.md files
 #
 # Install:
 #   git config core.hooksPath .githooks
@@ -12,45 +10,63 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-GATE="${HOME}/cyborg/rules/plugin-user-content-gate/HOW.sh"
 
-# Only run gate if SKILL.md files are staged
+# ── Gate 1: Leak gate (always runs) ─────────────────────────────────────────
+LEAK_GATE="${HOME}/cyborg/rules/leak-and-virgin-install/HOW.py"
+
+if [[ -f "$LEAK_GATE" ]]; then
+  leak_result=$(python3 "$LEAK_GATE" --staged 2>&1) || leak_exit=$?
+  leak_exit=${leak_exit:-0}
+  if [[ $leak_exit -eq 1 ]]; then
+    echo "" >&2
+    echo "❌ COMMIT BLOCKED — leak-and-virgin-install" >&2
+    echo "" >&2
+    echo "$leak_result" >&2
+    echo "" >&2
+    echo "Remediation: move private files to ~/anand-career-os/WIP/ and add patterns to .gitignore" >&2
+    echo "" >&2
+    exit 1
+  fi
+else
+  echo "⚠ leak-and-virgin-install: HOW.py not found — skipping leak check" >&2
+fi
+
+# ── Gate 2: Plugin user-content gate (SKILL.md files only) ──────────────────
+CONTENT_GATE="${HOME}/cyborg/rules/plugin-user-content-gate/HOW.sh"
+
 staged_skills=$(git diff --cached --name-only | grep -E "plugins/.*/SKILL\.md" || true)
-if [[ -z "$staged_skills" ]]; then
-  exit 0
-fi
+if [[ -n "$staged_skills" ]]; then
+  if [[ ! -f "$CONTENT_GATE" ]]; then
+    echo "⚠ plugin-user-content-gate: HOW.sh not found — skipping check" >&2
+  else
+    result=$(bash "$CONTENT_GATE" "${REPO_ROOT}" 2>/dev/null)
+    verdict=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('verdict','WARN'))" 2>/dev/null || echo "WARN")
 
-if [[ ! -f "$GATE" ]]; then
-  echo "⚠ plugin-user-content-gate: HOW.sh not found at ${GATE} — skipping check" >&2
-  exit 0
-fi
-
-result=$(bash "$GATE" "${REPO_ROOT}" 2>/dev/null)
-verdict=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('verdict','WARN'))" 2>/dev/null || echo "WARN")
-
-if [[ "$verdict" == "BLOCK" ]]; then
-  echo ""
-  echo "❌ COMMIT BLOCKED — plugin-user-content-gate"
-  echo ""
-  echo "Plugin SKILL.md files contain user-specific content."
-  echo "Product definitions must be generic (distributed to all users)."
-  echo ""
-  echo "Violations:"
-  echo "$result" | python3 -c "
+    if [[ "$verdict" == "BLOCK" ]]; then
+      echo "" >&2
+      echo "❌ COMMIT BLOCKED — plugin-user-content-gate" >&2
+      echo "" >&2
+      echo "Plugin SKILL.md files contain user-specific content." >&2
+      echo "Product definitions must be generic (distributed to all users)." >&2
+      echo "" >&2
+      echo "Violations:" >&2
+      echo "$result" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 for v in d.get('violations', []):
     print(f\"  {v['file']}:{v['line']} — {v['description']}\")
     print(f\"    content: {v['content'][:100]}\")
-" 2>/dev/null || echo "$result"
-  echo ""
-  echo "Remediation:"
-  echo "  • Replace hardcoded paths with /path/to/... placeholders or {workspace_root}"
-  echo "  • Replace personal domains/repos with generic examples (your-org/your-repo)"
-  echo "  • User-specific bootstrap config → ~/.codialectic/context.json"
-  echo "  • See: ~/cyborg/rules/plugin-user-content-gate/README.md"
-  echo ""
-  exit 1
+" 2>/dev/null || echo "$result" >&2
+      echo "" >&2
+      echo "Remediation:" >&2
+      echo "  • Replace hardcoded paths with /path/to/... placeholders or {workspace_root}" >&2
+      echo "  • Replace personal domains/repos with generic examples (your-org/your-repo)" >&2
+      echo "  • User-specific bootstrap config → ~/.codialectic/context.json" >&2
+      echo "  • See: ~/cyborg/rules/plugin-user-content-gate/README.md" >&2
+      echo "" >&2
+      exit 1
+    fi
+  fi
 fi
 
 exit 0
