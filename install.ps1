@@ -12,7 +12,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoUrl = if ($env:CO_DIALECTIC_REPO) { $env:CO_DIALECTIC_REPO } else { "https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main" }
-$Version = "3.0.0"
+$Version = "4.9.0"
 $ConfigDir = Join-Path $env:USERPROFILE ".co-dialectic"
 
 # -----------------------------------------
