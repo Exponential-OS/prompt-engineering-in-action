@@ -7,6 +7,8 @@ set -e
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
 VERSION="4.9.0"
 CONFIG_DIR="$HOME/.co-dialectic"
+INSTALLED=false
+INSTALLED_TOOLS=""
 
 # Co-Dialectic plugin skill inventory (v4.3.0). Shared by install + uninstall.
 # Append a new skill name here when a new skill is added to the plugin.
@@ -52,11 +54,21 @@ fi
 echo "🧠 Co-Dialectic Manager (v$VERSION)"
 echo "=================================="
 
+_is_interactive() {
+    [ -t 0 ] && return 0
+    ( exec < /dev/tty ) 2>/dev/null && return 0
+    return 1
+}
+
 ask_user() {
     local prompt="$1"
     local default="$2"
     local reply
-    if [ -t 0 ]; then read -r -p "$prompt " reply; elif [ -c /dev/tty ]; then read -r -p "$prompt " reply </dev/tty; else echo -n "$prompt "; reply="$default"; echo "$reply (auto-selected)"; fi
+    if _is_interactive; then
+        if [ -t 0 ]; then read -r -p "$prompt " reply; else read -r -p "$prompt " reply </dev/tty; fi
+    else
+        reply="$default"
+    fi
     if [[ -z "$reply" ]]; then reply="$default"; fi
     case "$reply" in [Yy]* ) return 0 ;; * ) return 1 ;; esac
 }
@@ -65,7 +77,11 @@ ask_choice() {
     local prompt="$1"
     local default="$2"
     local reply
-    if [ -t 0 ]; then read -r -p "$prompt " reply; elif [ -c /dev/tty ]; then read -r -p "$prompt " reply </dev/tty; else echo -n "$prompt "; reply="$default"; echo "$reply (auto-selected)"; fi
+    if _is_interactive; then
+        if [ -t 0 ]; then read -r -p "$prompt " reply; else read -r -p "$prompt " reply </dev/tty; fi
+    else
+        reply="$default"
+    fi
     if [[ -z "$reply" ]]; then reply="$default"; fi
     echo "$reply"
 }
@@ -216,8 +232,8 @@ wire_agent_hook() {
     # Idempotent — skips if already wired to this path.
     local settings="$HOME/.claude/settings.json"
     if [ ! -f "$settings" ]; then
-        echo "   ℹ️  ~/.claude/settings.json not found — skipping hook wiring"
-        return
+        mkdir -p "$HOME/.claude"
+        echo '{}' > "$settings"
     fi
 
     python3 - "$settings" "$FISH_HOOK_CMD" << 'PYEOF'
@@ -434,12 +450,14 @@ if [ -d "$HOME/.gemini/antigravity/skills" ]; then
     echo ""
 fi
 
-if [ -d "$HOME/.claude" ]; then
+if [ -d "$HOME/.claude" ] || command -v claude > /dev/null 2>&1; then
+    mkdir -p "$HOME/.claude/skills"
     if command -v claude > /dev/null 2>&1; then
         # Claude CLI present — prefer repo-native plugin install; fall back to direct download
         _use_direct=true
         if ask_user "✅ Detected Claude Code. Install via 'claude plugin install co-dialectic@xos' (recommended)? [Y/n]" "y"; then
-            claude plugin marketplace add Exponential-OS/agent-marketplace > /dev/null 2>&1 || true
+            claude plugin marketplace add Exponential-OS/agent-marketplace > /dev/null 2>&1 || \
+                claude plugin marketplace add Exponential-OS/prompt-engineering-in-action > /dev/null 2>&1 || true
             if claude plugin install co-dialectic@xos 2>/dev/null; then
                 echo "   ✅ Installed via claude plugin (co-dialectic@xos)"
                 # The plugin system does not register a skill whose name matches
@@ -553,5 +571,21 @@ fi
 
 rm -f "$TMP_SKILL"
 echo ""
-echo "🎉 Done! Co-Dialectic is ready."
-echo "⚠️  IMPORTANT: You MUST start a completely new chat/session for the instructions to take effect."
+
+if [ "$INSTALLED" = true ]; then
+    echo "🎉 Done! Co-Dialectic is ready."
+    echo ""
+    echo "Installed for:$(echo "$INSTALLED_TOOLS" | tr ',' '\n' | sed '/^$/d' | while read -r t; do echo -n " $t"; done)"
+    echo ""
+    echo "⚠️  IMPORTANT: You MUST start a completely new chat/session for the instructions to take effect."
+else
+    echo "⚠️  Nothing was installed."
+    echo ""
+    echo "To install manually, try one of these:"
+    echo "  Claude Code:  /plugin marketplace add Exponential-OS/agent-marketplace"
+    echo "                /plugin install co-dialectic@xos"
+    echo "  Cursor:       Re-run this installer from inside your project directory"
+    echo "  Any AI chat:  Paste the contents of SKILL.md into your system prompt"
+    echo ""
+    echo "For help: https://github.com/Exponential-OS/prompt-engineering-in-action"
+fi
