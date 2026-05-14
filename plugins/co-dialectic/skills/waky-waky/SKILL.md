@@ -6,7 +6,7 @@ description: >
   or "restore context". Loads the Constitution, identity, active handoffs,
   and per-WIP state so a fresh session picks up where the last one ended.
 metadata:
-  version: "3.5.0"
+  version: "3.6.0"
   author: "Anand Vallamsetla"
   tier: "continuity"
 ---
@@ -34,15 +34,15 @@ metadata:
 1. The system-reminder shows `waky-waky` in the "previously invoked skills" list
 2. No prior waky-waky confirmation output (e.g., "Context restored") is visible in the current context window
 
-If BOTH are true → context was compacted and waky-waky lost its state. **Auto-fire immediately** — silently load Tier 1 + Tier 1.5 + Tier 2 (skip Tier 3 to keep it fast), then emit a single compact line before responding to the user's message:
+If BOTH are true → context was compacted and waky-waky lost its state. **Auto-fire immediately** — silently run session-start hooks (Tier 1.5), load Tier 1 + Tier 2 (skip Tier 3 to keep it fast), then emit a single compact line before responding to the user's message:
 
 ```
-🔄 Context reloaded post-compaction. [AGENT_STATUS: <one-line summary of global_facts>]
+🔄 Context reloaded post-compaction. [Tier 1.5: <one-line summary of hook stdout, or "no hooks registered">]
 ```
 
 Then continue answering the user's message normally. Do NOT ask the user to say "waky waky." Do NOT tell them compaction happened. Just reload and continue.
 
-**Why this matters:** Context compaction is the #1 cause of agent amnesia — producing wrong years-of-experience, forgetting active job offers, hallucinating employer names. An agent that forgets Anand's AI Fund EIR while drafting YC/a16z artifacts causes real harm (2 hours wasted, trust destroyed). The post-compaction auto-restore closes this gap without requiring the human to babysit the compaction boundary.
+**Why this matters:** Context compaction is the #1 cause of agent amnesia — producing wrong biographical claims, forgetting active job offers, hallucinating employer names. The post-compaction auto-restore closes this gap without requiring the human to babysit the compaction boundary. The workspace's session-start hook decides what fast-path state to surface; codi just runs it.
 
 ## What to do
 
@@ -56,13 +56,15 @@ If no context registry exists (fresh install), skip all path-dependent tiers and
 2. `{context.identity_path}` — who the user is
 3. `{context.brand_path}` — brand statement
 
-### Tier 1.5 — Agent Status Board (ALWAYS load, before Tier 2)
+### Tier 1.5 — Pre-flight hook output (fast-path workspace state)
 
-Run `git -C {context.workspace_root} pull --ff-only origin main` silently first, then read:
+Tier 1.5 is not a file path — it is the stdout of the registered session-start hooks (see "Session-start pre-flight hooks" section below). The workspace decides what fast-path state looks like; codi just runs the hooks and ingests their stdout as context before Tier 2.
 
-4. `{context.workspace_root}/AGENT_STATUS.yaml` — fast-path cross-agent relay. Machine-parseable. Contains `global_facts` (truths all agents must know) and per-agent `current_task`/`status`/`next_actions`. **Read this before NEXT_SESSION_HANDOFF.md.** It is the anti-amnesia primitive — small, always current, git-synced. If it doesn't exist, skip silently and note in status block.
+**Why hooks, not a hardcoded file:** a workspace may produce its agent status from YAML, Notion, Jira, a git log summary, or any other source. Hardcoding a specific file path into waky-waky makes codi a custom solution, not a product. The hook is the seam; the workspace owns everything behind it.
 
-After loading: scan `global_facts` for anything that changes task priority this session. If any `agents` entry has `blocking_others: true` that affects this agent, surface it in the confirmation output.
+**Execution order:** run the session-start hooks first (step below), then treat their combined stdout as Tier 1.5 context. Load Tier 2 after.
+
+If no hooks are registered → Tier 1.5 is empty. Report `Tier 1.5: none (no session-start hooks registered)` in the status block.
 
 ### Tier 2 — Active state (load if present)
 
@@ -111,9 +113,9 @@ After loading + hooks, print this compact status block (no fluff, no recap of fi
 Co-Dialectic · Waky Waky — context restored.
   Constitution: loaded (all application principles, eight frameworks, personas)
   Identity: loaded
+  Tier 1.5 (hooks): <PASSED N/N — <one-line summary of hook stdout>> | <none registered>
   Root handoff: loaded (last updated: <date from file>)
   Per-WIP handoffs: loaded (<N> files)
-  Pre-flight hooks: <PASSED N/N> | <BLOCKED on hook "<name>"> | <none registered>
   Skipped (not found): <list, or "none">
 
 Ready. What are we picking up?
