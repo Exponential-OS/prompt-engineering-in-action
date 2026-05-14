@@ -39,9 +39,17 @@ If no context registry exists (fresh install), skip all path-dependent tiers and
 2. `{context.identity_path}` — who the user is
 3. `{context.brand_path}` — brand statement
 
+### Tier 1.5 — Agent Status Board (ALWAYS load, before Tier 2)
+
+Run `git -C {context.workspace_root} pull --ff-only origin main` silently first, then read:
+
+4. `{context.workspace_root}/AGENT_STATUS.yaml` — fast-path cross-agent relay. Machine-parseable. Contains `global_facts` (truths all agents must know) and per-agent `current_task`/`status`/`next_actions`. **Read this before NEXT_SESSION_HANDOFF.md.** It is the anti-amnesia primitive — small, always current, git-synced. If it doesn't exist, skip silently and note in status block.
+
+After loading: scan `global_facts` for anything that changes task priority this session. If any `agents` entry has `blocking_others: true` that affects this agent, surface it in the confirmation output.
+
 ### Tier 2 — Active state (load if present)
 
-4. `{context.workspace_root}/NEXT_SESSION_HANDOFF.md` — root cross-agent relay
+5. `{context.workspace_root}/NEXT_SESSION_HANDOFF.md` — root cross-agent relay (narrative history)
 5. `{context.workspace_root}/{context.strategy_rel_path}` — active career/work arc (if configured)
 6. `{context.workspace_root}/workspace.manifest.yaml` — workstream routing map
 
