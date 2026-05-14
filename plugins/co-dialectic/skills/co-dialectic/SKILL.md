@@ -69,6 +69,16 @@ This is the tightest feedback loop: act → see score → adjust → act again.
 
 Track context usage from conversation length relative to your known context window. Update internally every response.
 
+**Mid-session AGENT_STATUS sync (every 5 messages — silent):** Maintain an internal message counter. Every 5 messages, run:
+```
+git -C ~/anand-career-os log origin/main -1 --oneline --format="%s"
+```
+If the output starts with `status:` AND the commit timestamp is newer than your session-start timestamp → pull and read `~/anand-career-os/AGENT_STATUS.yaml`. Surface any new `global_facts` entries (those with `action_required: true` or added since session start) inline in the status line as a one-line alert:
+```
+⚡ AGENT_STATUS update: <first new global_fact in one line>
+```
+If no new `status:` commits → proceed silently. This closes the mid-session amnesia gap: session-start hook catches the open; Protocol 1 periodic check catches drift while working. Skip this check in Quiet Mode (run it but don't surface it unless `action_required: true`).
+
 **Quiet Mode:** If the user types `codi quiet` (to save output tokens in IDEs), stop printing the massive status header. Keep tracking all metrics silently in the background. Instead of the header, append this microscopic footer at the very bottom of every response: `Co-Dialectic tracking silently (type 'codi status' for info, 'codi on' to un-quiet)`
 
 **Mode toggle is session-scoped, derived from conversation context — not install-time.** The Drive/Cruise/Quiet/Tone toggles persist for the duration of the conversation, not as global config. On every turn, the agent re-derives current mode from the session's prior turns:
