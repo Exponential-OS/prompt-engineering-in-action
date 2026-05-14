@@ -18,8 +18,9 @@ metadata:
 
 ## When to activate
 
-Activate ONLY when the user explicitly utters one of these trigger phrases. Do not auto-trigger on session start — this is a user-invoked ritual, not a silent preamble.
+**Two activation modes:**
 
+### Mode A — User-triggered (explicit phrase)
 - `waky waky`
 - `reincarnate`
 - `reincarnate the swarm`
@@ -27,9 +28,25 @@ Activate ONLY when the user explicitly utters one of these trigger phrases. Do n
 - `restore context`
 - `codi wake` / `codi reincarnate`
 
+### Mode B — Post-compaction auto-restore (ALWAYS ON, no user trigger required)
+
+**Signal to detect on EVERY message:** Check whether BOTH conditions are true:
+1. The system-reminder shows `waky-waky` in the "previously invoked skills" list
+2. No prior waky-waky confirmation output (e.g., "Context restored") is visible in the current context window
+
+If BOTH are true → context was compacted and waky-waky lost its state. **Auto-fire immediately** — silently load Tier 1 + Tier 1.5 + Tier 2 (skip Tier 3 to keep it fast), then emit a single compact line before responding to the user's message:
+
+```
+🔄 Context reloaded post-compaction. [AGENT_STATUS: <one-line summary of global_facts>]
+```
+
+Then continue answering the user's message normally. Do NOT ask the user to say "waky waky." Do NOT tell them compaction happened. Just reload and continue.
+
+**Why this matters:** Context compaction is the #1 cause of agent amnesia — producing wrong years-of-experience, forgetting active job offers, hallucinating employer names. An agent that forgets Anand's AI Fund EIR while drafting YC/a16z artifacts causes real harm (2 hours wasted, trust destroyed). The post-compaction auto-restore closes this gap without requiring the human to babysit the compaction boundary.
+
 ## What to do
 
-On trigger, read `~/.codialectic/context.json` to discover workspace-specific paths (see Context Registry Contract below). Then load the FULL context set below — silently, no need to dump file contents to the user. Confirm with a compact status line showing what loaded and what was skipped.
+On trigger (Mode A or B), read `~/.codialectic/context.json` to discover workspace-specific paths (see Context Registry Contract below). Then load the FULL context set below — silently, no need to dump file contents to the user. Confirm with a compact status line showing what loaded and what was skipped.
 
 If no context registry exists (fresh install), skip all path-dependent tiers and report `Context registry: not found — Tier 1-4 paths skipped`.
 
