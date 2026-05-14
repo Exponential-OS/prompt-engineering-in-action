@@ -27,7 +27,7 @@ logs/
 .windsurfrules
 .cursorrules
 .cursorignore
-AGENTS.md
+/AGENTS.md
 
 # Demo production artifacts — private dev assets, live in career workspace
 plugins/co-dialectic/demo/frames/
