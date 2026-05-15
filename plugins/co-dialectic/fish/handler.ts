@@ -159,7 +159,10 @@ async function runFish(
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-  const raw = process.argv[2] ?? (await Bun.stdin.text()).trim();
+  const argVal = process.argv[2];
+  const raw = (argVal === undefined || argVal === "-")
+    ? (await Bun.stdin.text()).trim()
+    : argVal;
 
   if (!raw) {
     emit(
