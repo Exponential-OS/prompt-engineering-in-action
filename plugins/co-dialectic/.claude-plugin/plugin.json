@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.8.0 — LLM prompt optimizer + auto-verify by stakes + semantic T3 classification + background agent lifecycle manager (dedup/timeout/capacity/registration/session-sweep) + worktree-isolation foreground gate + runtime-agnostic executor types + fish-swarm MUST-spawn dispatch mandate + Protocol 0 post-compaction re-init + plugin user-content gate. Cross-family cascade-then-jury review, judge-panel, hallucination detector, fish-swarm orchestration, session handoff. Works with any LLM runtime.",
-  "version": "4.9.4",
+  "description": "Co-Dialectic v4.10.0 — TypeScript+Bun fish swarm (handler.ts + claude-code.ts + agent-lifecycle.ts). Fixes stuck background agents: Python polled wrong output path; TS relies on agent-injected complete command + timeout. P4 three-layer architecture compliant. LLM prompt optimizer + auto-verify by stakes + semantic T3 classification + background agent lifecycle manager. Cross-family judge panel, hallucination detector, fish-swarm orchestration. Works with any LLM runtime.",
+  "version": "4.10.0",
   "author": {
     "name": "Anand Vallamsetla"
   }
