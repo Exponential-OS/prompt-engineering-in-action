@@ -96,7 +96,7 @@ scoring rubric here — `judge-panel` owns it.
 **Invocation:**
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric hallucination \
   --artifact-file /tmp/last_response.txt \
   --silent

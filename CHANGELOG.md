@@ -4,6 +4,16 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.11.0] — 2026-05-15 — Complete Python→TypeScript Migration
+
+### Changed
+- Migrate judge_panel.py → judge_panel.ts (TypeScript+Bun cross-family cascade harness)
+- Update install.sh: fish hook wired as `bun run .../claude-code.ts`; fetch_skill_extras downloads .ts files
+- Update test-plugin.sh: check judge_panel.ts in sandbox; exclude node_modules+venv from symlink scan
+- Zero HOW.py files remain in co-dialectic. P4 three-layer fully compliant.
+
+---
+
 ## [4.10.0] — 2026-05-15 — TypeScript Fish Swarm
 
 ### Changed

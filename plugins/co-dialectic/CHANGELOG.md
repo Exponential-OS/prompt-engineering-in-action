@@ -1,5 +1,19 @@
 # Changelog — Co-Dialectic
 
+## [4.11.0] — 2026-05-15 — Complete Python→TypeScript Migration
+
+### Changed
+- Migrate judge_panel.py (789 lines) → judge_panel.ts (894 lines): TypeScript+Bun cross-family cascade harness
+  - `Promise.all` parallel small-panel (Gemini-Flash-Lite + GPT-5.4), `Bun.spawn` for subprocess execution
+  - All 10 rubrics preserved: hallucination, flattery, spec-coherence, patent-safety, prompt-quality, prompt-sharpen, persona-detect, calibration-scan, hallucination-preflight, t0t2-jury
+  - Same cascade logic, same exit codes, same output JSON schema
+- Update all SKILL.md references from `python3 ...judge_panel.py` to `bun run ...judge_panel.ts` (4 files: judge-panel, hallucination-detector, co-dialectic, fish-swarm)
+- Update install.sh to wire `bun run .../claude-code.ts` as the fish hook command (was python3 .../claude-code.py)
+- Update install.sh fetch_skill_extras() to download `judge_panel.ts` and `handler.ts`/`hooks/claude-code.ts`
+- Update test-plugin.sh Section 8 to check for `judge_panel.ts` in sandbox installs
+- Exclude `node_modules/` and `venv/` from symlink checks in test-plugin.sh CI
+- Zero HOW.py files remain in co-dialectic. P4 three-layer architecture fully compliant.
+
 ## [4.10.0] — 2026-05-15 — TypeScript Fish Swarm
 
 ### Changed

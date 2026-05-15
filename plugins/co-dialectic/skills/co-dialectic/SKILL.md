@@ -404,7 +404,7 @@ The classifier is the LLM itself (Claude reasoning, not regex). Internal tiers T
 T3 cross-family cascade runs through the fish-swarm dispatcher (same judge-panel harness, rubric `spec-coherence` for architectural docs or `hallucination` for factual artifacts — caller picks based on artifact shape). The FAIL-HARD contract from fish-swarm applies: if zero fish are reachable when T3 auto-verify fires, the response is BLOCKED and the fish-school remediation block is shown. The agent does NOT silently absorb the T3 gate into its own context (same-model self-review is a closed loop — the whole point of T3 is cross-family).
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric <spec-coherence|hallucination> \
   --artifact-file /tmp/last_t3_artifact.txt \
   --silent
@@ -598,7 +598,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.10.0
+**Version:** 4.11.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0

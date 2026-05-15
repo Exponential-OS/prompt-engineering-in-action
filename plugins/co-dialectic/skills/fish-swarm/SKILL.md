@@ -58,7 +58,7 @@ for T3-T4 work.
 ## The five orchestration tasks
 
 Each task is one rubric in the existing judge-panel harness
-(`scripts/judge_panel.py`). The harness does the cross-family cheap-fish
+(`scripts/judge_panel.ts`). The harness does the cross-family cheap-fish
 cascade; this skill is the prose contract that names the tasks and routes
 calls. **No parallel Python harness** — REUSE.
 
@@ -76,7 +76,7 @@ All five rubrics return the standard judge-panel JSON:
 ## How the active model invokes fish-swarm
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric <slug> \
   --artifact-file <path> \
   --silent
@@ -85,7 +85,7 @@ python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
 Or inline:
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric prompt-sharpen \
   --artifact "make a thing that does the stuff" \
   --silent
@@ -220,7 +220,7 @@ FAIL-HARD.
 ## Smoke test — verify the skill end-to-end
 
 ```bash
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric prompt-sharpen \
   --artifact "make a thing that does stuff with the data" \
   --silent
@@ -257,7 +257,7 @@ data type, intent clear). Cost reported in `cost_usd_estimate` should be
 - ❌ Caching fish verdicts across sessions — verdicts are session-scoped;
   the underlying state may have changed.
 - ❌ Adding new rubrics by writing a parallel harness — extend
-  `judge_panel.py`'s `RUBRICS` dict, never duplicate the cascade code.
+  `judge_panel.ts`'s `RUBRICS` dict, never duplicate the cascade code.
 - ❌ Using Haiku as a fish — it's still Anthropic-tier; defeats the cost
   separation.
 - ❌ Skipping the health probe at session start — the user needs to know
