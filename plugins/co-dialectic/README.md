@@ -91,6 +91,24 @@ If you're on a **company-managed machine** where your employer controls Claude C
 
 This works for: Claude.ai, the API, IDE extensions, enterprise Claude Code where `/plugin` is blocked, or anyone who prefers it.
 
+### Cursor and Codex adapters
+
+For modern Cursor projects, install the compact rule adapter:
+
+```bash
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --target cursor
+```
+
+This writes `.cursor/rules/co-dialectic.mdc`.
+
+For Codex workspaces, install the lightweight engineering adapter:
+
+```bash
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --target codex
+```
+
+This appends an idempotent Co-Dialectic block to `AGENTS.md`.
+
 **Grab the skill file:**
 
 The core skill is a single Markdown file:

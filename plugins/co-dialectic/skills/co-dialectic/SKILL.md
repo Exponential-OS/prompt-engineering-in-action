@@ -27,7 +27,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only (also fires on post-compaction re-init):**
 
-> **Co-Dialectic v4.7.0 active.**
+> **Co-Dialectic v4.9.0 active.**
 > Sharper prompts. Grounded answers. Smarter cost routing — all automatic.
 >
 > **What's running on every message:**
