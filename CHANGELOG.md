@@ -4,6 +4,19 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.10.0] — 2026-05-15 — TypeScript Fish Swarm
+
+### Changed
+- Migrate fish swarm from Python to TypeScript+Bun (P4 three-layer architecture)
+  - `handler.ts` replaces `HOW.py` — typed Invariant layer, `@anthropic-ai/sdk`
+  - `hooks/claude-code.ts` replaces `hooks/claude-code.py` — completion cmd uses bun
+  - `scripts/agent-lifecycle.ts` replaces `scripts/agent_lifecycle.py`
+- Fix stuck background agents: completion detection via explicit `bun run agent-lifecycle.ts complete`
+  injected into agent prompt (not broken file-path polling)
+- Added `package.json` with `@anthropic-ai/sdk` dep; Bun 1.3.14 required
+
+---
+
 ## [4.9.0] — 2026-05-10 — Wildcard Mode
 
 ### Added

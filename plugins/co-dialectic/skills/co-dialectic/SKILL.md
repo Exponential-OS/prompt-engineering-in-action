@@ -71,9 +71,11 @@ Track context usage from conversation length relative to your known context wind
 
 **Mid-session AGENT_STATUS sync (every 5 messages — silent):** Maintain an internal message counter. Every 5 messages, run:
 ```
-git -C ~/anand-career-os log origin/main -1 --oneline --format="%s"
+git -C $CODI_WORKSPACE_ROOT log origin/main -1 --oneline --format="%s"
 ```
-If the output starts with `status:` AND the commit timestamp is newer than your session-start timestamp → pull and read `~/anand-career-os/AGENT_STATUS.yaml`. Surface any new `global_facts` entries (those with `action_required: true` or added since session start) inline in the status line as a one-line alert:
+(`$CODI_WORKSPACE_ROOT` is the workspace path configured in your codi context, e.g. `~/.codialectic/context.json` → `workspace_root`. Falls back to the current working directory if not set.)
+
+If the output starts with `status:` AND the commit timestamp is newer than your session-start timestamp → pull and read `$CODI_WORKSPACE_ROOT/AGENT_STATUS.yaml`. Surface any new `global_facts` entries (those with `action_required: true` or added since session start) inline in the status line as a one-line alert:
 ```
 ⚡ AGENT_STATUS update: <first new global_fact in one line>
 ```
@@ -596,7 +598,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.9.0
+**Version:** 4.10.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0

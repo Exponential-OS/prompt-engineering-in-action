@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.2.0 \u2014 LLM prompt optimizer + auto-verify by stakes (Safe/Private/Shared/Significant/Live) + auto-handoff on closure + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector + research-first mode + fish-swarm orchestration.",
-      "version": "4.9.0",
+      "description": "Co-Dialectic v4.10.0 \u2014 LLM prompt optimizer + TypeScript+Bun fish swarm (P4 three-layer architecture) + MiroFish model routing + auto-verify by stakes + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector.",
+      "version": "4.10.0",
       "category": "productivity"
     },
     {
