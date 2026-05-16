@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.10.0 \u2014 LLM prompt optimizer + TypeScript+Bun fish swarm (P4 three-layer architecture) + MiroFish model routing + auto-verify by stakes + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector.",
-      "version": "4.11.0",
+      "description": "Co-Dialectic v4.12.0 \u2014 Codi Agents rename (fish\u2192Codi Agents throughout). TypeScript+Bun orchestration dispatcher + cross-family cascade + judge panel + P4 three-layer architecture fully compliant.",
+      "version": "4.12.0",
       "category": "productivity"
     },
     {

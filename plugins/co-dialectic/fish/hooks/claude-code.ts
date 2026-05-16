@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * hooks/claude-code.ts — Claude Code PreToolUse adapter for fish pre-check.
+ * hooks/claude-code.ts — Claude Code PreToolUse adapter for Codi Agents pre-check.
  *
  * Replaces hooks/claude-code.py (dead-end: Python completion command referenced
  * wrong script path; no type safety on hook JSON parsing).
@@ -256,7 +256,7 @@ async function main(): Promise<void> {
           .map((c) => c.agent_id)
           .join(", ");
         lifecycleBlockMsg =
-          `[fish lifecycle] BLOCK — file conflict with running agent(s): ${conflictIds}. ` +
+          `[Codi Agents] BLOCK — file conflict with running agent(s): ${conflictIds}. ` +
           `Files: ${JSON.stringify(extractedFiles)}. ` +
           `Wait for those agents to complete or call: ` +
           `${BUN_BIN} run ${LIFECYCLE_TS} complete --agent-id <id>`;
@@ -264,7 +264,7 @@ async function main(): Promise<void> {
     }
 
     if (!lifecycleBlockMsg) {
-      fishId = `fish-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
+      fishId = `codi-agent-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
       const regFiles = extractedFiles.length > 0 ? extractedFiles : [`agent-${fishId}`];
       runLifecycle([
         "register",
@@ -301,9 +301,9 @@ async function main(): Promise<void> {
 
   // ── Advisor routing annotation ────────────────────────────────────────────
   let tierNote =
-    `[MiroFish] recommended model: ${recommendedTier} ` +
+    `[Codi Agents] recommended model: ${recommendedTier} ` +
     `(stakes=${stakes}, apply_model=${applyModel}, bg=${applyBg ? autoBg : existingBg}). ` +
-    `Whale decompose → fish execute at ${recommendedTier} tier.`;
+    `Whale decompose → Codi Agent execute at ${recommendedTier} tier.`;
 
   if (worktreeForcedFg) {
     tierNote += " [worktree→foreground: isolation=worktree forces run_in_background=false]";
@@ -331,7 +331,7 @@ async function main(): Promise<void> {
       const completeCmd = `${BUN_BIN} run ${LIFECYCLE_TS} complete --agent-id ${fishId}`;
       updatedInput.prompt =
         prompt +
-        `\n\n[fish:${fishId}] On task completion, signal the lifecycle manager: ${completeCmd}`;
+        `\n\n[codi-agent:${fishId}] On task completion, signal the lifecycle manager: ${completeCmd}`;
     }
 
     hookSpecific.updatedInput = updatedInput;

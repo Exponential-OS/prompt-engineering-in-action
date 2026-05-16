@@ -4,6 +4,18 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.12.0] — 2026-05-16 — Rename fish → Codi Agents
+
+### Changed
+- Rename user-facing terminology: "fish" → "Codi Agents" throughout handler.ts, claude-code.ts, agent-lifecycle.ts, fish-swarm/SKILL.md
+- SLUG: `"fish"` → `"codi-agents"`; agent ID prefix `fish-*` → `codi-agent-*`
+- System messages: `[fish lifecycle]`/`[MiroFish]` → `[Codi Agents]`
+- session-start.sh: lifecycle orphan sweep switched from dead `agent_lifecycle.py` to `agent-lifecycle.ts` via Bun
+- fish-swarm/SKILL.md: skill renamed to `codi-agents`; all "fish school" → "agent pool" / "Codi Agents"
+- CI 54/0 clean
+
+---
+
 ## [4.11.0] — 2026-05-15 — Complete Python→TypeScript Migration
 
 ### Changed

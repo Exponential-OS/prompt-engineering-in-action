@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * handler.ts — codi fish-school pre-check (Invariant layer).
+ * handler.ts — Codi Agents pre-check (Invariant layer).
  *
  * Enforces POSTCONDITIONS only — not HOW the agent works.
  * Replaces HOW.py (dead-end: no type enforcement, no structured postconditions).
@@ -51,7 +51,7 @@ interface HandlerOutput {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const SLUG = "fish";
+const SLUG = "codi-agents";
 const LOG_PATH = join(homedir(), ".cyborg-enforcement-log.jsonl");
 
 const FISH_MODEL = "claude-haiku-4-5-20251001";
@@ -261,7 +261,7 @@ async function main(): Promise<void> {
   // T3/T4: pass-through with escalation instruction.
   if (ESCALATE_TIERS.has(stakesRaw)) {
     const msg =
-      `[co-dialectic fish] ${stakesRaw} task — fish passes through. ` +
+      `[Codi Agents] ${stakesRaw} task — passes through. ` +
       "BEFORE proceeding, invoke the judge panel (independent-verification-gate) " +
       "for cross-family review. Do not skip this step.";
     emit(
@@ -297,7 +297,7 @@ async function main(): Promise<void> {
   };
 
   if (fishVerdict === "WARN" || fishVerdict === "BLOCK") {
-    output.systemMessage = `[co-dialectic fish] ${reasonLine}`;
+    output.systemMessage = `[Codi Agents] ${reasonLine}`;
   }
 
   const exitCode = fishVerdict === "BLOCK" ? 1 : 0;

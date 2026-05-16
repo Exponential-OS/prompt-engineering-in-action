@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 /**
- * agent-lifecycle.ts — Background agent lifecycle manager.
+ * agent-lifecycle.ts — Codi Agents background lifecycle manager.
  *
  * Replaces agent_lifecycle.py (dead-end: monitored wrong output path).
  *
- * Root-cause fix: Python version polled ~/.co-dialectic/task-outputs/{fish_id}.txt
+ * Root-cause fix: Python version polled ~/.co-dialectic/task-outputs/{codi-agent-id}.txt
  * but Claude Code writes output to /private/tmp/claude-501/.../tasks/{task_id}.output.
- * No fish_id → task_id mapping existed → completion never auto-detected → stuck.
+ * No codi-agent-id → task_id mapping existed → completion never auto-detected → stuck.
  *
  * This version removes the broken file-based detection. Completion relies on
  * the agent explicitly calling `complete --agent-id {fish_id}` (injected into
@@ -145,7 +145,7 @@ function cmdPoll(timeoutMin: number): number {
 
     // Timeout detection — the only reliable stuck signal.
     // (File-based completion detection removed: Claude Code writes to
-    //  /private/tmp/.../tasks/{task_id}.output, not our fish_id path.)
+    //  /private/tmp/.../tasks/{task_id}.output, not our codi-agent-id path.)
     const registeredMs = new Date(info.registered_at).getTime();
     if (!isNaN(registeredMs)) {
       const ageMin = (now - registeredMs) / 60_000;

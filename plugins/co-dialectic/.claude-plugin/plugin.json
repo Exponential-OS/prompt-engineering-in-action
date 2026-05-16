@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.11.0 — Full Python→TypeScript migration complete. judge_panel.ts replaces judge_panel.py (cross-family cascade harness). install.sh wires handler.ts + claude-code.ts. CI 55/0 clean. P4 three-layer architecture fully compliant: zero HOW.py files remain. Fish swarm + judge panel + all SKILL.md refs migrated to Bun-native TypeScript.",
-  "version": "4.11.0",
+  "description": "Co-Dialectic v4.12.0 — Rename fish → Codi Agents. SLUG, agent IDs, status messages, session-start orphan sweep, and fish-swarm SKILL.md all updated to Codi Agents terminology. session-start.sh lifecycle sweep switched from dead Python to Bun handler.ts. CI 55/0 clean.",
+  "version": "4.12.0",
   "author": {
     "name": "Anand Vallamsetla"
   }

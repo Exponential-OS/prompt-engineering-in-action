@@ -1,5 +1,16 @@
 # Changelog — Co-Dialectic
 
+## [4.12.0] — 2026-05-16 — Rename fish → Codi Agents
+
+### Changed
+- Rename user-facing terminology throughout: "fish" → "Codi Agents", "fish school" → "agent pool"
+- `handler.ts`: SLUG `"fish"` → `"codi-agents"`; system messages updated to `[Codi Agents]`
+- `hooks/claude-code.ts`: agent ID prefix `fish-*` → `codi-agent-*`; all `[fish lifecycle]` / `[MiroFish]` messages → `[Codi Agents]`
+- `fish/scripts/agent-lifecycle.ts`: header comments updated to "Codi Agents"
+- `session-start.sh`: lifecycle orphan sweep switched from `agent_lifecycle.py` (dead Python) to `agent-lifecycle.ts` (Bun)
+- `skills/fish-swarm/SKILL.md`: renamed skill to `codi-agents`, all "fish" terminology → "Codi Agents"
+- CI 55/0 clean (no new test files — rename is terminology-only, not structural)
+
 ## [4.11.0] — 2026-05-15 — Complete Python→TypeScript Migration
 
 ### Changed
