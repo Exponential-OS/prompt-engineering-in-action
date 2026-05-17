@@ -1,5 +1,40 @@
 # Changelog — Co-Dialectic
 
+## [4.13.0] — 2026-05-17 — teachme + tiered sharpening (Sapiens to Cyborg)
+
+The biggest product upgrade since v4.0. Co-Dialectic now lives up to its name.
+
+### Added
+- **Protocol 3 — Tiered Sharpening**: every Protocol 3 turn now renders THREE tiers side-by-side:
+  - ↗ IMPROVED (specificity-injection, role-priming, etc.) — single LLM call
+  - ↗↗ SOCRATIC (questioning-elicitation, Socrates midwifery) — single LLM call, deeper reasoning
+  - ↗↗↗ DIALECTIC (Plato thesis-antithesis-synthesis) — 3 LLM calls, deferred until user picks (or eager for T3+ stakes)
+  User picks which to use, learning the technique each turn.
+
+- **Auto-detect T3+ stakes**: prompts naming a real person, public-facing artifact, or irreversible action auto-generate the DIALECTIC synthesis eagerly (cost worth it).
+
+- **NEW SKILL: teachme** (\`teachme\`, \`teach me <technique>\`, \`teachme growth\`):
+  - Explain-last (bare \`teachme\`): explains the technique applied in the most recent sharpening.
+  - Deep-dive: per-technique markdown at \`skills/teachme/techniques/\` — 3 ships in v4.13.0 (dialectic-tas, socratic-questioning, specificity-injection). More to follow.
+  - Growth report (\`teachme growth\`): user's technique adoption, score trend, recurring weak patterns.
+  - Proactive micro-lesson: auto-fires when same gap detected 3 turns running.
+
+- **xOS-hydratable telemetry**: every Protocol 3 turn appends to \`~/.codialectic/growth.jsonl\` with self-describing per-line schema (schema_version, schema_url, ts, persona, stakes_tier, prompt_hash, per-tier scores, technique_applied, user_picked, cost_usd). Companion \`growth.schema.json\` ships with the plugin. A future xOS consumer can ingest growth.jsonl without co-dialectic source — per SHARED-STATE HYDRATION INVARIANT.
+
+- **Privacy**: prompt content NEVER stored — only sha256(prompt)[:16] hash.
+
+### Why this matters (the Sapiens → Cyborg story)
+
+Harari's Sapiens thesis: humans dominate Earth because we coordinate at scale via shared stories, and stories are enabled by LANGUAGE. If language is what makes human-to-human coordination so powerful, then language between humans and their cyborg agents is the next frontier of capability. Platonic dialectic (2400+ years proven) is the highest form of human reasoning. Co-Dialectic codifies it into daily AI conversation so the user climbs the language ladder over weeks — and the habit transfers to family, team, community conversations. The plugin trains the dialectical reflex; the reflex reshapes every relationship.
+
+### Changed
+- Identity-card philosophy section in \`skills/co-dialectic/SKILL.md\` now distinguishes Socratic method from Platonic dialectic explicitly (was conflated in 4.12.x).
+
+### Verified
+- CI 55/0/0 ish (verify on ship).
+- product-vs-solution-gate: PASS (no contamination).
+- plugin-user-content-gate: PASS.
+
 ## [4.12.2] — 2026-05-17 — product-vs-solution sweep clean
 
 Ran product-vs-solution-gate (Ground Zero invariant from cyborg) against the plugin: 83 BLOCK hits across 14 files. Triaged each:

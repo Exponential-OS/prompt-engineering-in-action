@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Exponential-OS/co-dialectic/raw/main/plugins/co-dialectic/skills/teachme/growth.schema.json",
+  "title": "Co-Dialectic Growth Telemetry — xOS-Hydratable Per-Turn Record",
+  "description": "Schema for a single line in ~/.codialectic/growth.jsonl. Each line is self-describing (per SHARED-STATE HYDRATION INVARIANT) so a future xOS consumer can ingest the file without co-dialectic source code. Prompt content is NEVER stored — only its sha256 hash truncated to 16 chars.",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_type",
+    "ts",
+    "session_id",
+    "prompt_hash",
+    "original_score",
+    "tiers"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Pinned to this schema's version. Bump on breaking schema changes; old consumers can still parse older lines by version."
+    },
+    "schema_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional pointer to a hosted copy of the schema for runtime validation. Consumers can fetch this URL to validate without bundling the schema."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["sharpening_turn", "micro_lesson_surfaced", "micro_lesson_dismissed", "technique_practiced", "session_summary"],
+      "description": "Discriminator for downstream aggregation. Most lines will be sharpening_turn."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp. Always include the Z suffix."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}$",
+      "description": "8-char hex session identifier. Aggregates within a single Co-Dialectic session; rotates across sessions."
+    },
+    "persona": {
+      "type": "string",
+      "description": "Active persona slug (e.g., architecture, product, design, debugging) at the time of the turn."
+    },
+    "stakes_tier": {
+      "type": "string",
+      "enum": ["T0", "T1", "T2", "T3", "T4"],
+      "description": "EMERGENT SYSTEM IMMUNITY stakes tier detected for this prompt. T3+ triggers eager dialectic synthesis."
+    },
+    "prompt_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "sha256(prompt_text)[:16]. NEVER the prompt content itself — privacy invariant."
+    },
+    "prompt_length_chars": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Length of the original prompt in characters (no content)."
+    },
+    "original_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Prompt-quality score before sharpening, 0-100."
+    },
+    "tiers": {
+      "type": "object",
+      "description": "Per-tier scores, techniques, and cost. The user's choice is recorded in user_picked.",
+      "required": ["improved"],
+      "properties": {
+        "improved": { "$ref": "#/definitions/tierRecord" },
+        "socratic": { "$ref": "#/definitions/tierRecord" },
+        "dialectic": { "$ref": "#/definitions/tierRecord" }
+      }
+    },
+    "user_picked": {
+      "type": "string",
+      "enum": ["improved", "socratic", "dialectic", "original", "edited"],
+      "description": "Which tier the user chose. 'original' means user kept their prompt unchanged. 'edited' means user provided a custom edit."
+    },
+    "tier_used_cost_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Actual cost of the path the user chose. For dialectic, this includes the synthesis round."
+    },
+    "calibration_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Cal: score on the response that followed the sharpening."
+    },
+    "dismissed_micro_lessons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Technique slugs the user has muted in this session."
+    }
+  },
+  "definitions": {
+    "tierRecord": {
+      "type": "object",
+      "required": ["score", "technique"],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Estimated quality score for this tier's rewrite."
+        },
+        "technique": {
+          "type": "string",
+          "enum": [
+            "specificity-injection",
+            "role-priming",
+            "audience-priming",
+            "constraint-injection",
+            "chain-of-thought",
+            "few-shot-by-example",
+            "flipped-interaction",
+            "socratic-questioning",
+            "thesis-antithesis-synthesis",
+            "meta-shortcut",
+            "alternative-approaches"
+          ],
+          "description": "The technique label applied at this tier. Used by teachme to look up the deep-dive file."
+        },
+        "cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated USD cost of generating this tier's rewrite. Dialectic synthesis is included only if the tier was actually generated (eager mode or user-picked)."
+        }
+      }
+    }
+  }
+}

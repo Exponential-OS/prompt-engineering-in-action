@@ -7,6 +7,10 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.13.0] — 2026-05-17 — teachme + tiered sharpening (Sapiens to Cyborg)
+
+Co-Dialectic now lives up to its Platonic-dialectic name. Protocol 3 renders three tiers per turn (IMPROVED -> SOCRATIC -> DIALECTIC); new \`teachme\` skill explains techniques + tracks growth. growth.jsonl telemetry is xOS-hydratable per SHARED-STATE HYDRATION INVARIANT.
+
 ## [4.12.2] — 2026-05-17 — product-vs-solution sweep clean
 
 Co-dialectic plugin: 83 BLOCK hits to 0. Anand-as-author attribution exempted via markers; no runtime contamination. Plugin ships clean.
