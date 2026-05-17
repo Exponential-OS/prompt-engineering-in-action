@@ -4,6 +4,15 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.12.1] — 2026-05-17 — HOTFIX: Agent tool crash from updatedInput field drop
+
+### Fixed
+- `fish/hooks/claude-code.ts` PreToolUse hook on Agent calls was constructing `updatedInput` with only `{model, run_in_background, prompt}`, dropping `description` and `subagent_type`. Per Claude Code hook contract, `updatedInput` REPLACES the original `tool_input` — so Agent spawns crashed with `Error: undefined is not an object (evaluating 'K.length')`.
+- Fix: spread original `toolInput` into `updatedInput` first, then overlay model/bg/prompt overrides. All caller-provided fields are now preserved.
+
+### Verified
+- Hook smoke-test confirms `updatedInput` contains all 5 keys: `description`, `subagent_type`, `prompt`, `model`, `run_in_background`.
+
 ## [4.12.0] — 2026-05-16 — Rename fish → Codi Agents
 
 ### Changed

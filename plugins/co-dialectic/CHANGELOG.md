@@ -1,5 +1,11 @@
 # Changelog — Co-Dialectic
 
+## [4.12.1] — 2026-05-17 — HOTFIX: Agent tool crash from updatedInput field drop
+
+### Fixed
+- `fish/hooks/claude-code.ts` PreToolUse hook was constructing `updatedInput` with only `{model, run_in_background, prompt}`, dropping caller-provided `description` and `subagent_type`. `updatedInput` REPLACES `tool_input` per Claude Code hook contract — Agent spawns crashed with `Error: undefined is not an object (K.length)`.
+- Fix: spread original `toolInput` into `updatedInput` first, then overlay overrides.
+
 ## [4.12.0] — 2026-05-16 — Rename fish → Codi Agents
 
 ### Changed

@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.12.0 — Rename fish → Codi Agents. SLUG, agent IDs, status messages, session-start orphan sweep, and fish-swarm SKILL.md all updated to Codi Agents terminology. session-start.sh lifecycle sweep switched from dead Python to Bun handler.ts. CI 55/0 clean.",
-  "version": "4.12.0",
+  "description": "Co-Dialectic v4.12.1 — HOTFIX for Agent tool crash: PreToolUse hook was returning updatedInput with only {model, run_in_background, prompt}, dropping description and subagent_type. updatedInput REPLACES tool_input so Agent calls crashed with `undefined is not an object (K.length)`. Fix: spread original toolInput into updatedInput before overlaying model/bg overrides.",
+  "version": "4.12.1",
   "author": {
     "name": "Anand Vallamsetla"
   }

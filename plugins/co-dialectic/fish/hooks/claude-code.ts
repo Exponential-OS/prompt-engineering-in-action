@@ -317,10 +317,16 @@ async function main(): Promise<void> {
   payload.systemMessage = existingMsg ? `${existingMsg}\n${tierNote}` : tierNote;
 
   // ── Inject updatedInput ────────────────────────────────────────────────────
+  // CRITICAL: updatedInput REPLACES the original tool_input — must preserve
+  // all fields (description, subagent_type, etc.) or Agent tool crashes with
+  // `undefined is not an object` (observed 2026-05-17).
   if (applyModel || applyBg) {
     const hookSpecific = (payload.hookSpecificOutput ?? {}) as NonNullable<HandlerOutput["hookSpecificOutput"]>;
     hookSpecific.hookEventName = "PreToolUse";
-    const updatedInput = (hookSpecific.updatedInput ?? {}) as Record<string, unknown>;
+    const updatedInput: Record<string, unknown> = {
+      ...toolInput,
+      ...((hookSpecific.updatedInput ?? {}) as Record<string, unknown>),
+    };
 
     if (applyModel) updatedInput.model = recommendedTier;
     if (applyBg) updatedInput.run_in_background = autoBg;
