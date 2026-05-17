@@ -1,5 +1,5 @@
 {
-  "description": "Co-Dialectic kernel hooks — re-inject protocol state to survive context compaction.",
+  "description": "Co-Dialectic hooks — persistent survival across context compaction. Plugin-level hooks fire regardless of skill activation state. SessionStart syncs the userSettings skill. UserPromptSubmit reads ~/.codialectic/state.json and re-injects codi context on every turn.",
   "hooks": {
     "SessionStart": [
       {
@@ -17,11 +17,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/inject-kernel.sh\"",
-            "timeout": 5000
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.ts\"",
+            "timeout": 3000
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "_note": "Claude Code reads statusLine from user settings.json, not plugin hooks.json. This entry is documentation — the install.sh / SKILL.md installer wires statusline.sh into ~/.claude/settings.json at install time.",
+    "type": "command",
+    "command": "bash \"${HOME}/.claude/plugins/cache/xos/co-dialectic/4.14.0/hooks/statusline.sh\""
   }
 }

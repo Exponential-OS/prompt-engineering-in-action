@@ -1,5 +1,33 @@
 # Changelog — Co-Dialectic
 
+## [4.14.0] — 2026-05-17 — SURVIVAL LAYER (codi never dies)
+
+The compaction-survival fix. Codi is now a persistent substrate, not a session skill.
+
+### Why this exists
+Codi was getting silently turned off after context compaction. Users (Anand + future customers) would install, use for 30 mins, hit compaction, lose codi, never know why their workflow degraded. Foundation-First Fix invariant says: when a load-bearing block fails, fix it before shipping more features.
+
+### Added
+- `hooks/user-prompt-submit.ts` (Bun) — runs on every user message. Reads `~/.codialectic/state.json` and emits BOTH `hookSpecificOutput.additionalContext` AND `systemMessage`. Tells Claude codi is active, which mode + persona is in effect, and to render Protocol 1 status line + Protocol 3 tiered output.
+- `hooks/statusline.sh` — Claude Code statusLine script. Reads state.json and renders `📦 Product · 88% · Cal: 96% · 🤖 Codi: full · drive` in the IDE status bar. The user can SEE codi is alive even when the AI forgets.
+- `~/.codialectic/state.json` — persistent source of truth. Schema: active, mode, honesty, persona, last_score, last_cal, wildcard, version, growth_total_turns. Updated by Protocol 1 after every response. Survives compaction, sessions, even plugin reinstall.
+
+### Changed
+- `hooks.json` UserPromptSubmit hook switched from the simple `inject-kernel.sh` (hardcoded systemMessage) to the new state-aware `user-prompt-submit.ts`.
+- statusLine documentation added (Claude Code reads from user settings.json; install.sh wires the entry).
+
+### Architecture
+- The hook config is in plugin\'s hooks.json — fires regardless of skill activation state.
+- The state.json is on disk — survives compaction, session end, restart.
+- The statusLine is in user\'s settings.json — visible always.
+
+Three persistent surfaces ⇒ codi cannot turn off invisibly. Only an explicit `codi off` command (sets active=false in state.json) disables it.
+
+### Verified
+- Hook smoke-test: `bun run hooks/user-prompt-submit.ts` emits valid JSON with both context + systemMessage.
+- Status line smoke-test: `bash hooks/statusline.sh` renders correctly.
+- settings.json: statusLine wired to dynamic-version cache resolver.
+
 ## [4.13.1] — 2026-05-17 — 8 more techniques + SHA correction
 
 ### Added

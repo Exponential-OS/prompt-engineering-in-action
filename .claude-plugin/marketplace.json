@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.13.0 - tiered sharpening (improved -> Socratic -> Plato dialectic) + teachme skill + xOS-hydratable growth telemetry.",
-      "version": "4.13.1",
+      "description": "Co-Dialectic v4.14.0 - SURVIVAL LAYER. Codi survives compaction via persistent state.json + UserPromptSubmit hook + statusline.sh.",
+      "version": "4.14.0",
       "category": "productivity"
     },
     {
