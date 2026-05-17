@@ -189,7 +189,7 @@ Every Protocol 3 turn appends one line to `~/.codialectic/growth.jsonl`. The sch
   "session_id": "{8-char hash}",
   "persona": "architecture",
   "stakes_tier": "T2",
-  "prompt_hash": "{sha256 first 16 chars}",
+  "prompt_hash": "{full sha256 (64 hex chars, one-way)}",
   "prompt_length_chars": 142,
   "original_score": 65,
   "tiers": {
@@ -204,7 +204,7 @@ Every Protocol 3 turn appends one line to `~/.codialectic/growth.jsonl`. The sch
 }
 ```
 
-Privacy: `prompt_hash` is sha256(prompt)[:16] — **prompt content is never stored**. Only the hash for deduplication and the metadata for growth tracking.
+Privacy: `prompt_hash` is sha256(prompt) — **prompt content is never stored**. Only the hash for deduplication and the metadata for growth tracking.
 
 **xOS hydration contract**: when xOS activates and ingests `~/.codialectic/growth.jsonl`, it can:
 

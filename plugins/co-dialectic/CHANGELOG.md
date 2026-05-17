@@ -1,5 +1,21 @@
 # Changelog — Co-Dialectic
 
+## [4.13.1] — 2026-05-17 — 8 more techniques + SHA correction
+
+### Added
+- 8 technique deep-dive markdown files at `skills/teachme/techniques/`:
+  role-priming, audience-priming, constraint-injection, chain-of-thought,
+  few-shot-by-example, flipped-interaction, meta-shortcut, alternative-approaches.
+  Total of 11 techniques shipped (3 from v4.13.0 + 8 in v4.13.1).
+
+### Fixed
+- `growth.schema.json`: `prompt_hash` was `sha256(prompt)[:16]` (16 hex chars,
+  64 bits). Corrected to full sha256 (64 hex chars, 256 bits). Clarification:
+  SHA is cryptographically one-way — NOT reversible. Truncation was a privacy
+  micro-optimization that lowered collision resistance unnecessarily. Full hash
+  is the standard. Privacy property (prompt content unrecoverable from hash) is
+  unchanged either way.
+
 ## [4.13.0] — 2026-05-17 — teachme + tiered sharpening (Sapiens to Cyborg)
 
 The biggest product upgrade since v4.0. Co-Dialectic now lives up to its name.

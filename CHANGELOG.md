@@ -7,6 +7,10 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.13.1] — 2026-05-17 — 8 more techniques + SHA correction
+
+8 technique deep-dive files added to `skills/teachme/techniques/`: role-priming, audience-priming, constraint-injection, chain-of-thought, few-shot-by-example, flipped-interaction, meta-shortcut, alternative-approaches (11 total). `growth.schema.json` prompt_hash corrected to full sha256 (64 hex chars).
+
 ## [4.13.0] — 2026-05-17 — teachme + tiered sharpening (Sapiens to Cyborg)
 
 Co-Dialectic now lives up to its Platonic-dialectic name. Protocol 3 renders three tiers per turn (IMPROVED -> SOCRATIC -> DIALECTIC); new \`teachme\` skill explains techniques + tracks growth. growth.jsonl telemetry is xOS-hydratable per SHARED-STATE HYDRATION INVARIANT.

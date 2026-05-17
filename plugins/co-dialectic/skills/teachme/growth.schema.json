@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/Exponential-OS/co-dialectic/raw/main/plugins/co-dialectic/skills/teachme/growth.schema.json",
-  "title": "Co-Dialectic Growth Telemetry — xOS-Hydratable Per-Turn Record",
-  "description": "Schema for a single line in ~/.codialectic/growth.jsonl. Each line is self-describing (per SHARED-STATE HYDRATION INVARIANT) so a future xOS consumer can ingest the file without co-dialectic source code. Prompt content is NEVER stored — only its sha256 hash truncated to 16 chars.",
+  "title": "Co-Dialectic Growth Telemetry \u2014 xOS-Hydratable Per-Turn Record",
+  "description": "Schema for a single line in ~/.codialectic/growth.jsonl. Each line is self-describing (per SHARED-STATE HYDRATION INVARIANT) so a future xOS consumer can ingest the file without co-dialectic source code. Prompt content is NEVER stored \u2014 only its sha256 hash truncated to 16 chars.",
   "version": "1.0.0",
   "type": "object",
   "required": [
@@ -27,7 +27,13 @@
     },
     "event_type": {
       "type": "string",
-      "enum": ["sharpening_turn", "micro_lesson_surfaced", "micro_lesson_dismissed", "technique_practiced", "session_summary"],
+      "enum": [
+        "sharpening_turn",
+        "micro_lesson_surfaced",
+        "micro_lesson_dismissed",
+        "technique_practiced",
+        "session_summary"
+      ],
       "description": "Discriminator for downstream aggregation. Most lines will be sharpening_turn."
     },
     "ts": {
@@ -46,13 +52,19 @@
     },
     "stakes_tier": {
       "type": "string",
-      "enum": ["T0", "T1", "T2", "T3", "T4"],
+      "enum": [
+        "T0",
+        "T1",
+        "T2",
+        "T3",
+        "T4"
+      ],
       "description": "EMERGENT SYSTEM IMMUNITY stakes tier detected for this prompt. T3+ triggers eager dialectic synthesis."
     },
     "prompt_hash": {
       "type": "string",
-      "pattern": "^[a-f0-9]{16}$",
-      "description": "sha256(prompt_text)[:16]. NEVER the prompt content itself — privacy invariant."
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "sha256(prompt_text) \u2014 full 64-char hex. SHA-256 is cryptographically one-way; the prompt is NEVER recoverable from the hash. Privacy invariant."
     },
     "prompt_length_chars": {
       "type": "integer",
@@ -68,16 +80,30 @@
     "tiers": {
       "type": "object",
       "description": "Per-tier scores, techniques, and cost. The user's choice is recorded in user_picked.",
-      "required": ["improved"],
+      "required": [
+        "improved"
+      ],
       "properties": {
-        "improved": { "$ref": "#/definitions/tierRecord" },
-        "socratic": { "$ref": "#/definitions/tierRecord" },
-        "dialectic": { "$ref": "#/definitions/tierRecord" }
+        "improved": {
+          "$ref": "#/definitions/tierRecord"
+        },
+        "socratic": {
+          "$ref": "#/definitions/tierRecord"
+        },
+        "dialectic": {
+          "$ref": "#/definitions/tierRecord"
+        }
       }
     },
     "user_picked": {
       "type": "string",
-      "enum": ["improved", "socratic", "dialectic", "original", "edited"],
+      "enum": [
+        "improved",
+        "socratic",
+        "dialectic",
+        "original",
+        "edited"
+      ],
       "description": "Which tier the user chose. 'original' means user kept their prompt unchanged. 'edited' means user provided a custom edit."
     },
     "tier_used_cost_usd": {
@@ -93,14 +119,19 @@
     },
     "dismissed_micro_lessons": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Technique slugs the user has muted in this session."
     }
   },
   "definitions": {
     "tierRecord": {
       "type": "object",
-      "required": ["score", "technique"],
+      "required": [
+        "score",
+        "technique"
+      ],
       "properties": {
         "score": {
           "type": "integer",

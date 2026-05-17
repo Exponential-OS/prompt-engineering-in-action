@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.13.0 - teachme + tiered sharpening. Protocol 3 now shows three tiers per turn: IMPROVED (specificity) -> SOCRATIC (questioning) -> DIALECTIC (Plato thesis-antithesis-synthesis). New teachme skill explains the last sharpening, deep-dives on techniques, and surfaces growth reports. growth.jsonl telemetry is xOS-hydration-compatible.",
-  "version": "4.13.0",
+  "description": "Co-Dialectic v4.13.1 - 8 additional technique deep-dives shipped (role-priming, audience-priming, constraint-injection, chain-of-thought, few-shot-by-example, flipped-interaction, meta-shortcut, alternative-approaches). Total 11 techniques. SHA hash schema corrected from sha256[:16] to full sha256 (clarification: SHA is one-way, NOT reversible \u2014 irreversibility is the privacy property).",
+  "version": "4.13.1",
   "author": {
     "name": "Anand Vallamsetla"
   },
