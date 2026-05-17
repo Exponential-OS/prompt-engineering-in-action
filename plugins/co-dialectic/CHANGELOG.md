@@ -1,5 +1,21 @@
 # Changelog — Co-Dialectic
 
+## [4.14.1] — 2026-05-17 — survival layer auto-install + macOS portability fix
+
+### Added
+- `hooks/scripts/install-survival-layer.sh` — fires on every SessionStart. Idempotent.
+  Creates `~/.codialectic/state.json` if missing. Copies plugin's `statusline.sh` to fixed
+  resident path `~/.codialectic/statusline.sh` (overwrites on every run — refresh on upgrade).
+  Adds `statusLine` block to `~/.claude/settings.json` if missing, pointing at the resident path.
+  New customers now get the full survival experience zero-friction.
+
+### Fixed (caught by t0t2-jury cross-family judge)
+- Initial draft used `ls -v ~/.claude/plugins/cache/xos/co-dialectic/*/hooks/statusline.sh | tail -1`.
+  `-v` is a GNU extension; macOS BSD ls does NOT version-sort. On macOS this returned the
+  WRONG version (lexically-sorted: "4.10.0" > "4.9.4" but tail -1 picked the wrong one).
+  REDESIGN: install hook copies statusline.sh to a fixed path; settings.json points at that
+  fixed path. No version resolution needed at runtime. Portable across BSD + GNU systems.
+
 ## [4.14.0] — 2026-05-17 — SURVIVAL LAYER (codi never dies)
 
 The compaction-survival fix. Codi is now a persistent substrate, not a session skill.

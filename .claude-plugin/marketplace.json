@@ -12,7 +12,7 @@
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "Co-Dialectic v4.14.0 - SURVIVAL LAYER. Codi survives compaction via persistent state.json + UserPromptSubmit hook + statusline.sh.",
-      "version": "4.14.0",
+      "version": "4.14.1",
       "category": "productivity"
     },
     {

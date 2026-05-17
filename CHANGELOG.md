@@ -7,6 +7,10 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.14.1] — 2026-05-17 — survival auto-install + macOS portability fix
+
+SessionStart hook auto-creates ~/.codialectic/state.json + copies statusline.sh to fixed resident path + wires settings.json statusLine. macOS BSD ls -v bug fixed (caught by judge panel) — no more version-sort gymnastics; fixed path everywhere.
+
 ## [4.14.0] — 2026-05-17 — codi SURVIVAL LAYER (never dies on compaction)
 
 UserPromptSubmit hook reads persistent ~/.codialectic/state.json on every turn. statusline.sh renders codi state in Claude Code IDE status bar. Three persistent surfaces (hook config + state file + status line) make codi survive compaction, session restart, and skill-activation lapses.
