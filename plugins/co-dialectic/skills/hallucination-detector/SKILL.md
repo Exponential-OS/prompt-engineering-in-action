@@ -14,6 +14,8 @@ metadata:
   plugin_number: 3
   depends_on: ["judge-panel"]
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN HALLUCINATION-DETECTOR ###
 # Hallucination Detector

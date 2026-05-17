@@ -15,6 +15,8 @@ metadata:
   tier: "core"
   plugin_number: 4
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN JUDGE-PANEL ###
 # Judge Panel — Cascade-then-Jury Verification

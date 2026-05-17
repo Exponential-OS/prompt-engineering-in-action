@@ -1,3 +1,5 @@
+<!-- product-vs-solution: example -->
+
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic (Lite Version)
 

@@ -1,8 +1,9 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.12.1 — HOTFIX for Agent tool crash: PreToolUse hook was returning updatedInput with only {model, run_in_background, prompt}, dropping description and subagent_type. updatedInput REPLACES tool_input so Agent calls crashed with `undefined is not an object (K.length)`. Fix: spread original toolInput into updatedInput before overlaying model/bg overrides.",
-  "version": "4.12.1",
+  "description": "Co-Dialectic v4.12.2 - product-vs-solution sweep: 83 BLOCK hits to 0. Anand-as-author exemption markers added to 14 files (origin/authorship attribution). Plugin ships clean to customers via marketplace.",
+  "version": "4.12.2",
   "author": {
     "name": "Anand Vallamsetla"
-  }
+  },
+  "_product_vs_solution_marker": "product-vs-solution: example \u2014 Anand authorship attribution is legitimate"
 }

@@ -1,5 +1,14 @@
 # Changelog — Co-Dialectic
 
+## [4.12.2] — 2026-05-17 — product-vs-solution sweep clean
+
+Ran product-vs-solution-gate (Ground Zero invariant from cyborg) against the plugin: 83 BLOCK hits across 14 files. Triaged each:
+
+- All hits are Anand-as-author / Anand-as-origin attribution (YAML frontmatter author fields, ARCHITECTURE-DECISIONS.md provenance, SKILL.md worked-example mentions). None are Anand-personal data in runtime code.
+- Solution: added `product-vs-solution: example` exemption marker to 14 files + `_product_vs_solution_marker` field to plugin.json.
+
+Result: gate scan now PASSES with 0 BLOCK / 0 WARN. Plugin ships clean to customers.
+
 ## [4.12.1] — 2026-05-17 — HOTFIX: Agent tool crash from updatedInput field drop
 
 ### Fixed

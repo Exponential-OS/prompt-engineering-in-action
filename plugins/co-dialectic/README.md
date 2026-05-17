@@ -1,3 +1,5 @@
+<!-- product-vs-solution: example -->
+
 # Co-Dialectic — Smarter AI Conversations, Automatically
 
 **Make every AI conversation sharper, more honest, and more reliable.**

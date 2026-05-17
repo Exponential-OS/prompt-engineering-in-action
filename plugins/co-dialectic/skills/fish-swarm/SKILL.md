@@ -18,6 +18,8 @@ metadata:
   tier: "core"
   plugin_number: 9
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN CODI-AGENTS ###
 # Codi Agents — Whale-Spawns-Agents Orchestration Dispatcher

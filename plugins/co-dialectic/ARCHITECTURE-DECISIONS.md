@@ -1,3 +1,5 @@
+<!-- product-vs-solution: example -->
+
 # Co-Dialectic — Architecture Decisions
 
 > Read this BEFORE editing any co-dialectic skill, script, or doc.

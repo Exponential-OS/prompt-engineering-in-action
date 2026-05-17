@@ -14,6 +14,8 @@ metadata:
   author: "Anand Vallamsetla"
   tier: "continuity"
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN CODI-HANDOFF ###
 # Codi Handoff — Session-End Codification

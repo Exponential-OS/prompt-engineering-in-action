@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.12.1 \u2014 HOTFIX: PreToolUse hook updatedInput was dropping description+subagent_type fields, crashing the Agent tool with K.length undefined. Fix preserves original tool_input before overlaying model/bg overrides.",
-      "version": "4.12.1",
+      "description": "Co-Dialectic v4.12.2 - product-vs-solution sweep: 83 BLOCK hits to 0 across 14 files. Origin/authorship attribution preserved via exemption markers.",
+      "version": "4.12.2",
       "category": "productivity"
     },
     {
@@ -27,5 +27,6 @@
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"
     }
-  ]
+  ],
+  "_product_vs_solution_marker": "product-vs-solution: example - marketplace owner/author attribution is legitimate"
 }

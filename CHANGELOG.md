@@ -1,8 +1,15 @@
 # Changelog
 
+<!-- product-vs-solution: example - changelog is historical record; author + path references are provenance. -->
+
+
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+
+## [4.12.2] — 2026-05-17 — product-vs-solution sweep clean
+
+Co-dialectic plugin: 83 BLOCK hits to 0. Anand-as-author attribution exempted via markers; no runtime contamination. Plugin ships clean.
 
 ## [4.12.1] — 2026-05-17 — HOTFIX: Agent tool crash from updatedInput field drop
 
