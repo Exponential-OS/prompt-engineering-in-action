@@ -1,5 +1,5 @@
 {
-  "description": "Co-Dialectic hooks — persistent survival across context compaction + dev-cycle visibility. Plugin-level hooks fire regardless of skill activation state. SessionStart syncs the userSettings skill. UserPromptSubmit reads ~/.codialectic/state.json and re-injects codi context on every turn. PreToolUse(Skill) emits a plugin+version+scope banner so the dev-cycle never wonders which install of which plugin won the scope race.",
+  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes.",
   "hooks": {
     "SessionStart": [
       {
@@ -36,6 +36,27 @@
             "type": "command",
             "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-version-banner.ts\"",
             "timeout": 2000
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/codify-scan-on-md-edit.ts\"",
+            "timeout": 7000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/unit-of-work-check.ts\"",
+            "timeout": 5000
           }
         ]
       }

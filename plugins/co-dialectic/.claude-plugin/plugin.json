@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.15.0 - DEV-CYCLE VISIBILITY. New PreToolUse(Skill) hook emits a one-line banner on every skill invocation showing which plugin@marketplace v? scope won the scope-resolution race. Eliminates the 'wrong-version-won-quietly' debug class: when a stale project-scope install shadows a newer user-scope one, you see it immediately, not after an hour of confused debugging. Carries forward survival-layer auto-install + state.json persistence from v4.14.x.",
-  "version": "4.15.0",
+  "description": "Co-Dialectic v4.16.0 - FOUNDATION INVARIANT HARNESSES. Adds three wired harnesses turning prose-only invariants into auto-firing gates: (1) TEMPORAL-GROUNDING — OS-grounded datetime injected into every UserPromptSubmit; no more 'tonight' said at Monday afternoon. (2) CODIFY-OR-MARK-UNCODIFIED scan auto-fire on PreToolUse(Edit/Write/MultiEdit) of .md files in invariant-carrier locations (cyborg/, plugins/, CLAUDE.md, references/invariants/); surfaces prose-only invariants as WARNING before edits land. (3) UNIT-OF-WORK-COMMIT — Stop hook checks workspace cwd for uncommitted changes (gated by workspace-identity), surfaces reminder per CLAUDE.md protocol. Carries forward v4.15 skill-version-banner + v4.14 survival layer.",
+  "version": "4.16.0",
   "author": {
     "name": "Anand Vallamsetla"
   },

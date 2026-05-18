@@ -84,6 +84,32 @@ function emitSilent(): never {
   process.exit(0);
 }
 
+function osGroundedDate(): string {
+  // TEMPORAL GROUNDING INVARIANT (v4.16.0): inject OS-grounded datetime into
+  // every prompt context. Prevents the "agent says 'tonight' at 1pm Monday"
+  // failure mode caused by stale internal time recall. This is the structural
+  // wire for the temporal-grounding harness at ~/cyborg/rules/temporal-grounding/.
+  try {
+    const d = new Date();
+    const opts: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
+      hour12: false,
+    };
+    const parts = new Intl.DateTimeFormat("en-US", opts).formatToParts(d);
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    return `${get("weekday")}, ${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")} ${get("timeZoneName")}`;
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
 function buildReminder(state: CodiState): string {
   const personaLine = state.persona
     ? `${state.persona_icon ?? "🎯"} ${state.persona} (active persona)`
@@ -96,10 +122,13 @@ function buildReminder(state: CodiState): string {
 
   const modeLine = `Mode: ${state.mode}${state.honesty !== "grounded" ? ` · honesty:${state.honesty}` : ""}${state.wildcard ? " · 🃏 Wildcard ON" : ""}`;
 
+  const nowLine = `Now (OS-grounded, do NOT recall from memory): ${osGroundedDate()}`;
+
   return [
     "<codi-survival-reminder>",
     `Co-Dialectic v${state.version} is ACTIVE (persistent via ~/.codialectic/state.json, survives compaction).`,
     "",
+    `${nowLine}`,
     `${personaLine}`,
     `${modeLine}`,
     `${scoresLine}`,
@@ -107,6 +136,7 @@ function buildReminder(state: CodiState): string {
     "Protocol 1 (Status Line): begin EVERY response with the persona/score/Cal line.",
     "Protocol 3 (Tiered Sharpening): if this prompt has room to improve, render the three tiers (IMPROVED / SOCRATIC / DIALECTIC) per spec. Auto-detect T3+ stakes (named person, public-facing, irreversible) → eager DIALECTIC synthesis.",
     "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain.",
+    "Protocol 17 (Temporal Grounding): every time-referential phrase ('tonight', 'tomorrow', 'recently', 'yesterday') in your response MUST anchor to the OS-grounded Now line above. Convert relative → absolute datetime before writing.",
     "",
     "After your response, write back to ~/.codialectic/state.json with the new last_score, last_cal, and persona. The state file is the source of truth across sessions and compactions.",
     "</codi-survival-reminder>",
