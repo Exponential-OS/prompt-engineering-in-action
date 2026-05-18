@@ -7,6 +7,10 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.14.2] — 2026-05-17 — include skills/handoff in install
+
+skills/handoff/SKILL.md was present in source and marketplace but missing from 4.14.1 cache; patch bump forces fresh install.
+
 ## [4.14.1] — 2026-05-17 — survival auto-install + macOS portability fix
 
 SessionStart hook auto-creates ~/.codialectic/state.json + copies statusline.sh to fixed resident path + wires settings.json statusLine. macOS BSD ls -v bug fixed (caught by judge panel) — no more version-sort gymnastics; fixed path everywhere.
