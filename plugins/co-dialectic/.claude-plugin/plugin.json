@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.14.1 - SURVIVAL LAYER complete. Auto-installs state.json + statusLine wiring on first SessionStart (idempotent). New customers get the full survival experience zero-friction.",
-  "version": "4.14.2",
+  "description": "Co-Dialectic v4.15.0 - DEV-CYCLE VISIBILITY. New PreToolUse(Skill) hook emits a one-line banner on every skill invocation showing which plugin@marketplace v? scope won the scope-resolution race. Eliminates the 'wrong-version-won-quietly' debug class: when a stale project-scope install shadows a newer user-scope one, you see it immediately, not after an hour of confused debugging. Carries forward survival-layer auto-install + state.json persistence from v4.14.x.",
+  "version": "4.15.0",
   "author": {
     "name": "Anand Vallamsetla"
   },

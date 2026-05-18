@@ -1,5 +1,5 @@
 {
-  "description": "Co-Dialectic hooks — persistent survival across context compaction. Plugin-level hooks fire regardless of skill activation state. SessionStart syncs the userSettings skill. UserPromptSubmit reads ~/.codialectic/state.json and re-injects codi context on every turn.",
+  "description": "Co-Dialectic hooks — persistent survival across context compaction + dev-cycle visibility. Plugin-level hooks fire regardless of skill activation state. SessionStart syncs the userSettings skill. UserPromptSubmit reads ~/.codialectic/state.json and re-injects codi context on every turn. PreToolUse(Skill) emits a plugin+version+scope banner so the dev-cycle never wonders which install of which plugin won the scope race.",
   "hooks": {
     "SessionStart": [
       {
@@ -24,6 +24,18 @@
             "type": "command",
             "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.ts\"",
             "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-version-banner.ts\"",
+            "timeout": 2000
           }
         ]
       }

@@ -1,5 +1,38 @@
 # Changelog — Co-Dialectic
 
+## [4.15.0] — 2026-05-17 — dev-cycle visibility (skill-version-banner hook)
+
+### Added
+- `hooks/skill-version-banner.ts` — PreToolUse hook on the `Skill` matcher. On every skill invocation:
+  - Reads `~/.claude/plugins/installed_plugins.json`
+  - Finds every installed plugin whose `<installPath>/skills/<skill>/SKILL.md` exists
+  - Picks the install that WINS Claude Code's scope-resolution race (project-scope-matching-cwd > local > user)
+  - Emits a one-line banner via `systemMessage` (visible to user) AND verbose context via `additionalContext` (visible to agent)
+- `hooks.json` wires the new hook with a 2s timeout. Matcher `Skill` filters at the harness layer; the script also defensively checks `tool_name === "Skill"`.
+
+### Why this exists
+Tonight's BAE rename (Sep `social-distribution-plugin` → `brand-amplification-engine`) surfaced a debugging black hole: when 3 versions of `career-intelligence@xos` were installed across different project scopes (v0.59, v0.64, v0.65) AND an orphaned `social-distribution@xos` v0.49 was still lurking, `mission-control` produced garbage in a new session — and there was no way to tell which install had won. Hours of "why isn't this working" with no signal.
+
+This hook eliminates that debug class permanently:
+- The user immediately sees `[skill: career-intelligence@xos v0.65 · scope=user · mission-control]`
+- The agent reasons about which version it's actually running
+- Ambiguity warning surfaces if >1 install declares the same skill
+
+Worked example output:
+```
+[skill: career-intelligence@xos v0.65.0 · scope=user · mission-control]
+  path: ~/.claude/plugins/cache/xos/career-intelligence/0.65.0
+```
+
+When ambiguous (multiple installs declare the same skill):
+```
+[skill: career-intelligence@xos v0.65.0 · scope=user · mission-control ⚠ 3 installs found — scope race resolved]
+  path: ~/.claude/plugins/cache/xos/career-intelligence/0.65.0
+```
+
+### Failure semantics
+Hook ALWAYS exits 0. Never blocks tool execution. If resolution fails (skill not installed, cwd doesn't match any project scope, manifest corrupt), emits a "could not resolve" banner and lets the Skill tool proceed. No user can be locked out by this hook.
+
 ## [4.14.1] — 2026-05-17 — survival layer auto-install + macOS portability fix
 
 ### Added
