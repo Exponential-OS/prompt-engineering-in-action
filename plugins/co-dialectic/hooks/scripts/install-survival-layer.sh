@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 # install-survival-layer.sh — Co-Dialectic auto-install on first SessionStart.
 #
-# Idempotent. Runs on every SessionStart. Three responsibilities:
+# Idempotent. Runs on every SessionStart. Four responsibilities:
 #   1. Create ~/.codialectic/state.json if missing (defaults: active=true, mode=drive).
 #   2. Copy the current plugin's statusline.sh to ~/.codialectic/statusline.sh
 #      (overwrite — keeps the canonical copy fresh on plugin upgrade). The settings.json
 #      statusLine entry points at the fixed path, so no version-sort gymnastics.
 #   3. Add statusLine block to ~/.claude/settings.json if missing — pointing at the
 #      fixed ~/.codialectic/statusline.sh path.
+#   4. (v4.17.0) Trigger one-shot migration of ~/.codialectic/state.json to
+#      co-dialectic/status-state.json via brain-kernel-bootstrap, if:
+#        - BRAIN_WORKSPACE_ROOT or CAREER_HOME env is set (workspace is known), AND
+#        - ~/.codialectic/state.json exists (there is legacy state to migrate), AND
+#        - co-dialectic/status-state.json does NOT yet exist in the workspace.
 #
 # This avoids the `ls -v` macOS-vs-Linux portability trap (BSD ls does not version-sort).
 # Single canonical path = predictable behavior across platforms.
@@ -109,7 +114,58 @@ print(f"[install-survival-layer] statusLine wired to {resident_path}", file=sys.
 PYEOF
 fi
 
-# ── 4. First-run marker ─────────────────────────────────────────────────────
+# ── 4. One-shot migration to brain-kernel (v4.17.0) ──────────────────────────
+# Trigger migration only when all three conditions hold:
+#   (a) a workspace root is known (BRAIN_WORKSPACE_ROOT or CAREER_HOME is set)
+#   (b) legacy state exists at ~/.codialectic/state.json
+#   (c) workspace does not yet have co-dialectic/status-state.json
+#
+# Migration is delegated to brain-kernel-bootstrap.ts via bun.
+# Failure here is NON-FATAL — the hook logs the error and continues.
+# The next SessionStart will retry until migration succeeds.
+
+WORKSPACE_ROOT="${BRAIN_WORKSPACE_ROOT:-${CAREER_HOME:-}}"
+BUN_BIN="${HOME}/.bun/bin/bun"
+BOOTSTRAP_TS="${CLAUDE_PLUGIN_ROOT:-}/brain-kernel-bootstrap.ts"
+
+if [ -n "${WORKSPACE_ROOT}" ] && \
+   [ -f "${STATE_FILE}" ] && \
+   [ ! -f "${WORKSPACE_ROOT}/co-dialectic/status-state.json" ] && \
+   [ -f "${BOOTSTRAP_TS}" ] && \
+   [ -x "${BUN_BIN}" ]; then
+
+  MIGRATE_OUT=$("${BUN_BIN}" run - <<MIGRATE_SCRIPT 2>&1 || true)
+import { createBrain } from "${WORKSPACE_ROOT}/../xos/plugins/brain-kernel/kernel.ts";
+import { migrateLocalState } from "${BOOTSTRAP_TS}";
+
+const brain = createBrain("${WORKSPACE_ROOT}");
+const result = await migrateLocalState(brain);
+process.stdout.write(JSON.stringify(result) + "\n");
+MIGRATE_SCRIPT
+
+  MIGRATE_STATUS=$(echo "${MIGRATE_OUT}" | python3 -c "
+import sys, json
+try:
+    d = json.loads(sys.stdin.readline())
+    print(d.get('status', 'unknown'))
+except Exception:
+    print('error')
+" 2>/dev/null || echo "error")
+
+  if [ "${MIGRATE_STATUS}" = "migrated" ]; then
+    echo "[install-survival-layer] state.json migrated to brain-kernel at ${WORKSPACE_ROOT}/co-dialectic/status-state.json" >&2
+    echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] brain-kernel migration: migrated to ${WORKSPACE_ROOT}/co-dialectic/status-state.json" >> "${INSTALL_LOG}" 2>/dev/null || true
+  elif [ "${MIGRATE_STATUS}" = "skipped" ]; then
+    : # already migrated — silent
+  elif [ "${MIGRATE_STATUS}" = "no-source" ]; then
+    : # no legacy state to migrate — silent
+  else
+    echo "[install-survival-layer] WARN: brain-kernel migration returned status=${MIGRATE_STATUS} — will retry next session" >&2
+    echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] brain-kernel migration: WARN status=${MIGRATE_STATUS}" >> "${INSTALL_LOG}" 2>/dev/null || true
+  fi
+fi
+
+# ── 5. First-run marker ─────────────────────────────────────────────────────
 if [ ! -f "${INSTALL_LOG}" ]; then
   NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   echo "[${NOW}] Co-Dialectic survival layer installed (state.json + resident statusline.sh + settings.json statusLine)" > "${INSTALL_LOG}"

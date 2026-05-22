@@ -1,9 +1,30 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.16.0 - FOUNDATION INVARIANT HARNESSES. Adds three wired harnesses turning prose-only invariants into auto-firing gates: (1) TEMPORAL-GROUNDING — OS-grounded datetime injected into every UserPromptSubmit; no more 'tonight' said at Monday afternoon. (2) CODIFY-OR-MARK-UNCODIFIED scan auto-fire on PreToolUse(Edit/Write/MultiEdit) of .md files in invariant-carrier locations (cyborg/, plugins/, CLAUDE.md, references/invariants/); surfaces prose-only invariants as WARNING before edits land. (3) UNIT-OF-WORK-COMMIT — Stop hook checks workspace cwd for uncommitted changes (gated by workspace-identity), surfaces reminder per CLAUDE.md protocol. Carries forward v4.15 skill-version-banner + v4.14 survival layer.",
-  "version": "4.16.0",
+  "description": "Co-Dialectic v4.17.0 - BRAIN-KERNEL MIGRATION. Routes persistent state from machine-local ~/.codialectic/state.json to GitHub-backed workspace co-dialectic/status-state.json via brain-kernel. Adds brain namespace declaration, reads identity/skills-matrix.md + identity/handles.md via kernel primitives, and registers feedback-contradictions / persona-drift / calibration-drift linters. Carries forward v4.16 foundation invariant harnesses.",
+  "version": "4.17.0",
+  "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
+  "brain": {
+    "namespace": "co-dialectic",
+    "owned_paths": [
+      "feedback/**",
+      "personas/**",
+      "calibration-history.md",
+      "status-state.json"
+    ],
+    "writes_to_primitives": [],
+    "reads_from_primitives": [
+      "identity/skills-matrix.md",
+      "identity/handles.md"
+    ],
+    "reads_from_engines": [],
+    "linters": [
+      "feedback-contradictions",
+      "persona-drift",
+      "calibration-drift"
+    ]
+  },
   "author": {
     "name": "Anand Vallamsetla"
   },
-  "_product_vs_solution_marker": "product-vs-solution: example \u2014 Anand authorship attribution is legitimate"
+  "_product_vs_solution_marker": "product-vs-solution: example — Anand authorship attribution is legitimate"
 }
