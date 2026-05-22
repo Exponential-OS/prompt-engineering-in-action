@@ -54,6 +54,15 @@ interface CodiState {
   version: string;
   growth_total_turns: number;
   last_updated_ts: string;
+  /**
+   * verbosity — added in v4.19.0 to resolve GH #10 (Guillaume De Smedt
+   * feedback: "I love reading — just not while in 'get things done' mode").
+   * "concise" (default for new state) = summary-first; sharpening offered on
+   * demand, not eagerly rendered. "verbose" = legacy behavior; eager Tiered
+   * Sharpening + full protocol reminders. Optional for backward compat: legacy
+   * state files without this field are treated as "concise".
+   */
+  verbosity?: "concise" | "verbose";
 }
 
 // ─── State loading ────────────────────────────────────────────────────────────
@@ -245,6 +254,24 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
       `writing to brain path will complete the migration)`;
 
   const onboardingHint = buildOnboardingHint(state);
+  const verbosity = state.verbosity ?? "concise";
+  const verbosityLine = `Verbosity: ${verbosity} (toggle: 'cod verbose' / 'cod concise')`;
+
+  const protocol3Concise =
+    "Protocol 3 (Tiered Sharpening) — CONCISE MODE (default): " +
+    "lead with the ANSWER. Do NOT eagerly render the three tiers. " +
+    "If the prompt has room to improve, end the response with ONE LINE: " +
+    "`Sharpen? Type 'cod sharpen' for IMPROVED / SOCRATIC / DIALECTIC.` " +
+    "Exception: T3+ stakes (named person, public-facing, irreversible decision) → " +
+    "render DIALECTIC inline even in concise mode (the user is making a one-way-door call).";
+
+  const protocol3Verbose =
+    "Protocol 3 (Tiered Sharpening) — VERBOSE MODE: " +
+    "if this prompt has room to improve, render the three tiers " +
+    "(IMPROVED / SOCRATIC / DIALECTIC) per spec. Auto-detect T3+ stakes " +
+    "(named person, public-facing, irreversible) → eager DIALECTIC synthesis.";
+
+  const protocol3Line = verbosity === "verbose" ? protocol3Verbose : protocol3Concise;
 
   const lines = [
     "<codi-survival-reminder>",
@@ -253,15 +280,16 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
     `${nowLine}`,
     `${personaLine}`,
     `${modeLine}`,
+    `${verbosityLine}`,
     `${scoresLine}`,
     "",
     "Protocol 1 (Status Line): begin EVERY response with the persona/score/Cal line.",
-    "Protocol 3 (Tiered Sharpening): if this prompt has room to improve, render the three tiers (IMPROVED / SOCRATIC / DIALECTIC) per spec. Auto-detect T3+ stakes (named person, public-facing, irreversible) → eager DIALECTIC synthesis.",
+    protocol3Line,
     "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain. Task-first routing per skills/co-dialectic/task-persona-map.md — users describe tasks, not persona names.",
     "Protocol 17 (Temporal Grounding): every time-referential phrase ('tonight', 'tomorrow', 'recently', 'yesterday') in your response MUST anchor to the OS-grounded Now line above. Convert relative → absolute datetime before writing.",
     "",
     writeBackInstruction,
-    "Update last_score, last_cal, persona, and growth_total_turns (increment by 1) fields. The brain-kernel path is the source of truth across sessions and devices.",
+    "Update last_score, last_cal, persona, growth_total_turns (increment by 1), and verbosity fields. The brain-kernel path is the source of truth across sessions and devices.",
     "</codi-survival-reminder>",
   ];
   if (onboardingHint) {

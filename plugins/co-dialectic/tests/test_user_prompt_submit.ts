@@ -26,6 +26,7 @@ function makeState(overrides: Partial<{
   persona_icon: string | null;
   last_score: number | null;
   last_cal: number | null;
+  verbosity: "concise" | "verbose" | undefined;
 }> = {}): any {
   return {
     schema_version: "1.0.0",
@@ -38,9 +39,10 @@ function makeState(overrides: Partial<{
     last_cal: overrides.last_cal ?? null,
     wildcard: false,
     session_start_ts: "2026-05-22T00:00:00Z",
-    version: "4.18.0",
+    version: "4.19.0",
     growth_total_turns: overrides.growth_total_turns ?? 0,
     last_updated_ts: "2026-05-22T00:00:00Z",
+    ...("verbosity" in overrides ? { verbosity: overrides.verbosity } : {}),
   };
 }
 
@@ -124,5 +126,67 @@ describe("buildReminder integration (issues #8 + #9)", () => {
     expect(reminder).toContain("</codi-survival-reminder>");
     expect(reminder).toContain("Co-Dialectic v");
     expect(reminder).toContain("Protocol 1 (Status Line)");
+  });
+});
+
+describe("verbosity / concise-by-default (issue #10)", () => {
+  test("default verbosity = concise (no field set)", () => {
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    expect(reminder).toContain("Verbosity: concise");
+    expect(reminder).toContain("CONCISE MODE");
+    expect(reminder).toContain("lead with the ANSWER");
+    expect(reminder).toContain("'cod sharpen'");
+    expect(reminder).not.toContain("VERBOSE MODE:");
+  });
+
+  test("explicit concise verbosity — same concise instructions", () => {
+    const reminder = buildReminder(
+      makeState({ growth_total_turns: 50, verbosity: "concise" }),
+      "brain",
+    );
+    expect(reminder).toContain("Verbosity: concise");
+    expect(reminder).toContain("CONCISE MODE");
+    expect(reminder).toContain("lead with the ANSWER");
+  });
+
+  test("verbose verbosity — eager three-tier sharpening per spec", () => {
+    const reminder = buildReminder(
+      makeState({ growth_total_turns: 50, verbosity: "verbose" }),
+      "brain",
+    );
+    expect(reminder).toContain("Verbosity: verbose");
+    expect(reminder).toContain("VERBOSE MODE:");
+    expect(reminder).toContain("render the three tiers");
+    expect(reminder).toContain("IMPROVED / SOCRATIC / DIALECTIC");
+    expect(reminder).not.toContain("CONCISE MODE");
+  });
+
+  test("concise mode preserves T3+ inline DIALECTIC escape hatch", () => {
+    const reminder = buildReminder(
+      makeState({ growth_total_turns: 50, verbosity: "concise" }),
+      "brain",
+    );
+    expect(reminder).toContain("T3+ stakes");
+    expect(reminder).toContain("inline even in concise mode");
+  });
+
+  test("verbosity-toggle hint is always present in reminder", () => {
+    const conciseReminder = buildReminder(
+      makeState({ growth_total_turns: 50, verbosity: "concise" }),
+      "brain",
+    );
+    const verboseReminder = buildReminder(
+      makeState({ growth_total_turns: 50, verbosity: "verbose" }),
+      "brain",
+    );
+    expect(conciseReminder).toContain("'cod verbose'");
+    expect(conciseReminder).toContain("'cod concise'");
+    expect(verboseReminder).toContain("'cod verbose'");
+    expect(verboseReminder).toContain("'cod concise'");
+  });
+
+  test("write-back instruction tells Claude to persist verbosity", () => {
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    expect(reminder).toContain("verbosity");
   });
 });

@@ -1,5 +1,34 @@
 # Changelog — Co-Dialectic
 
+## [4.19.0] — 2026-05-22 — concise by default (GH #10 tone reversal)
+
+### Added
+- `CodiState.verbosity: "concise" | "verbose"` field (optional for backward compat). Default for missing field = `"concise"` — flips the system-wide default from verbose to concise.
+- `buildReminder()` Protocol 3 now branches on verbosity: concise mode tells Claude to lead with the answer and emit ONE LINE `Sharpen? Type 'cod sharpen' …` at the bottom; verbose mode renders the legacy eager IMPROVED / SOCRATIC / DIALECTIC three-tier output.
+- 6 new tests in `tests/test_user_prompt_submit.ts` (18 total) covering default = concise, explicit concise, explicit verbose, T3+ inline-DIALECTIC escape hatch, verbosity-toggle hint always present, and write-back persistence of the verbosity field.
+
+### Changed
+- `skills/co-dialectic/SKILL-lite.md` Protocol 3 renamed to "Prompt Improvement (Verbosity-Aware)" — concise mode is explicitly the default. Verbose mode retains legacy Drive/Cruise behavior.
+- `buildReminder()` write-back instruction now tells Claude to persist `verbosity` along with the other mutable fields.
+
+### Why this exists
+Guillaume De Smedt, GH issue #10, verbatim: *"I love reading — just not while in 'get things done' mode"* and *"I'm finding I'm ignoring everything above and just looking at this summary."* The system's verbose-by-default behavior was actively fighting the "get things done" user — they were already mentally bypassing the verbose scaffolding and looking for the summary. The fix inverts the default: summary-first; verbose is opt-in.
+
+Concrete behavior change for a "prioritize this list" prompt:
+- **Before (v4.18.0):** codi renders IMPROVED prompt + SOCRATIC questions + DIALECTIC synthesis, then asks user to choose y/n/e before answering. User must scroll past 3 blocks before reaching the prioritization output.
+- **After (v4.19.0):** codi answers the prioritization directly. Bottom-of-response one-liner: `Sharpen? Type 'cod sharpen' …`. T3+ stakes (e.g., "prioritize for the board meeting") still get DIALECTIC inline.
+
+### Caveats
+- Caliber is unchanged. Concise output still channels the persona's 0.001% depth. The Pre-Output Caliber Audit + persona competency stack still apply.
+- Verbose mode is preserved verbatim for users who want the original behavior. Toggle: `cod verbose`.
+- This release is the SMALLEST MEANINGFUL UNIT for #10. Tone reversal at the prompt-engineering level (system prompts, sharpening templates) is deferred to v4.20.x.
+
+### Source-of-truth
+- GH issue: github.com/Exponential-OS/prompt-engineering-in-action/issues/10
+- Handoff: WIP/prompt-engineering-in-action-product/feedback/2026-05-22-guillaume-de-smedt-handoff.md
+- Test run: `bun test ./tests/test_user_prompt_submit.ts` → 18 pass, 0 fail
+- Regression: `bun test ./tests/test_brain_kernel_bootstrap.ts` → 18 pass, 0 fail (unchanged)
+
 ## [4.18.0] — 2026-05-22 — task-first persona routing + onboarding hint (GH #8 + #9)
 
 ### Added

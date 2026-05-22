@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.18.0 - TASK-FIRST PERSONA ROUTING + ONBOARDING HINT. Adds skills/co-dialectic/task-persona-map.md so users describe tasks ('critique the UX', 'prioritize this') instead of remembering persona names. Status line shows task-first labels by default. New users get a 3-turn onboarding hint that explains the score/calibration metrics and task-routing pattern, then auto-fades. Resolves GH issues #8 (task-based persona routing) and #9 (first-time context for UI metrics).",
-  "version": "4.18.0",
+  "description": "Co-Dialectic v4.19.0 - CONCISE BY DEFAULT (tone reversal). Default verbosity flipped from verbose to concise — codi now leads with the answer; sharpening becomes opt-in via 'cod sharpen'. T3+ stakes (named human, public-facing, irreversible) still get inline DIALECTIC because the user is making a one-way-door call. Users can opt back into eager tiered sharpening with 'cod verbose'. New CodiState.verbosity field. Carries forward v4.18.0 task-first persona routing + onboarding hint. Resolves GH issue #10 (Guillaume De Smedt feedback: 'I love reading — just not while in get things done mode').",
+  "version": "4.19.0",
   "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
   "brain": {
     "namespace": "co-dialectic",
