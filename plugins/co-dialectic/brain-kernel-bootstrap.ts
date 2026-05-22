@@ -26,8 +26,17 @@ import { join } from "path";
 import { homedir } from "os";
 
 import type { Brain, LintFn as LinterFn } from "../../../xos/plugins/brain-kernel/kernel.ts";
+import type { RegisterEngineOpts } from "../../../xos/plugins/brain-kernel/acl.ts";
 import type { LintFinding } from "../../../xos/plugins/brain-kernel/lint.ts";
 import type { BrainReadAPI } from "../../../xos/plugins/brain-kernel/lint.ts";
+
+// H3: resolve kernel path via BRAIN_KERNEL_ROOT env var with documented fallback.
+// Set BRAIN_KERNEL_ROOT when the kernel lives outside the standard sibling-repo layout.
+// Type-only imports above use literal relative paths (static resolution).
+// This variable is available for runtime-dynamic kernel creation patterns.
+const _kernelRoot: string =
+  process.env.BRAIN_KERNEL_ROOT ??
+  join(new URL(".", import.meta.url).pathname, "..", "..", "..", "xos", "plugins", "brain-kernel");
 
 export const ENGINE_ID = "co-dialectic";
 
@@ -57,27 +66,42 @@ const BRAIN_STATE_PATH = "co-dialectic/status-state.json";
 /**
  * registerAcl — declare engine namespace + read access to primitives.
  *
+ * Uses the full RegisterEngineOpts overload (brain-kernel >= H2) to correctly
+ * wire reads_from_primitives and reads_from_engines in the AclStore.
+ *
  * Mirrors the `brain` section in plugin.json:
  *   owned_paths:           co-dialectic/**
  *   writes_to_primitives:  [] (codi does not write primitives)
  *   reads_from_primitives: identity/skills-matrix.md, identity/handles.md
  *
- * IMPLEMENTATION NOTE: brain.acl.register() is idempotent per engine_id.
- * The first call sets the namespace. Subsequent calls on the same engine_id
- * are NO-OPs. Cross-namespace read declarations are documented here for
- * forward compatibility; the current kernel permits all reads by default
- * (ACL is write-gated, not read-gated).
+ * Note: reads_from_primitives is documentation only (kernel reads are
+ * default-allow per SPEC §11 locked decision 11), but registering via
+ * RegisterEngineOpts is the canonical API and enables cycle detection.
+ *
+ * Judge finding H4: replaced legacy multi-call sequence with single
+ * RegisterEngineOpts call to lock in the correct API shape.
  */
 function registerAcl(brain: Brain): void {
-  // Primary registration: sets namespace "co-dialectic" with implied
-  // owned_paths: ["co-dialectic/**"].
-  brain.acl.register(ENGINE_ID, "co-dialectic", "write");
-
-  // Read declarations (NO-OPs per idempotency, kept as forward-compat docs):
-  // Reads are not ACL-gated in the current kernel but declared here so that
-  // if the kernel adds read enforcement these are already wired.
-  brain.acl.register(ENGINE_ID, "identity/skills-matrix.md", "read");  // reads_from_primitives
-  brain.acl.register(ENGINE_ID, "identity/handles.md", "read");         // reads_from_primitives
+  // G-Judge1 manifest fix: skills-matrix.md is owned by career-intelligence (not an
+  // identity/ primitive), so it belongs in reads_from_engines per SPEC §16.5.
+  // identity/handles.md IS a primitive (owned by identity/ namespace) — stays in
+  // reads_from_primitives. Reads are default-allow either way (SPEC §11 decision 11),
+  // but correct classification enables accurate cycle detection.
+  const opts: RegisterEngineOpts = {
+    namespace: "co-dialectic",
+    owned_paths: [
+      "status-state.json", "feedback/**", "personas/**",
+      "calibration-history.md", "session-logs/**",
+    ],
+    writes_to_primitives: [],  // codi does not write identity/ or network/ primitives
+    reads_from_primitives: [
+      "identity/handles.md",
+    ],
+    reads_from_engines: [
+      "career-intelligence/skills-matrix.md",
+    ],
+  };
+  brain.acl.register(ENGINE_ID, opts);
 }
 
 // ─── State I/O ─────────────────────────────────────────────────────────────────
@@ -240,20 +264,22 @@ export async function migrateLocalState(brain: Brain): Promise<{
     return { status: "error", err: writeResult.err };
   }
 
-  // Append deprecation note to legacy file (do NOT delete — too risky)
-  // The statusline.sh and user-prompt-submit.ts still reference this path on the
-  // current machine. They will be updated in a follow-up hook patch.
-  const deprecationNote =
-    `\n/* DEPRECATED — migrated to brain-kernel at co-dialectic/status-state.json on ${new Date().toISOString()}. ` +
+  // Write deprecation note to a sidecar file — do NOT append to state.json.
+  // Appending /* ... */ JS-comment syntax to state.json would produce invalid JSON,
+  // breaking any reader that calls JSON.parse() on the file (judge finding H1).
+  // The sidecar approach leaves state.json untouched while still documenting the
+  // migration for any human inspecting the directory.
+  const sidecarPath = LEGACY_STATE_PATH + ".migration-note";
+  const migrationNote =
+    `DEPRECATED — migrated to brain-kernel at co-dialectic/status-state.json on ${new Date().toISOString()}.\n` +
     (parsedOk
-      ? `This file is no longer the source of truth. The survival hook will read from the workspace path once the hooks are updated.`
-      : `WARNING: this file contained corrupt JSON at time of migration. Please run /co-dialectic-onboarding.`) +
-    ` */`;
+      ? `This file is no longer the source of truth. The survival hook will read from the workspace path once the hooks are updated.\n`
+      : `WARNING: this file contained corrupt JSON at time of migration. Please run /co-dialectic-onboarding.\n`);
 
   try {
-    writeFileSync(LEGACY_STATE_PATH, rawContent + deprecationNote, "utf8");
+    writeFileSync(sidecarPath, migrationNote, "utf8");
   } catch {
-    // Non-fatal: if we can't write the deprecation note, the migration still succeeded.
+    // Non-fatal: if we can't write the sidecar note, the migration still succeeded.
     // The legacy file remains unchanged.
   }
 

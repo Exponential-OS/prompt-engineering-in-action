@@ -127,6 +127,10 @@ fi
 WORKSPACE_ROOT="${BRAIN_WORKSPACE_ROOT:-${CAREER_HOME:-}}"
 BUN_BIN="${HOME}/.bun/bin/bun"
 BOOTSTRAP_TS="${CLAUDE_PLUGIN_ROOT:-}/brain-kernel-bootstrap.ts"
+# H3: resolve kernel path via BRAIN_KERNEL_ROOT env var with documented fallback.
+# Set BRAIN_KERNEL_ROOT when the kernel is installed outside the sibling-repo layout.
+BRAIN_KERNEL_ROOT="${BRAIN_KERNEL_ROOT:-${WORKSPACE_ROOT}/../xos/plugins/brain-kernel}"
+BRAIN_KERNEL_TS="${BRAIN_KERNEL_ROOT}/kernel.ts"
 
 if [ -n "${WORKSPACE_ROOT}" ] && \
    [ -f "${STATE_FILE}" ] && \
@@ -135,7 +139,7 @@ if [ -n "${WORKSPACE_ROOT}" ] && \
    [ -x "${BUN_BIN}" ]; then
 
   MIGRATE_OUT=$("${BUN_BIN}" run - <<MIGRATE_SCRIPT 2>&1 || true)
-import { createBrain } from "${WORKSPACE_ROOT}/../xos/plugins/brain-kernel/kernel.ts";
+import { createBrain } from "${BRAIN_KERNEL_TS}";
 import { migrateLocalState } from "${BOOTSTRAP_TS}";
 
 const brain = createBrain("${WORKSPACE_ROOT}");

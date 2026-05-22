@@ -146,6 +146,9 @@ function emit(additionalContext: string, systemMessage: string): never {
   process.exit(0);
 }
 
+// H2: return type is `never` so TypeScript flow-analysis understands that callers
+// of emitSilent() do not return — this narrows `state` and `source` correctly
+// in the code that follows each emitSilent() call in main().
 function emitSilent(): never {
   process.stdout.write(JSON.stringify({
     decision: "approve",

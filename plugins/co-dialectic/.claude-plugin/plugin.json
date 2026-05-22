@@ -13,10 +13,11 @@
     ],
     "writes_to_primitives": [],
     "reads_from_primitives": [
-      "identity/skills-matrix.md",
       "identity/handles.md"
     ],
-    "reads_from_engines": [],
+    "reads_from_engines": [
+      "career-intelligence/skills-matrix.md"
+    ],
     "linters": [
       "feedback-contradictions",
       "persona-drift",
