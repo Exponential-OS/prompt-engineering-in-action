@@ -186,7 +186,42 @@ function osGroundedDate(): string {
 
 // ─── Reminder builder ─────────────────────────────────────────────────────────
 
-function buildReminder(state: CodiState, stateSource: "brain" | "legacy"): string {
+/**
+ * ONBOARDING_TURN_WINDOW — number of turns during which the first-time score
+ * explainer is appended to the reminder. Resolves issue #9 (Guillaume De Smedt
+ * feedback): "what are these scores? what do they mean?" Users only need this
+ * once — fade after a few turns. 3 is the smallest window that survives a
+ * typical first interaction (prompt + clarifier + follow-up).
+ */
+export const ONBOARDING_TURN_WINDOW = 3;
+
+/**
+ * buildOnboardingHint — returns the first-time score explainer when the user
+ * is still in their onboarding window, or an empty string after the window.
+ *
+ * Returns empty string (not null) so the caller can unconditionally concatenate
+ * without conditional join logic.
+ */
+export function buildOnboardingHint(state: CodiState): string {
+  if (state.growth_total_turns >= ONBOARDING_TURN_WINDOW) return "";
+  const remaining = ONBOARDING_TURN_WINDOW - state.growth_total_turns;
+  return [
+    "<codi-onboarding-hint>",
+    `First-time orientation (auto-fades in ${remaining} more turn${remaining === 1 ? "" : "s"}):`,
+    "  • The status line at the top of each response shows three things:",
+    "      X% = prompt-quality (how well-formed your prompt was for me to act on)",
+    "      Cal: Y% = caliber fidelity (how deeply the persona engaged at its 0.001% level)",
+    "      Icon = active persona — task-described (e.g., 🎨 UX Critique) by default.",
+    "  • You never need to memorize persona names. Just say what you want done:",
+    "      'critique the UX' → 🎨 UX Critique    'prioritize this list' → 📦 Product Strategy",
+    "      'debug this' → 🔍 Debug    'pitch this to a VC' → 🎯 Positioning",
+    "  • Type 'who' in any turn to see which persona is active.",
+    "  • Type '/cod verbose' to see persona names; '/cod concise' to hide them.",
+    "</codi-onboarding-hint>",
+  ].join("\n");
+}
+
+export function buildReminder(state: CodiState, stateSource: "brain" | "legacy"): string {
   const personaLine = state.persona
     ? `${state.persona_icon ?? "🎯"} ${state.persona} (active persona)`
     : "Persona: auto-detect from current task";
@@ -209,7 +244,9 @@ function buildReminder(state: CodiState, stateSource: "brain" | "legacy"): strin
       `(NOTE: state was loaded from legacy ~/.codialectic/state.json — brain path not yet initialized; ` +
       `writing to brain path will complete the migration)`;
 
-  return [
+  const onboardingHint = buildOnboardingHint(state);
+
+  const lines = [
     "<codi-survival-reminder>",
     `Co-Dialectic v${state.version} is ACTIVE (state source: ${stateSource === "brain" ? "brain-kernel workspace" : "legacy ~/.codialectic/state.json"}, survives compaction).`,
     "",
@@ -220,13 +257,17 @@ function buildReminder(state: CodiState, stateSource: "brain" | "legacy"): strin
     "",
     "Protocol 1 (Status Line): begin EVERY response with the persona/score/Cal line.",
     "Protocol 3 (Tiered Sharpening): if this prompt has room to improve, render the three tiers (IMPROVED / SOCRATIC / DIALECTIC) per spec. Auto-detect T3+ stakes (named person, public-facing, irreversible) → eager DIALECTIC synthesis.",
-    "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain.",
+    "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain. Task-first routing per skills/co-dialectic/task-persona-map.md — users describe tasks, not persona names.",
     "Protocol 17 (Temporal Grounding): every time-referential phrase ('tonight', 'tomorrow', 'recently', 'yesterday') in your response MUST anchor to the OS-grounded Now line above. Convert relative → absolute datetime before writing.",
     "",
     writeBackInstruction,
-    "Update last_score, last_cal, and persona fields. The brain-kernel path is the source of truth across sessions and devices.",
+    "Update last_score, last_cal, persona, and growth_total_turns (increment by 1) fields. The brain-kernel path is the source of truth across sessions and devices.",
     "</codi-survival-reminder>",
-  ].join("\n");
+  ];
+  if (onboardingHint) {
+    lines.push("", onboardingHint);
+  }
+  return lines.join("\n");
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -244,4 +285,7 @@ function main(): void {
   emit(additionalContext, systemMessage);
 }
 
-main();
+// Only run main when invoked directly (not when imported by tests).
+if (import.meta.main) {
+  main();
+}

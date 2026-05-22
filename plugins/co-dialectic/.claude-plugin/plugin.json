@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.17.0 - BRAIN-KERNEL MIGRATION. Routes persistent state from machine-local ~/.codialectic/state.json to GitHub-backed workspace co-dialectic/status-state.json via brain-kernel. Adds brain namespace declaration, reads identity/skills-matrix.md + identity/handles.md via kernel primitives, and registers feedback-contradictions / persona-drift / calibration-drift linters. Carries forward v4.16 foundation invariant harnesses.",
-  "version": "4.17.0",
+  "description": "Co-Dialectic v4.18.0 - TASK-FIRST PERSONA ROUTING + ONBOARDING HINT. Adds skills/co-dialectic/task-persona-map.md so users describe tasks ('critique the UX', 'prioritize this') instead of remembering persona names. Status line shows task-first labels by default. New users get a 3-turn onboarding hint that explains the score/calibration metrics and task-routing pattern, then auto-fades. Resolves GH issues #8 (task-based persona routing) and #9 (first-time context for UI metrics).",
+  "version": "4.18.0",
   "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
   "brain": {
     "namespace": "co-dialectic",

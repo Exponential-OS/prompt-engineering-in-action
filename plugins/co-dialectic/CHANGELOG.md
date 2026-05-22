@@ -1,5 +1,31 @@
 # Changelog — Co-Dialectic
 
+## [4.18.0] — 2026-05-22 — task-first persona routing + onboarding hint (GH #8 + #9)
+
+### Added
+- `skills/co-dialectic/task-persona-map.md` — canonical task-verb → persona routing table. Users describe what they want done ("critique the UX", "prioritize this list", "debug this") and the system routes to the correct persona transparently. Resolves the "I can't remember Jony Ive's name" friction surfaced by Guillaume De Smedt (Principal PM, Bevy).
+- `hooks/user-prompt-submit.ts → buildOnboardingHint()` — for the first 3 turns of a new user's interaction, the user-prompt-submit hook appends a `<codi-onboarding-hint>` block that explains (a) what the prompt-quality % means, (b) what the `Cal:` % means, (c) that the user does NOT need to memorize persona names — task language is enough. The hint auto-fades after `ONBOARDING_TURN_WINDOW` (3) turns. Gated on `growth_total_turns < 3`.
+- `tests/test_user_prompt_submit.ts` — 12 new tests covering the onboarding-hint fade window (turn 0/1/2 show, turn 3+ hide), singular/plural wording, the task-persona-map reference in the reminder, and that the survival-reminder core block always renders.
+
+### Changed
+- `skills/co-dialectic/SKILL-lite.md` Protocol 2 — leads with "Task-first routing (default)" and points to `task-persona-map.md` before the legacy name-based roster. Status-line default is now task-first (`🎨 UX Critique` not `🎨 Design (Jony Ive)`).
+- `hooks/user-prompt-submit.ts → buildReminder()` Protocol 11 line — now references `skills/co-dialectic/task-persona-map.md` and instructs Claude to increment `growth_total_turns` after each response (needed for the onboarding-hint fade).
+- `hooks/user-prompt-submit.ts → main()` — gated behind `import.meta.main` so the test file can import helpers without triggering the hook's emit() side-effect.
+
+### Why this exists
+First PM-grade ICP user (Guillaume De Smedt, Principal PM at Bevy, ex-VP Global Community at Startup Grind) filed 4 structured GitHub issues 2026-05-22. Issues #8 and #9 ship together as the smallest meaningful unit. Verbatim user pain:
+
+- #8: "I know these people, but I'd not normally state their name... I can't remember Jonny's name + I don't know who is best at 'prioritization'."
+- #9: "one thing I am confused about — what are these scores? what do they mean?"
+
+Fix shipped within hours of feedback to build trust with the first PM-grade non-academic user.
+
+### Source-of-truth
+- GH issues: github.com/Exponential-OS/prompt-engineering-in-action/issues/8, /9
+- Handoff: WIP/prompt-engineering-in-action-product/feedback/2026-05-22-guillaume-de-smedt-handoff.md
+- Test run: `bun test ./tests/test_user_prompt_submit.ts` → 12 pass, 0 fail
+- Regression: `bun test ./tests/test_brain_kernel_bootstrap.ts` → 18 pass, 0 fail (no regression)
+
 ## [4.15.0] — 2026-05-17 — dev-cycle visibility (skill-version-banner hook)
 
 ### Added
