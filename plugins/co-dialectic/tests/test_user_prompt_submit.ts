@@ -46,6 +46,50 @@ function makeState(overrides: Partial<{
   };
 }
 
+describe("modeLine defensive coding (v4.20.0 — honesty:undefined fix)", () => {
+  test("missing honesty field — no 'honesty:undefined' literal", () => {
+    const stateNoHonesty: any = makeState({ growth_total_turns: 5 });
+    delete stateNoHonesty.honesty;
+    const reminder = buildReminder(stateNoHonesty, "brain");
+    expect(reminder).not.toContain("honesty:undefined");
+    expect(reminder).toContain("Mode: drive");
+  });
+
+  test("honesty='grounded' (default) — suffix is omitted", () => {
+    const reminder = buildReminder(makeState({ growth_total_turns: 5 }), "brain");
+    expect(reminder).toContain("Mode: drive");
+    expect(reminder).not.toMatch(/honesty:/);
+  });
+
+  test("honesty='brutal' — suffix is rendered", () => {
+    const stateBrutal: any = makeState({ growth_total_turns: 5 });
+    stateBrutal.honesty = "brutal";
+    const reminder = buildReminder(stateBrutal, "brain");
+    expect(reminder).toContain("Mode: drive · honesty:brutal");
+  });
+
+  test("missing mode field — falls back to 'drive'", () => {
+    const stateNoMode: any = makeState({ growth_total_turns: 5 });
+    delete stateNoMode.mode;
+    const reminder = buildReminder(stateNoMode, "brain");
+    expect(reminder).toContain("Mode: drive");
+  });
+
+  test("wildcard=true — 🃏 suffix appears", () => {
+    const stateWild: any = makeState({ growth_total_turns: 5 });
+    stateWild.wildcard = true;
+    const reminder = buildReminder(stateWild, "brain");
+    expect(reminder).toContain("🃏 Wildcard ON");
+  });
+
+  test("wildcard missing/undefined — no 🃏 suffix", () => {
+    const stateNoWild: any = makeState({ growth_total_turns: 5 });
+    delete stateNoWild.wildcard;
+    const reminder = buildReminder(stateNoWild, "brain");
+    expect(reminder).not.toContain("🃏");
+  });
+});
+
 describe("buildOnboardingHint (issue #9)", () => {
   test("turn 0 (brand new user) — shows hint", () => {
     const hint = buildOnboardingHint(makeState({ growth_total_turns: 0 }));

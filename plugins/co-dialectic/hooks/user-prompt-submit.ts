@@ -240,7 +240,28 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
       ? `Last response: ${state.last_score}% · Cal: ${state.last_cal}%`
       : "Status line will populate on this response";
 
-  const modeLine = `Mode: ${state.mode}${state.honesty !== "grounded" ? ` · honesty:${state.honesty}` : ""}${state.wildcard ? " · 🃏 Wildcard ON" : ""}`;
+  /**
+   * modeLine — render the user-facing mode descriptor.
+   *
+   * Bug fix v4.20.0 (GH #11-adjacent): when state.json lacks the `honesty`
+   * field (older state schemas, fresh installs, or post-migration state
+   * shapes), `state.honesty` is `undefined`. The previous conditional
+   * `state.honesty !== "grounded"` is true for undefined, producing the
+   * literal string "honesty:undefined" in the survival reminder — a visible
+   * cosmetic bug AND a signal of state-schema drift.
+   *
+   * Fix: only append the honesty suffix when honesty is a non-empty string
+   * AND is not the default ("grounded"). Same defensive treatment for
+   * `state.wildcard` and `state.mode` (fall back to "drive" if missing).
+   */
+  const safeMode = state.mode || "drive";
+  const showHonesty =
+    typeof state.honesty === "string" &&
+    state.honesty.length > 0 &&
+    state.honesty !== "grounded";
+  const honestySuffix = showHonesty ? ` · honesty:${state.honesty}` : "";
+  const wildcardSuffix = state.wildcard === true ? " · 🃏 Wildcard ON" : "";
+  const modeLine = `Mode: ${safeMode}${honestySuffix}${wildcardSuffix}`;
 
   const nowLine = `Now (OS-grounded, do NOT recall from memory): ${osGroundedDate()}`;
 

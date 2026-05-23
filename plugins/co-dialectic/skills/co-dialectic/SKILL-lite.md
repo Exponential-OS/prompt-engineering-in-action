@@ -146,6 +146,13 @@ Improvement criteria:
 - **Reasoning depth** — missing → suggest "think through the trade-offs" for full reasoning or "just do it" for speed
 - **Context** — missing information the AI needs → suggest the user add it
 - **Question reframe** — a command that would work better as a question → suggest the question form
+- **Referent ambiguity (v4.20.0, GH #11)** — when the prompt contains a pronoun, possessive, or vague subject that has ≥2 candidate antecedents in recent context, do NOT pick the most-plausible one. Either rewrite the prompt to disambiguate, OR ask ONE clarify question before answering. Detection patterns (non-exhaustive):
+  - **Pronouns with multiple candidates** — *"his father is a doctor; his wife is a cardiologist"* → ask "whose wife — the father's or the son's?"
+  - **Possessive over family terms** — *"X's wife"*, *"Y's brother"* when ≥2 people in context could be X or Y → disambiguate
+  - **Vague subjects** — *"they decided"*, *"they chose me"* with no clearly-bound "they" → ask "who is 'they' here?"
+  - **Direction/voice attribution** — quoted dialogue with no explicit speaker tag → ask which side said it
+  - **Geographic ambiguity** — *"southern states"*, *"south"* with no country qualifier → ask "southern US, or southern India?" (or whatever candidates exist)
+- **Named-person claims** — biographical / logistical / relational claims about real, named people MUST be either (a) sourced from the person's `network/people/<slug>.json` file or (b) explicitly stated by the user this session. Unverified inference is BLOCKED by the `named-person-claim-grounding` PreToolUse gate before output ships.
 
 Over days, your suggestions should appear less often — because the user is improving.
 

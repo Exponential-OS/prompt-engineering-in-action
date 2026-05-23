@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.19.1 - HOTFIX Stop hook schema (unit-of-work-check). emitReminder() in hooks/unit-of-work-check.ts was emitting hookSpecificOutput.additionalContext (PreToolUse/UserPromptSubmit only — invalid for Stop). Context folded into systemMessage. Same-class bug as cyborg/scripts/stop-hook-learning-flywheel.ts (6bf6a8a 2026-05-22) — single-slot-learning sweep failure now corrected. Carries forward v4.19.0 concise-by-default + v4.18.0 task-first persona routing.",
-  "version": "4.19.1",
+  "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Ships (a) named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) blocking biographical/logistical/relational claims about named people unless sourced from network/people/<slug>.json OR explicitly stated by user this session — fixes GH #11 CRITICAL (5 hallucinations in one session), (b) Protocol 3 sharpening with referent-ambiguity detection patterns (pronouns, possessives, vague 'they', geographic ambiguity, voice attribution), (c) buildReminder honesty:undefined cosmetic bug fix + defensive coding for missing state fields. RELOAD REQUIRED — older cached plugin installs (v4.9–v4.16 still present in installed_plugins.json on some project scopes) are running stale hooks; v4.18 task-first persona routing + v4.19 concise-by-default fixes will only take effect after a fresh plugin install picks up v4.20.0.",
+  "version": "4.20.0",
   "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
   "brain": {
     "namespace": "co-dialectic",
