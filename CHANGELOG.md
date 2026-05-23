@@ -7,6 +7,20 @@ All notable changes to this repository are tracked here. This project follows [S
 
 ---
 
+## [4.19.1] — 2026-05-22 — HOTFIX: Stop hook schema compliance (unit-of-work-check)
+
+### Fixed
+- `hooks/unit-of-work-check.ts` `emitReminder()` was emitting `hookSpecificOutput.additionalContext`, which is **not valid for Stop hooks** (that field is PreToolUse / UserPromptSubmit only). Every Stop hook fire was generating a "Hook JSON output validation failed — (root): Invalid input" error in the agent log, surfacing the validation error to the user instead of the intended commit-protocol reminder.
+- Fix: fold the context block into `systemMessage` instead of `hookSpecificOutput.additionalContext`. Banner + context now ship together via the schema-valid `systemMessage` field.
+- Same-class bug previously fixed in `~/cyborg/scripts/stop-hook-learning-flywheel.ts` (commit 6bf6a8a 2026-05-22) — that fix should have been swept across all Stop hooks at the time. Single-slot-learning failure: codified rule `feedback_single_slot_learning_structural.md` exists for exactly this case and was not applied.
+
+### Verified
+- File patched at canonical source `plugins/co-dialectic/hooks/unit-of-work-check.ts`.
+
+## [4.19.0] — 2026-05-22 — CONCISE BY DEFAULT (tone reversal)
+
+Default verbosity flipped from verbose to concise — codi now leads with the answer; sharpening becomes opt-in via `cod sharpen`. T3+ stakes (named human, public-facing, irreversible) still get inline DIALECTIC because the user is making a one-way-door call. Users can opt back into eager tiered sharpening with `cod verbose`. New `CodiState.verbosity` field. Carries forward v4.18.0 task-first persona routing + onboarding hint. Resolves GH issue #10 (Guillaume De Smedt feedback: "I love reading — just not while in get things done mode").
+
 ## [4.14.2] — 2026-05-17 — include skills/handoff in install
 
 skills/handoff/SKILL.md was present in source and marketplace but missing from 4.14.1 cache; patch bump forces fresh install.

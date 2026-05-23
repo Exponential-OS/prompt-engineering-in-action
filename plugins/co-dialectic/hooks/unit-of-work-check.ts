@@ -62,13 +62,13 @@ function emitSilent(): never {
 }
 
 function emitReminder(banner: string, context: string): never {
-  // Stop hook can emit additionalContext + systemMessage similar to UserPromptSubmit
+  // Stop hook schema does NOT accept hookSpecificOutput.additionalContext —
+  // that field is PreToolUse / UserPromptSubmit only. Same-class bug previously
+  // fixed in stop-hook-learning-flywheel.ts (cyborg/main 6bf6a8a, 2026-05-22).
+  // For Stop hooks, fold the context into systemMessage — it surfaces to the
+  // user without blocking the session close and stays schema-valid.
   const payload = {
-    systemMessage: banner,
-    hookSpecificOutput: {
-      hookEventName: "Stop",
-      additionalContext: context,
-    },
+    systemMessage: `${banner}\n\n${context}`,
   };
   process.stdout.write(JSON.stringify(payload) + "\n");
   process.exit(0);

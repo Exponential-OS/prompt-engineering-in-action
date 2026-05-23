@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.14.0 - SURVIVAL LAYER. Codi survives compaction via persistent state.json + UserPromptSubmit hook + statusline.sh.",
-      "version": "4.14.1",
+      "description": "Co-Dialectic v4.19.1 - HOTFIX Stop hook schema (unit-of-work-check). emitReminder() folded hookSpecificOutput.additionalContext into systemMessage (Stop hooks don't accept additionalContext). Carries v4.19.0 concise-by-default + v4.18.0 task-first persona routing.",
+      "version": "4.19.1",
       "category": "productivity"
     },
     {
