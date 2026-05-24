@@ -1,0 +1,109 @@
+OEM / RESELLER LICENSE AGREEMENT
+Co-Dialectic — Exponential OS, Inc.
+
+Version 1.0, May 2026
+
+Copyright (c) 2026 Exponential OS, Inc. All rights reserved.
+
+This OEM/Reseller License Agreement ("Agreement") is between Exponential OS, Inc.,
+a Delaware corporation ("Licensor"), and the entity purchasing this license
+("OEM Partner").
+
+1. GRANT OF LICENSE
+
+Subject to the terms of this Agreement and payment of the applicable license fee,
+Licensor grants OEM Partner a non-exclusive, worldwide license to:
+
+  (a) Embed, integrate, or bundle the Co-Dialectic software ("Software") within
+      OEM Partner's own products or services ("OEM Products");
+  (b) Distribute the Software as a component of OEM Products to OEM Partner's
+      end customers;
+  (c) Modify the Software as necessary for integration with OEM Products;
+  (d) White-label or rebrand the Software within OEM Products, subject to
+      attribution requirements in Section 4.
+
+2. WHAT THIS LICENSE PERMITS (vs. AGPL-3.0 and Commercial License)
+
+  - OEM Partner is NOT required to disclose source code of modifications or
+    OEM Products under AGPL-3.0.
+  - OEM Partner MAY distribute the Software to third parties as part of OEM Products
+    (the Commercial License does not permit this; the OEM License does).
+  - OEM Partner MAY sublicense use of the Software to end customers solely as
+    embedded within OEM Products.
+
+3. RESTRICTIONS
+
+OEM Partner shall NOT:
+
+  (a) Distribute the Software as a standalone product (i.e., separate from OEM Products);
+  (b) Grant end customers access to the Software's source code unless required by
+      applicable law;
+  (c) Use the Software to build a product that competes directly with Licensor's own
+      commercial offerings of the Software as a standalone product;
+  (d) Transfer this license without Licensor's prior written consent;
+  (e) Misrepresent the origin of the Software or remove Licensor's copyright notices
+      from source files (white-labeling of the user-facing interface is permitted;
+      source-file attribution is not removable).
+
+4. ATTRIBUTION
+
+OEM Products incorporating the Software shall include the following attribution in
+a reasonably discoverable location (e.g., "About" page, documentation, or credits):
+
+  "Powered by Co-Dialectic, an Exponential OS technology."
+
+OEM Partner may request a waiver of this requirement for an additional fee.
+
+5. INTELLECTUAL PROPERTY
+
+Licensor retains all right, title, and interest in and to the Software. OEM Partner
+retains ownership of OEM Products and original modifications. End customers receive
+no direct license from Licensor — their rights flow through OEM Partner's own license
+terms for OEM Products.
+
+6. FEES AND PAYMENT
+
+License fees are as set forth in the applicable OEM Agreement or Order Form. Fees
+may include a base license fee plus per-unit or revenue-share components as negotiated.
+All fees are non-refundable.
+
+7. SUPPORT AND UPDATES
+
+Licensor shall provide OEM Partner with access to Software updates and bug fixes for
+the duration of the license term. Priority support terms, SLAs, and escalation paths
+are as specified in the applicable OEM Agreement.
+
+8. TERM AND TERMINATION
+
+This license is effective upon execution and continues for the period specified in
+the OEM Agreement. Either party may terminate for material breach with 30 days'
+written notice and opportunity to cure. Upon termination:
+
+  (a) OEM Partner shall cease embedding the Software in new OEM Products;
+  (b) Existing deployed OEM Products may continue to operate for a wind-down period
+      of 12 months (or as negotiated);
+  (c) OEM Partner shall destroy all copies of the Software not embedded in deployed
+      OEM Products.
+
+9. WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+10. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL, OR PUNITIVE DAMAGES. LICENSOR'S TOTAL LIABILITY SHALL NOT EXCEED
+THE FEES PAID BY OEM PARTNER IN THE 12 MONTHS PRECEDING THE CLAIM.
+
+11. GOVERNING LAW
+
+This Agreement is governed by the laws of the State of Delaware.
+
+12. CONTACT
+
+For OEM/reseller licensing inquiries: avallam@thewhyman.com
+Website: https://exponentialos.io
+
+---
+Exponential OS, Inc.
+Delaware C-Corp
