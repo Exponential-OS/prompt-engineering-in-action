@@ -10,6 +10,8 @@ metadata:
   author: "Anand Vallamsetla"
   tier: "continuity"
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN WAKY-WAKY ###
 # Waky Waky — Session Reincarnation

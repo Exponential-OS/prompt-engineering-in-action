@@ -10,6 +10,8 @@ metadata:
   author: "Anand Vallamsetla"
   tier: "soul"
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN UNKNOWN-UNKNOWN ###
 # Unknown Unknown — Rumsfeld Matrix Agent

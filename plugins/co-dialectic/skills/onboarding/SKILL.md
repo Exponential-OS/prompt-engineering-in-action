@@ -10,6 +10,8 @@ metadata:
   version: "4.7.0"
   author: "Anand Vallamsetla"
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN CO-DIALECTIC ONBOARDING ###
 

@@ -1,0 +1,13 @@
+{
+  "name": "co-dialectic",
+  "version": "4.17.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test ./tests/test_brain_kernel_bootstrap.ts",
+    "test:all": "bun test ./tests/test_brain_kernel_bootstrap.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

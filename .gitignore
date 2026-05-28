@@ -38,3 +38,9 @@ plugins/co-dialectic/demo/frame-0[2-9].png
 plugins/co-dialectic/demo/hook-*.png
 plugins/co-dialectic/demo/codi-demo*.mp4
 plugins/co-dialectic/demo/codi-product-educational*.mp4
+
+# Career OS session-logger contamination (added 2026-05-18)
+# This is NOT a Career OS workspace; the session-logger hook (v0.66+)
+# has a workspace-identity gate that prevents this from happening again,
+# but this .gitignore is defense-in-depth in case the gate is bypassed.
+brain/sessions/

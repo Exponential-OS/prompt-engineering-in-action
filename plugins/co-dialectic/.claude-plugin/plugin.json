@@ -1,8 +1,31 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.9.0 — LLM prompt optimizer + auto-verify by stakes + semantic T3 classification + background agent lifecycle manager (dedup/timeout/capacity/registration/session-sweep) + worktree-isolation foreground gate + runtime-agnostic executor types + fish-swarm MUST-spawn dispatch mandate + Protocol 0 post-compaction re-init + plugin user-content gate. Cross-family cascade-then-jury review, judge-panel, hallucination detector, fish-swarm orchestration, session handoff. Works with any LLM runtime.",
-  "version": "4.9.4",
+  "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Ships (a) named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) blocking biographical/logistical/relational claims about named people unless sourced from network/people/<slug>.json OR explicitly stated by user this session — fixes GH #11 CRITICAL (5 hallucinations in one session), (b) Protocol 3 sharpening with referent-ambiguity detection patterns (pronouns, possessives, vague 'they', geographic ambiguity, voice attribution), (c) buildReminder honesty:undefined cosmetic bug fix + defensive coding for missing state fields. RELOAD REQUIRED — older cached plugin installs (v4.9–v4.16 still present in installed_plugins.json on some project scopes) are running stale hooks; v4.18 task-first persona routing + v4.19 concise-by-default fixes will only take effect after a fresh plugin install picks up v4.20.0.",
+  "version": "4.20.0",
+  "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
+  "brain": {
+    "namespace": "co-dialectic",
+    "owned_paths": [
+      "feedback/**",
+      "personas/**",
+      "calibration-history.md",
+      "status-state.json"
+    ],
+    "writes_to_primitives": [],
+    "reads_from_primitives": [
+      "identity/handles.md"
+    ],
+    "reads_from_engines": [
+      "career-intelligence/skills-matrix.md"
+    ],
+    "linters": [
+      "feedback-contradictions",
+      "persona-drift",
+      "calibration-drift"
+    ]
+  },
   "author": {
     "name": "Anand Vallamsetla"
-  }
+  },
+  "_product_vs_solution_marker": "product-vs-solution: example — Anand authorship attribution is legitimate"
 }

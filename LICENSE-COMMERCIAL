@@ -1,0 +1,88 @@
+COMMERCIAL LICENSE AGREEMENT
+Co-Dialectic — Exponential OS, Inc.
+
+Version 1.0, May 2026
+
+Copyright (c) 2026 Exponential OS, Inc. All rights reserved.
+
+This Commercial License Agreement ("Agreement") is between Exponential OS, Inc.,
+a Delaware corporation ("Licensor"), and the entity or individual purchasing this
+license ("Licensee").
+
+1. GRANT OF LICENSE
+
+Subject to the terms of this Agreement and payment of the applicable license fee,
+Licensor grants Licensee a non-exclusive, non-transferable, worldwide license to:
+
+  (a) Use, copy, and modify the Co-Dialectic software ("Software") for Licensee's
+      internal business purposes;
+  (b) Deploy the Software on Licensee's own infrastructure or cloud environments
+      to serve Licensee's own employees and direct customers;
+  (c) Create derivative works of the Software for Licensee's internal use.
+
+2. WHAT THIS LICENSE PERMITS (vs. AGPL-3.0)
+
+The AGPL-3.0 license requires that any modified version of the Software made
+available over a network must have its complete source code disclosed to users.
+This Commercial License removes that requirement:
+
+  - Licensee is NOT required to disclose source code of modifications.
+  - Licensee is NOT required to license derivative works under AGPL-3.0.
+  - Licensee MAY keep modifications proprietary.
+
+3. RESTRICTIONS
+
+Licensee shall NOT:
+
+  (a) Sublicense, resell, rent, lease, or distribute the Software to third parties
+      as a standalone product or as a material component of a product offered to
+      third parties (see OEM/Reseller License for this use case);
+  (b) Remove or alter any copyright, trademark, or attribution notices;
+  (c) Use the Software to compete directly with Licensor's own commercial offerings
+      of the Software;
+  (d) Transfer this license to any third party without Licensor's prior written consent.
+
+4. INTELLECTUAL PROPERTY
+
+Licensor retains all right, title, and interest in and to the Software. This
+Agreement does not transfer ownership of the Software to Licensee. Licensee
+retains ownership of original modifications created by Licensee.
+
+5. FEES AND PAYMENT
+
+License fees are as set forth in the applicable Order Form or invoice. All fees
+are non-refundable. Licensor reserves the right to update pricing for renewal
+terms with 60 days' notice.
+
+6. TERM AND TERMINATION
+
+This license is effective upon payment and continues for the period specified in
+the Order Form (default: 12 months, auto-renewing). Either party may terminate
+with 30 days' written notice. Upon termination, Licensee shall cease all use of
+the Software and destroy all copies.
+
+7. WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, AND NONINFRINGEMENT.
+
+8. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL, OR PUNITIVE DAMAGES, REGARDLESS OF THE CAUSE OF ACTION. LICENSOR'S
+TOTAL LIABILITY SHALL NOT EXCEED THE FEES PAID BY LICENSEE IN THE 12 MONTHS
+PRECEDING THE CLAIM.
+
+9. GOVERNING LAW
+
+This Agreement is governed by the laws of the State of Delaware.
+
+10. CONTACT
+
+For commercial licensing inquiries: avallam@thewhyman.com
+Website: https://exponentialos.io
+
+---
+Exponential OS, Inc.
+Delaware C-Corp
