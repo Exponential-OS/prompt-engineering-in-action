@@ -6,7 +6,7 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.19.1"
+VERSION="4.20.0"
 CONFIG_DIR="$HOME/.co-dialectic"
 INSTALLED=false
 INSTALLED_TOOLS=""

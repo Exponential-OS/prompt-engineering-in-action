@@ -3,7 +3,7 @@
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic (Lite Version)
 
-**Version:** 4.9.0-lite
+**Version:** 4.20.0-lite
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
