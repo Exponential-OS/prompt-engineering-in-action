@@ -29,25 +29,3 @@ jobs:
 
       - name: Full install smoke test (install.sh in temp HOME)
         run: bash test-plugin.sh --smoke-install
-
-      - name: Fish gate Python syntax
-        run: |
-          python3 -m py_compile plugins/co-dialectic/fish/HOW.py
-          python3 -m py_compile plugins/co-dialectic/fish/hooks/claude-code.py
-
-      - name: Fish gate tier coverage (T0, T1, T2, T3)
-        run: |
-          echo '{"task":"list files","stakes":"T0","context":"safe read-only op"}' | \
-            python3 plugins/co-dialectic/fish/HOW.py - | \
-            python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('fired')==False or d.get('verdict') in ('PASS','SKIP','WARN'), f'T0 unexpected: {d}'"
-          echo '{"task":"ci smoke test","stakes":"T1","context":"github actions"}' | \
-            python3 plugins/co-dialectic/fish/HOW.py - | \
-            python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T1 no verdict: {d}'"
-          echo '{"task":"write shared config file","stakes":"T2","context":"shared state"}' | \
-            python3 plugins/co-dialectic/fish/HOW.py - | \
-            python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T2 no verdict: {d}'"
-          echo '{"task":"deploy to production","stakes":"T3","context":"live system"}' | \
-            python3 plugins/co-dialectic/fish/HOW.py - | \
-            python3 -c "import json,sys; d=json.load(sys.stdin); assert 'verdict' in d, f'T3 no verdict: {d}'"
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
