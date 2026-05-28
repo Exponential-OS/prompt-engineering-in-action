@@ -52,7 +52,7 @@ echo "=== 2. No orphaned directories ==="
 # -----------------------------------------------
 echo ""
 echo "=== 3. No unexpected symlinks ==="
-SYMLINKS=$(find . -type l -not -path './.git/*' -not -name 'GEMINI.md' 2>/dev/null | head -5)
+SYMLINKS=$(find . -type l -not -path './.git/*' -not -name 'GEMINI.md' -not -path '*/venv/*' -not -path '*/node_modules/*' 2>/dev/null | head -5)
 [ -z "$SYMLINKS" ] && pass "no unexpected symlinks found" || fail "symlinks found: $SYMLINKS"
 # Verify GEMINI.md symlink target is correct
 if [ -L "./GEMINI.md" ]; then
@@ -314,11 +314,11 @@ if [ "$CHECK_SMOKE" = true ]; then
     done
     [ "$SKILL_FAIL" -eq 0 ] && pass "All skills landed in temp HOME" || fail "$SKILL_FAIL skill(s) missing after install"
 
-    # Verify judge_panel.py hook landed (fetch_skill_extras downloads it for judge-panel)
-    if [ -f "$TMP_HOME/.claude/skills/judge-panel/scripts/judge_panel.py" ]; then
-        pass "judge-panel hook installed: scripts/judge_panel.py"
+    # Verify judge_panel.ts hook landed (fetch_skill_extras downloads it for judge-panel)
+    if [ -f "$TMP_HOME/.claude/skills/judge-panel/scripts/judge_panel.ts" ]; then
+        pass "judge-panel hook installed: scripts/judge_panel.ts"
     else
-        fail "judge-panel hook missing: scripts/judge_panel.py not found after install"
+        fail "judge-panel hook missing: scripts/judge_panel.ts not found after install"
     fi
 
     # Protocol 12 / hygiene retired in v4.x — assert it is NOT installed on fresh install
@@ -379,9 +379,9 @@ else
     done
     [ "$PI_FAIL" -eq 0 ] && pass "All skills in plugin cache" || fail "$PI_FAIL skill(s) missing from plugin cache"
 
-    # Verify judge_panel.py hook is present in plugin cache
-    if [ -f "$PI_CACHE/judge-panel/scripts/judge_panel.py" ]; then
-        pass "Plugin cache: judge-panel hook (scripts/judge_panel.py)"
+    # Verify judge_panel.ts hook is present in plugin cache
+    if [ -f "$PI_CACHE/judge-panel/scripts/judge_panel.ts" ]; then
+        pass "Plugin cache: judge-panel hook (scripts/judge_panel.ts)"
     else
         fail "Plugin cache: judge-panel hook missing"
     fi

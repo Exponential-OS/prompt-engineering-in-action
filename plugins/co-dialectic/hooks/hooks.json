@@ -1,9 +1,14 @@
 {
-  "description": "Co-Dialectic kernel hooks — re-inject protocol state to survive context compaction.",
+  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes.",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/install-survival-layer.sh\"",
+            "timeout": 3000
+          },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh\"",
@@ -17,11 +22,49 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/inject-kernel.sh\"",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.ts\"",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-version-banner.ts\"",
+            "timeout": 2000
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/codify-scan-on-md-edit.ts\"",
+            "timeout": 7000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/unit-of-work-check.ts\"",
             "timeout": 5000
           }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "_note": "Claude Code reads statusLine from user settings.json, not plugin hooks.json. This entry is documentation — the install.sh / SKILL.md installer wires statusline.sh into ~/.claude/settings.json at install time.",
+    "type": "command",
+    "command": "bash \"${HOME}/.claude/plugins/cache/xos/co-dialectic/4.14.0/hooks/statusline.sh\""
   }
 }

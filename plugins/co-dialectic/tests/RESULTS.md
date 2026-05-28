@@ -1,3 +1,5 @@
+<!-- product-vs-solution: example -->
+
 # Judge-Panel Eval Results — v3.2.0 (2026-04-24)
 
 **Harness:** `tests/judge_panel_eval.py` · **Corpus:** `tests/corpus/` (8 seeded-flaw cases)

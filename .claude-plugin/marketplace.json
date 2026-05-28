@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.9.0 \u2014 LLM prompt optimizer + auto-verify by stakes (Safe/Private/Shared/Significant/Live) + auto-handoff on closure + honesty selector + agent-swarm + hygiene cycle + cross-family cascade-then-jury review + hallucination detector + research-first mode + fish-swarm orchestration.",
-      "version": "4.9.0",
+      "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) BLOCKs unverified biographical/logistical/relational claims about named people (GH #11 CRITICAL — 5 hallucinations in one session). Protocol 3 sharpening adds referent-ambiguity detection. Fixes honesty:undefined cosmetic bug. RELOAD REQUIRED — stale cached plugins on older project scopes run v4.14–v4.16 hooks; reinstall picks up v4.20.0 + retroactively unlocks v4.18 task-first persona routing + v4.19 concise-by-default.",
+      "version": "4.20.0",
       "category": "productivity"
     },
     {
@@ -27,5 +27,6 @@
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"
     }
-  ]
+  ],
+  "_product_vs_solution_marker": "product-vs-solution: example - marketplace owner/author attribution is legitimate"
 }

@@ -1,11 +1,12 @@
 #!/bin/bash
+# product-vs-solution: example - install script references owner gateway URL (legitimate distribution channel).
 # Co-Dialectic Manager
 # Usage: curl -fsSL https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main/install.sh | bash
 
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.9.0"
+VERSION="4.19.1"
 CONFIG_DIR="$HOME/.co-dialectic"
 INSTALLED=false
 INSTALLED_TOOLS=""
@@ -184,11 +185,11 @@ fetch_skill_extras() {
     case "$skill_name" in
         judge-panel)
             mkdir -p "$skill_dir/scripts"
-            if curl -fsSL "$REPO/plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py" -o "$skill_dir/scripts/judge_panel.py"; then
-                chmod +x "$skill_dir/scripts/judge_panel.py" 2>/dev/null || true
-                echo "      └─ scripts/judge_panel.py (cascade harness)"
+            if curl -fsSL "$REPO/plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts" -o "$skill_dir/scripts/judge_panel.ts"; then
+                chmod +x "$skill_dir/scripts/judge_panel.ts" 2>/dev/null || true
+                echo "      └─ scripts/judge_panel.ts (cascade harness)"
             else
-                echo "      └─ ⚠️  failed to fetch scripts/judge_panel.py — judge-panel will not be functional"
+                echo "      └─ ⚠️  failed to fetch scripts/judge_panel.ts — judge-panel will not be functional"
             fi
             ;;
     esac
@@ -198,29 +199,29 @@ fetch_skill_extras() {
 # FISH GATE INSTALL + HOOK WIRING
 # -----------------------------------------
 FISH_INSTALL_DIR="$HOME/.claude/skills/co-dialectic/fish"
-FISH_HOOK_CMD="python3 $HOME/.claude/skills/co-dialectic/fish/hooks/claude-code.py"
+FISH_HOOK_CMD="bun run $HOME/.claude/skills/co-dialectic/fish/hooks/claude-code.ts"
 
 install_fish_gate() {
-    # Downloads HOW.py + hooks/claude-code.py into the installed skill dir.
+    # Downloads handler.ts + hooks/claude-code.ts into the installed skill dir.
     # These are the runtime primitives; the hook wiring happens in wire_agent_hook().
     local failed=0
     mkdir -p "$FISH_INSTALL_DIR/hooks"
 
-    if curl -fsSL "$REPO/plugins/co-dialectic/fish/HOW.py" \
-            -o "$FISH_INSTALL_DIR/HOW.py" 2>/dev/null; then
-        chmod +x "$FISH_INSTALL_DIR/HOW.py"
-        echo "   ✅ fish/HOW.py (pre-task gate engine)"
+    if curl -fsSL "$REPO/plugins/co-dialectic/fish/handler.ts" \
+            -o "$FISH_INSTALL_DIR/handler.ts" 2>/dev/null; then
+        chmod +x "$FISH_INSTALL_DIR/handler.ts"
+        echo "   ✅ fish/handler.ts (pre-task gate engine)"
     else
-        echo "   ⚠️  failed to fetch fish/HOW.py"
+        echo "   ⚠️  failed to fetch fish/handler.ts"
         failed=$((failed + 1))
     fi
 
-    if curl -fsSL "$REPO/plugins/co-dialectic/fish/hooks/claude-code.py" \
-            -o "$FISH_INSTALL_DIR/hooks/claude-code.py" 2>/dev/null; then
-        chmod +x "$FISH_INSTALL_DIR/hooks/claude-code.py"
-        echo "   ✅ fish/hooks/claude-code.py (Claude Code PreToolUse adapter)"
+    if curl -fsSL "$REPO/plugins/co-dialectic/fish/hooks/claude-code.ts" \
+            -o "$FISH_INSTALL_DIR/hooks/claude-code.ts" 2>/dev/null; then
+        chmod +x "$FISH_INSTALL_DIR/hooks/claude-code.ts"
+        echo "   ✅ fish/hooks/claude-code.ts (Claude Code PreToolUse adapter)"
     else
-        echo "   ⚠️  failed to fetch fish/hooks/claude-code.py"
+        echo "   ⚠️  failed to fetch fish/hooks/claude-code.ts"
         failed=$((failed + 1))
     fi
 
@@ -260,7 +261,7 @@ pretool  = hooks.setdefault("PreToolUse", [])
 # Idempotency: skip if any Agent matcher already points to our fish adapter.
 already = any(
     e.get("matcher") == "Agent" and
-    any("co-dialectic/fish/hooks/claude-code.py" in h.get("command", "")
+    any("co-dialectic/fish/hooks/claude-code.ts" in h.get("command", "")
         for h in e.get("hooks", []))
     for e in pretool
 )
@@ -301,7 +302,7 @@ settings["hooks"]["PreToolUse"] = [
     e for e in pretool
     if not (
         e.get("matcher") == "Agent" and
-        any("co-dialectic/fish/hooks/claude-code.py" in h.get("command", "")
+        any("co-dialectic/fish/hooks/claude-code.ts" in h.get("command", "")
             for h in e.get("hooks", []))
     )
 ]
@@ -470,7 +471,7 @@ if [ -d "$HOME/.claude" ] || command -v claude > /dev/null 2>&1; then
                 else
                     echo "   ⚠️  Could not fetch main skill file — run installer again to retry"
                 fi
-                # Fish gate: download HOW.py + adapter and wire the PreToolUse hook
+                # Fish gate: download handler.ts + adapter and wire the PreToolUse hook
                 echo "   ⬇️  Installing fish gate (pre-task approach checker)..."
                 if install_fish_gate; then
                     wire_agent_hook

@@ -10,6 +10,8 @@ metadata:
   author: "Anand Vallamsetla"
   tier: "soul"
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN CALIBRATION-AUDITOR ###
 # Calibration Auditor — Zero Flattery Invariant

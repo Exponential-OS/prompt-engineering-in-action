@@ -1,3 +1,5 @@
+<!-- product-vs-solution: example -->
+
 # Co-Dialectic — Smarter AI Conversations, Automatically
 
 **Make every AI conversation sharper, more honest, and more reliable.**
@@ -163,13 +165,27 @@ Domain-specific applications — career coaching, team campaign engines, family 
 
 Issues and pull requests: [github.com/Exponential-OS/prompt-engineering-in-action](https://github.com/Exponential-OS/prompt-engineering-in-action)
 
+All contributors must sign the [Contributor & Beta Tester Agreement](https://exponentialos.io/contributor-agreement) before PRs can be merged. The agreement includes a CLA that grants Exponential OS relicensing rights, enabling the dual-license model below.
+
 If you hit a wall installing, [open an issue](https://github.com/Exponential-OS/prompt-engineering-in-action/issues) — we want to know about broken paths.
 
 ---
 
 ## License
 
-AGPL-3.0. See [LICENSE](../../LICENSE).
+Co-Dialectic is available under three licenses:
+
+| License | Who it's for | Cost | Source sharing required? |
+|---|---|---|---|
+| **[AGPL-3.0](../../LICENSE)** | Open-source users, individuals, non-commercial | Free | Yes — modifications must be shared under AGPL |
+| **[Commercial](../../LICENSE-COMMERCIAL)** | Companies using internally (no source sharing) | Paid | No |
+| **[OEM / Reseller](../../LICENSE-OEM)** | Partners embedding in their own products | Paid | No |
+
+**Default:** If you use Co-Dialectic without purchasing a commercial or OEM license, the AGPL-3.0 terms apply.
+
+**Why three licenses?** AGPL keeps Co-Dialectic free and open for the community. The Commercial and OEM licenses exist for organizations that need to keep their modifications private or redistribute Co-Dialectic as part of their own products. This is the same model used by MongoDB, Grafana, GitLab, and other successful open-source companies.
+
+For commercial or OEM licensing inquiries: avallam@thewhyman.com
 
 ## Author
 

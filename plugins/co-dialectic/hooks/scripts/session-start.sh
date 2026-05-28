@@ -22,11 +22,12 @@ if [ "${USER_VERSION}" != "${PLUGIN_VERSION}" ]; then
     cp "${PLUGIN_SKILL}" "${USER_SKILL}"
 fi
 
-# Orphan sweep: poll lifecycle registry for stuck/timed-out agents from prior sessions.
-LIFECYCLE_SCRIPT="${CLAUDE_PLUGIN_ROOT}/fish/scripts/agent_lifecycle.py"
+# Orphan sweep: poll lifecycle registry for stuck/timed-out Codi Agents from prior sessions.
+LIFECYCLE_TS="${CLAUDE_PLUGIN_ROOT}/fish/scripts/agent-lifecycle.ts"
+BUN_BIN="${HOME}/.bun/bin/bun"
 LIFECYCLE_MSG=""
-if [ -f "${LIFECYCLE_SCRIPT}" ]; then
-    POLL_OUT=$(python3 "${LIFECYCLE_SCRIPT}" poll --timeout-min 10 2>/dev/null; true)
+if [ -f "${LIFECYCLE_TS}" ] && [ -x "${BUN_BIN}" ]; then
+    POLL_OUT=$("${BUN_BIN}" run "${LIFECYCLE_TS}" poll --timeout-min 10 2>/dev/null || true)
     STUCK_COUNT=$(echo "${POLL_OUT}" | python3 -c "
 import sys, json
 try:
@@ -36,7 +37,7 @@ except Exception:
     print(0)
 " 2>/dev/null || echo "0")
     if [ "${STUCK_COUNT}" != "0" ]; then
-        LIFECYCLE_MSG=" ⚠️ ${STUCK_COUNT} background agent(s) timed out from a prior session — check status: python3 ${LIFECYCLE_SCRIPT} status"
+        LIFECYCLE_MSG=" ⚠️ ${STUCK_COUNT} Codi Agent(s) timed out from a prior session — check status: ${BUN_BIN} run ${LIFECYCLE_TS} status"
     fi
 fi
 

@@ -15,6 +15,8 @@ metadata:
   tier: "core"
   plugin_number: 4
 ---
+<!-- product-vs-solution: example -->
+
 
 ### BEGIN JUDGE-PANEL ###
 # Judge Panel — Cascade-then-Jury Verification
@@ -140,7 +142,7 @@ from CI). CLI installed but failing means the CLI setup is broken — fix
 that, do not silently mask via paid API.
 
 **Approval can be set via:**
-- CLI flags on `python3 judge_panel.py`:
+- CLI flags on `bun run judge_panel.ts`:
   - `--api-fallback-approved` (master gate — both lanes)
   - `--api-fallback-approved-gemini` (Gemini lane only)
   - `--api-fallback-approved-openai` (OpenAI lane only)
@@ -210,10 +212,10 @@ structurally informative.
 
 ## Invocation — how the main agent runs it
 
-The agent invokes the skill by calling the bundled Python harness:
+The agent invokes the skill by calling the bundled TypeScript harness:
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric "<rubric slug or inline rubric>" \
   --artifact-file <path-to-artifact>
 ```
@@ -221,14 +223,14 @@ python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
 Or by passing the artifact inline:
 
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric hallucination \
   --artifact "The response text to evaluate..."
 ```
 
 Output is a single JSON object on stdout (schema below). No other stdout
 writes — errors go to stderr. This makes the skill composable: any other
-skill can call `judge_panel.py`, parse stdout as JSON, and act on the
+skill can call `judge_panel.ts`, parse stdout as JSON, and act on the
 verdict without prompting the main LLM again.
 
 ## Output JSON shape
@@ -279,7 +281,7 @@ judge agreed with it.
 
 ## Rubric slugs bundled with the skill
 
-The Python harness ships with named rubrics. A caller passes the slug;
+The TypeScript harness ships with named rubrics. A caller passes the slug;
 the harness substitutes the artifact into the rubric template and sends
 to each judge.
 
@@ -314,7 +316,7 @@ with `escalated: true`.
 
 **Trigger command 3 (silent mode, as another skill):**
 ```
-python3 plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.py \
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric hallucination --artifact "..." --silent
 ```
 **Expected output:** Pure JSON on stdout, nothing on stderr unless an
