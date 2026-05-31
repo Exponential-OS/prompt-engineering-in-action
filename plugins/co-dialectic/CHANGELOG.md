@@ -1,5 +1,30 @@
 # Changelog — Co-Dialectic
 
+## [4.21.0] — 2026-05-31 — AUTO-HANDOFF BEFORE COMPACTION
+
+### Added — PreCompact hook (hooks/precompact-handoff.ts)
+- New PreCompact hook fires when Claude Code is about to summarize the context window. Before compaction proceeds, the hook:
+  1. Writes a marker file at `~/.codialectic/last-precompact.json` (timestamp + trigger + transcript path + cwd + session_id) so post-compaction Claude can verify a handoff was attempted.
+  2. Emits a strong `<system-reminder>` via `hookSpecificOutput.additionalContext` telling Claude to INVOKE the `codi-handoff` skill IMMEDIATELY before the conversation context is lost to summarization.
+- hooks.json wires `PreCompact` event with 5s timeout. Fail-safe: hook ALWAYS exits 0 — never blocks compaction.
+
+### Why this exists
+- User flagged 2026-05-31: "for session end - write to handoff doc hook is not there either for codi or claude. what happened?"
+- Diagnosis: the codi-handoff skill (Protocol 9 — auto closure detection) was designed to fire on conversation closure signals ("bye", "wrap up", "EOD", etc.). It works when the user types a closure phrase. It FAILS when:
+  - Compaction fires silently because the context window is full (the most common case for long working sessions)
+  - The user's last message doesn't contain a closure phrase
+  - Claude pattern-matches the trigger but writes the handoff manually instead of invoking the skill (which happened on 2026-05-17 — manual NEXT_SESSION_HANDOFF.md write instead of skill invocation)
+- Claude Code DOES have a `PreCompact` event that fires before summarization. No prior codi version wired it (`git log --grep="PreCompact"` returned zero across full history).
+- This hook closes the gap: every compaction now triggers an explicit handoff capture before context is lost.
+
+### Design choice — option (b) reminder, not direct file write
+- Considered (a) write handoff packet directly to NEXT_SESSION_HANDOFF.md from the hook
+- Chose (b) inject reminder → let Claude invoke the codi-handoff skill
+- Rationale: the codi-handoff skill already owns Protocol 9 closure-detection logic, structured-packet schema (v4.1 spec with model nested + uuid-v4 session_id + schema_version 1.0), workspace-substrate dispatch (GitHub Issues / HANDOFF.md / etc.). Duplicating that in TypeScript would diverge over time. Hook stays minimal — single responsibility (trigger). Skill invocation lets the active persona + caliber rules shape the handoff content.
+
+### Restart required
+PreCompact hook only takes effect after Claude Code reloads its hooks from the cached plugin. Per the v4.20.0 RELOAD-REQUIRED note: older project-scope installs (v4.9–v4.16) need `claude plugin reinstall co-dialectic@xos` or session restart to pick up the new hook event.
+
 ## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
 
 ### Added — named-person-claim-grounding semantic gate

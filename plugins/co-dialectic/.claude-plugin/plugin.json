@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Ships (a) named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) blocking biographical/logistical/relational claims about named people unless sourced from network/people/<slug>.json OR explicitly stated by user this session — fixes GH #11 CRITICAL (5 hallucinations in one session), (b) Protocol 3 sharpening with referent-ambiguity detection patterns (pronouns, possessives, vague 'they', geographic ambiguity, voice attribution), (c) buildReminder honesty:undefined cosmetic bug fix + defensive coding for missing state fields. RELOAD REQUIRED — older cached plugin installs (v4.9–v4.16 still present in installed_plugins.json on some project scopes) are running stale hooks; v4.18 task-first persona routing + v4.19 concise-by-default fixes will only take effect after a fresh plugin install picks up v4.20.0.",
-  "version": "4.20.0",
+  "description": "Co-Dialectic v4.21.0 - AUTO-HANDOFF BEFORE COMPACTION. New PreCompact hook (hooks/precompact-handoff.ts) fires when Claude Code is about to summarize the context window. Emits a strong system-reminder telling Claude to invoke the codi-handoff skill IMMEDIATELY before the conversation context is lost to summarization. Closes the gap where Protocol 9 closure-detection misses compaction events that fire without explicit user closure phrases ('bye', 'wrap up', etc.) — the most common case for long working sessions. Carries forward v4.20.0 named-person-claim-grounding gate + v4.19 concise mode + v4.18 task-first persona routing.",
+  "version": "4.21.0",
   "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
   "brain": {
     "namespace": "co-dialectic",

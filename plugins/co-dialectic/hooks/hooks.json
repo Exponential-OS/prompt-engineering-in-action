@@ -1,5 +1,5 @@
 {
-  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes.",
+  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses + auto-handoff before compaction. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes. PreCompact hook (v4.21.0+) auto-triggers the codi-handoff skill before context summarization — catches the gap where Protocol 9 closure detection misses compaction events that fire without user closure phrases.",
   "hooks": {
     "SessionStart": [
       {
@@ -56,6 +56,17 @@
           {
             "type": "command",
             "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/unit-of-work-check.ts\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/precompact-handoff.ts\"",
             "timeout": 5000
           }
         ]
