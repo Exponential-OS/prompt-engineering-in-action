@@ -1,5 +1,29 @@
 # Changelog — Co-Dialectic
 
+## [4.21.1] — 2026-05-31 — BELT-AND-SUSPENDERS CAPTURE (PreCompact)
+
+### Added — Layer 2 CAPTURE in precompact-handoff.ts
+Extends v4.21.0's RECOMMEND-only design with a second layer:
+
+1. **Layer 1 RECOMMEND (existing)** — emits `hookSpecificOutput.additionalContext` with strong system-reminder telling Claude to invoke the `codi-handoff` skill IMMEDIATELY before compaction proceeds.
+2. **Layer 2 CAPTURE (NEW)** — writes a structured deterministic packet to `~/.codialectic/precompact-packet-<timestamp>.json` BEFORE emitting the reminder. The packet contains:
+   - Timestamp, trigger, cwd, session_id, transcript_path
+   - Full git state: branch, HEAD SHA + subject, uncommitted file count, uncommitted file list (capped at 50), last 10 commits (sha + subject)
+   - `has_uncommitted_handoff_doc` flag — detects if NEXT_SESSION_HANDOFF.md or HANDOFF.md is uncommitted (signal that handoff work was in-flight)
+   - `notes` + `next_step_for_post_compact_claude` arrays — instructions baked into the packet so post-compact Claude can hydrate without prior context
+3. **Marker file updated** to v1.1.0 schema — includes `packet_file` path so post-compact Claude can find the packet immediately, plus `git_uncommitted_count` + `git_branch` for quick triage.
+
+### Why both layers
+- Layer 1 alone fails when Claude is mid-tool-use and can't act before compaction completes, OR when Claude pattern-matches incorrectly and writes the handoff manually instead of invoking the skill (which happened 2026-05-17).
+- Layer 2 alone is structurally limited — only knows what's in the OS, not what's in the conversation. Misses the "unfinished work semantic" that requires understanding the dialogue.
+- Together: deterministic floor (Layer 2 — always captures git state) + conversational ceiling (Layer 1 — when the skill fires, it adds the semantic richness).
+
+### systemMessage now includes verification status
+v4.21.0 systemMessage was just `"PreCompact firing — auto-handoff triggered"`. v4.21.1 shows actual capture status: `"PreCompact firing — auto-handoff captured (trigger=manual, packet=✓, git_uncommitted=3)"` — user immediately sees whether the packet write succeeded and what state was captured.
+
+### Restart required
+Same as v4.21.0 — PreCompact hook only takes effect after Claude Code reloads hooks. Run `claude plugin reinstall co-dialectic@xos` or restart the session.
+
 ## [4.21.0] — 2026-05-31 — AUTO-HANDOFF BEFORE COMPACTION
 
 ### Added — PreCompact hook (hooks/precompact-handoff.ts)
