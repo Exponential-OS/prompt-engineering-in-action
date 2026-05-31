@@ -11,6 +11,11 @@ handoff.md
 !plugins/co-dialectic/skills/handoff/
 !plugins/co-dialectic/skills/handoff/**
 
+# Whitelist co-dialectic handoff-related hooks (shipped product code, not session docs)
+# Catches files like precompact-handoff.ts that the *handoff* pattern above would
+# otherwise ignore.
+!plugins/co-dialectic/hooks/*handoff*
+
 # Auto-generated / transient
 .context-sharing-last-seen-sha
 __pycache__/
