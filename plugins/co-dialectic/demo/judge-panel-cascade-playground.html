@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Judge-Panel Cascade — Interactive Playground · Co-Dialectic</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --border: #30363d;
+    --text: #e6edf3; --dim: #8b949e; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --green: #3fb950; --red: #f85149; --yellow: #d29922; --blue: #58a6ff;
+    --purple: #bc8cff; --orange: #ffa657;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: grid; grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr auto;
+    grid-template-areas: "header header" "controls preview" "prompt prompt";
+    height: 100vh; gap: 0;
+  }
+  header {
+    grid-area: header; padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; }
+  header .sub { color: var(--dim); font-size: 12px; }
+
+  /* ── Controls ── */
+  .controls {
+    grid-area: controls; padding: 16px; border-right: 1px solid var(--border);
+    overflow-y: auto; background: var(--panel);
+  }
+  .group { margin-bottom: 18px; }
+  .group h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--dim); margin-bottom: 8px;
+  }
+  .juror-card {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 10px;
+  }
+  .juror-card .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  .juror-card .family { font-size: 11px; color: var(--dim); font-weight: 400; }
+  .seg { display: flex; gap: 4px; margin-bottom: 8px; }
+  .seg button {
+    flex: 1; padding: 5px 0; border: 1px solid var(--border); background: transparent;
+    color: var(--dim); border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .seg button.on-pass { background: rgba(63,185,80,.18); color: var(--green); border-color: var(--green); }
+  .seg button.on-fail { background: rgba(248,81,73,.18); color: var(--red); border-color: var(--red); }
+  .seg button.on-uncertain { background: rgba(210,153,34,.18); color: var(--yellow); border-color: var(--yellow); }
+  .slider-row { display: flex; align-items: center; gap: 8px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--blue); }
+  .slider-row .val { font-family: var(--mono); font-size: 12px; width: 30px; text-align: right; }
+  select {
+    width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font-size: 13px;
+  }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presets button {
+    padding: 5px 10px; border: 1px solid var(--border); background: var(--panel2);
+    color: var(--text); border-radius: 14px; cursor: pointer; font-size: 12px;
+  }
+  .presets button:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* ── Preview / cascade ── */
+  .preview { grid-area: preview; padding: 24px; overflow-y: auto; }
+  .stage { margin-bottom: 4px; }
+  .stage-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim);
+    margin-bottom: 8px;
+  }
+  .fish-row { display: flex; gap: 16px; }
+  .fish {
+    flex: 1; background: var(--panel); border: 2px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; transition: border-color .3s, box-shadow .3s;
+  }
+  .fish.pass { border-color: var(--green); box-shadow: 0 0 12px rgba(63,185,80,.25); }
+  .fish.fail { border-color: var(--red); box-shadow: 0 0 12px rgba(248,81,73,.25); }
+  .fish.uncertain { border-color: var(--yellow); box-shadow: 0 0 12px rgba(210,153,34,.25); }
+  .fish .icon { font-size: 22px; }
+  .fish .model { font-family: var(--mono); font-size: 12px; margin: 4px 0 2px; }
+  .fish .fam { font-size: 11px; color: var(--dim); }
+  .fish .verdict-line { margin-top: 8px; font-size: 13px; font-weight: 600; }
+  .fish .conf-bar { height: 5px; background: var(--border); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .fish .conf-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+  .connector { display: flex; justify-content: center; padding: 6px 0; color: var(--dim); font-size: 18px; }
+  .decision-node {
+    background: var(--panel); border: 2px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; text-align: center; transition: border-color .3s;
+  }
+  .decision-node.agree { border-color: var(--green); }
+  .decision-node.disagree { border-color: var(--red); }
+  .decision-node .big { font-size: 14px; font-weight: 700; }
+  .decision-node .why { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .branch { display: flex; gap: 16px; margin-top: 6px; }
+  .branch > div { flex: 1; }
+  .path {
+    border: 2px dashed var(--border); border-radius: 10px; padding: 12px 14px; text-align: center;
+    color: var(--dim); transition: all .3s; font-size: 13px;
+  }
+  .path.active-skip { border-style: solid; border-color: var(--green); color: var(--green); background: rgba(63,185,80,.08); }
+  .path.active-esc { border-style: solid; border-color: var(--orange); color: var(--orange); background: rgba(255,166,87,.08); }
+  .tiebreaker { margin-top: 10px; opacity: .3; transition: opacity .3s; }
+  .tiebreaker.active { opacity: 1; }
+  .whale {
+    background: var(--panel); border: 2px solid var(--purple); border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 0 14px rgba(188,140,255,.2);
+  }
+  .verdict-packet {
+    margin-top: 16px; background: #0a0e14; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; font-family: var(--mono); font-size: 12px; white-space: pre; overflow-x: auto;
+  }
+  .verdict-banner {
+    margin-top: 14px; padding: 12px 18px; border-radius: 10px; font-size: 15px; font-weight: 700;
+    text-align: center;
+  }
+  .verdict-banner.pass { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid var(--green); }
+  .verdict-banner.fail { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid var(--red); }
+  .verdict-banner.uncertain { background: rgba(210,153,34,.15); color: var(--yellow); border: 1px solid var(--yellow); }
+
+  /* ── Prompt bar ── */
+  .promptbar {
+    grid-area: prompt; border-top: 1px solid var(--border); background: var(--panel);
+    padding: 12px 20px; display: flex; gap: 14px; align-items: center;
+  }
+  .promptbar .ptext { flex: 1; font-size: 13px; color: var(--text); }
+  .promptbar button {
+    padding: 8px 18px; background: var(--blue); color: #0d1117; font-weight: 600;
+    border: none; border-radius: 8px; cursor: pointer; font-size: 13px; white-space: nowrap;
+  }
+  .footer-note { font-size: 11px; color: var(--dim); margin-top: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐟 Judge-Panel Cascade</h1>
+  <span class="sub">cascade-then-jury · cross-family verification · Co-Dialectic plugin #4 · jury beats judge</span>
+</header>
+
+<div class="controls">
+  <div class="group">
+    <h3>Presets</h3>
+    <div class="presets">
+      <button onclick="preset('agreeHigh')">Agree + High conf</button>
+      <button onclick="preset('agreeLow')">Agree + Low conf</button>
+      <button onclick="preset('disagree')">Disagree</button>
+      <button onclick="preset('uncertain')">Uncertain juror</button>
+      <button onclick="preset('eiffel')">Eiffel-Tower fail</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <h3>🐟 Small fish 1 — Google</h3>
+    <div class="juror-card">
+      <div class="name">gemini-3.1-flash-lite <span class="family">(google)</span></div>
+      <div class="seg" id="seg-j1">
+        <button data-v="pass" onclick="setVerdict(1,'pass')">pass</button>
+        <button data-v="fail" onclick="setVerdict(1,'fail')">fail</button>
+        <button data-v="uncertain" onclick="setVerdict(1,'uncertain')">uncertain</button>
+      </div>
+      <div class="slider-row">
+        <span style="font-size:11px;color:var(--dim)">conf</span>
+        <input type="range" min="0" max="100" id="conf-j1" oninput="setConf(1,this.value)">
+        <span class="val" id="val-j1">88</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <h3>🐟 Small fish 2 — OpenAI</h3>
+    <div class="juror-card">
+      <div class="name">gpt-5.4 <span class="family">(openai)</span></div>
+      <div class="seg" id="seg-j2">
+        <button data-v="pass" onclick="setVerdict(2,'pass')">pass</button>
+        <button data-v="fail" onclick="setVerdict(2,'fail')">fail</button>
+        <button data-v="uncertain" onclick="setVerdict(2,'uncertain')">uncertain</button>
+      </div>
+      <div class="slider-row">
+        <span style="font-size:11px;color:var(--dim)">conf</span>
+        <input type="range" min="0" max="100" id="conf-j2" oninput="setConf(2,this.value)">
+        <span class="val" id="val-j2">85</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <h3>Cascade settings</h3>
+    <div class="juror-card">
+      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">Confidence threshold (skip escalation when both ≥)</div>
+      <div class="slider-row">
+        <input type="range" min="50" max="100" id="conf-th" oninput="setThreshold(this.value)">
+        <span class="val" id="val-th">80</span>
+      </div>
+      <div style="font-size:12px;color:var(--dim);margin:10px 0 4px">🐋 Tiebreaker model</div>
+      <select id="tb-model" onchange="setTiebreaker(this.value)">
+        <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (google — default)</option>
+        <option value="gpt-5.4">gpt-5.4 (openai)</option>
+      </select>
+      <div style="font-size:12px;color:var(--dim);margin:10px 0 4px">Tiebreaker verdict (when escalated)</div>
+      <div class="seg" id="seg-tb">
+        <button data-v="pass" onclick="setVerdict('tb','pass')">pass</button>
+        <button data-v="fail" onclick="setVerdict('tb','fail')">fail</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Cascade rules (judge_panel.ts v3.3):<br>
+    AGREE = both pass or both fail. Any <i>uncertain</i> ⇒ DISAGREE.<br>
+    Escalate when DISAGREE, or AGREE with either conf &lt; threshold.<br>
+    Author (Claude) never judges — three families, zero overlap.
+  </div>
+</div>
+
+<div class="preview">
+  <div class="stage">
+    <div class="stage-label">Stage 1 — small-fish panel (parallel, always fires)</div>
+    <div class="fish-row">
+      <div class="fish" id="fish1">
+        <span class="icon">🐟</span>
+        <div class="model">gemini-3.1-flash-lite-preview</div>
+        <div class="fam">family: google · OAuth CLI · ~$0.0008</div>
+        <div class="verdict-line" id="fish1-verdict"></div>
+        <div class="conf-bar"><div class="conf-fill" id="fish1-bar"></div></div>
+      </div>
+      <div class="fish" id="fish2">
+        <span class="icon">🐟</span>
+        <div class="model">gpt-5.4</div>
+        <div class="fam">family: openai · OAuth CLI · ~$0.0008</div>
+        <div class="verdict-line" id="fish2-verdict"></div>
+        <div class="conf-bar"><div class="conf-fill" id="fish2-bar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">▼</div>
+
+  <div class="stage">
+    <div class="decision-node" id="agreement">
+      <div class="big" id="agreement-big"></div>
+      <div class="why" id="agreement-why"></div>
+    </div>
+  </div>
+
+  <div class="branch">
+    <div>
+      <div class="connector">▼</div>
+      <div class="path" id="path-skip">✓ verdict stands — no escalation<br><span style="font-size:11px">cost ratio vs naive jury: 0.32×</span></div>
+    </div>
+    <div>
+      <div class="connector">▼</div>
+      <div class="path" id="path-esc">⚠ ESCALATE to big-fish tiebreaker<br><span style="font-size:11px">+1 cross-family judge fires</span></div>
+      <div class="tiebreaker" id="tb-block">
+        <div class="connector">▼</div>
+        <div class="whale">
+          <span class="icon">🐋</span>
+          <div class="model" id="tb-model-label">gemini-3.1-pro-preview</div>
+          <div class="fam" id="tb-fam">stage 2 — cross-family vs author AND vs both small fish</div>
+          <div class="verdict-line" id="tb-verdict"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="verdict-banner" id="banner"></div>
+  <div class="verdict-packet" id="packet"></div>
+</div>
+
+<div class="promptbar">
+  <div class="ptext" id="prompt-out"></div>
+  <button onclick="copyPrompt()" id="copy-btn">Copy prompt</button>
+</div>
+
+<script>
+const DEFAULTS = { j1: {v:'pass', c:88}, j2: {v:'pass', c:85}, th: 80, tbModel: 'gemini-3.1-pro-preview', tb: {v:'pass'} };
+const state = JSON.parse(JSON.stringify(DEFAULTS));
+
+const COLORS = { pass:'var(--green)', fail:'var(--red)', uncertain:'var(--yellow)' };
+
+const PRESETS = {
+  agreeHigh: { j1:{v:'pass',c:88}, j2:{v:'pass',c:85}, th:80, tb:{v:'pass'} },
+  agreeLow:  { j1:{v:'pass',c:72}, j2:{v:'pass',c:64}, th:80, tb:{v:'fail'} },
+  disagree:  { j1:{v:'pass',c:90}, j2:{v:'fail',c:82}, th:80, tb:{v:'fail'} },
+  uncertain: { j1:{v:'uncertain',c:55}, j2:{v:'pass',c:81}, th:80, tb:{v:'pass'} },
+  eiffel:    { j1:{v:'fail',c:97}, j2:{v:'fail',c:95}, th:80, tb:{v:'fail'} },
+};
+
+function preset(name) {
+  const p = PRESETS[name];
+  state.j1 = {...p.j1}; state.j2 = {...p.j2}; state.th = p.th; state.tb = {...p.tb};
+  syncControls(); updateAll();
+}
+function setVerdict(who, v) {
+  if (who === 'tb') state.tb.v = v;
+  else state['j'+who].v = v;
+  syncControls(); updateAll();
+}
+function setConf(who, val) { state['j'+who].c = +val; syncControls(); updateAll(); }
+function setThreshold(val) { state.th = +val; syncControls(); updateAll(); }
+function setTiebreaker(m) { state.tbModel = m; updateAll(); }
+
+function syncControls() {
+  for (const [id, j] of [['j1', state.j1], ['j2', state.j2]]) {
+    document.getElementById('conf-'+id).value = j.c;
+    document.getElementById('val-'+id).textContent = j.c;
+    document.querySelectorAll('#seg-'+id+' button').forEach(b =>
+      b.className = b.dataset.v === j.v ? 'on-'+j.v : '');
+  }
+  document.getElementById('conf-th').value = state.th;
+  document.getElementById('val-th').textContent = state.th;
+  document.querySelectorAll('#seg-tb button').forEach(b =>
+    b.className = b.dataset.v === state.tb.v ? 'on-'+state.tb.v : '');
+}
+
+function cascade() {
+  const {j1, j2, th} = state;
+  const anyUncertain = j1.v === 'uncertain' || j2.v === 'uncertain';
+  const agree = !anyUncertain && j1.v === j2.v;
+  const highConf = j1.c >= th && j2.c >= th;
+  const escalate = !agree || !highConf;
+  let final, conf, source;
+  if (!escalate) {
+    final = j1.v; conf = Math.round((j1.c + j2.c) / 2); source = 'small-fish panel';
+  } else {
+    final = state.tb.v;
+    const agreeing = [j1, j2].filter(j => j.v === state.tb.v);
+    conf = agreeing.length ? Math.round((85 + agreeing[0].c) / 2) : 78;
+    source = 'tiebreaker (' + state.tbModel + ')';
+  }
+  return { agree, anyUncertain, highConf, escalate, final, conf, source };
+}
+
+function renderPreview() {
+  const r = cascade();
+  const {j1, j2} = state;
+  // fish cards
+  for (const [n, j] of [[1, j1], [2, j2]]) {
+    const card = document.getElementById('fish'+n);
+    card.className = 'fish ' + j.v;
+    document.getElementById('fish'+n+'-verdict').innerHTML =
+      `verdict: <span style="color:${COLORS[j.v]}">${j.v}</span> · conf ${j.c}`;
+    const bar = document.getElementById('fish'+n+'-bar');
+    bar.style.width = j.c + '%';
+    bar.style.background = COLORS[j.v];
+  }
+  // agreement node
+  const ag = document.getElementById('agreement');
+  ag.className = 'decision-node ' + (r.agree ? 'agree' : 'disagree');
+  document.getElementById('agreement-big').textContent =
+    r.agree ? (r.highConf ? 'AGREE + HIGH CONFIDENCE' : 'AGREE + LOW CONFIDENCE') : 'DISAGREE';
+  document.getElementById('agreement-why').textContent =
+    r.anyUncertain ? 'an uncertain verdict always counts as disagreement'
+    : r.agree
+      ? (r.highConf ? `both verdicts match and both conf ≥ ${state.th}` : `verdicts match but a conf < ${state.th}`)
+      : 'verdicts differ — one pass, one fail';
+  // paths
+  document.getElementById('path-skip').className = 'path' + (r.escalate ? '' : ' active-skip');
+  document.getElementById('path-esc').className  = 'path' + (r.escalate ? ' active-esc' : '');
+  // tiebreaker
+  const tbBlock = document.getElementById('tb-block');
+  tbBlock.className = 'tiebreaker' + (r.escalate ? ' active' : '');
+  document.getElementById('tb-model-label').textContent = state.tbModel;
+  document.getElementById('tb-fam').textContent =
+    (state.tbModel.startsWith('gemini') ? 'family: google' : 'family: openai') +
+    ' — cross-family vs author AND vs escalation trigger';
+  document.getElementById('tb-verdict').innerHTML = r.escalate
+    ? `verdict: <span style="color:${COLORS[state.tb.v]}">${state.tb.v}</span> (final authority)` : '— idle —';
+  // banner + packet
+  const banner = document.getElementById('banner');
+  banner.className = 'verdict-banner ' + r.final;
+  banner.textContent = `FINAL: ${r.final.toUpperCase()} · confidence ${r.conf} · decided by ${r.source}`;
+  document.getElementById('packet').textContent = JSON.stringify({
+    version: '3.3.0', rubric: 'hallucination',
+    cascade: {
+      stage_1_small_fish: [
+        { model: 'gemini-3.1-flash-lite-preview', family: 'google', verdict: j1.v, confidence: j1.c },
+        { model: 'gpt-5.4', family: 'openai', verdict: j2.v, confidence: j2.c },
+      ],
+      agreement: r.agree ? 'agree' : 'disagree',
+      confidence_tier: r.agree ? (r.highConf ? 'high' : 'low') : 'n/a',
+      escalated: r.escalate,
+      stage_2_tiebreaker: r.escalate ? { model: state.tbModel, verdict: state.tb.v } : null,
+    },
+    final_verdict: r.final, final_confidence: r.conf,
+    cost_vs_naive_parallel_jury_ratio: r.escalate ? 0.78 : 0.32,
+  }, null, 2);
+}
+
+function updatePrompt() {
+  const r = cascade();
+  const {j1, j2} = state;
+  const parts = [];
+  parts.push(`Simulate a judge-panel cascade where Gemini Flash Lite votes ${j1.v} at confidence ${j1.c} and GPT-5.4 votes ${j2.v} at confidence ${j2.c}`);
+  if (state.th !== DEFAULTS.th) parts.push(`with the escalation threshold at ${state.th} instead of the default 80`);
+  if (r.escalate) {
+    parts.push(`— this ${r.agree ? 'agrees but under-confident' : 'disagreement'} case escalates to ${state.tbModel}, whose ${state.tb.v} verdict becomes final`);
+  } else {
+    parts.push(`— the panel agrees with high confidence, so the ${r.final} verdict stands without escalation (0.32× the cost of a naive parallel jury)`);
+  }
+  parts.push(`. Explain why this outcome preserves the cross-family guarantee.`);
+  document.getElementById('prompt-out').textContent = parts.join(' ');
+}
+
+function updateAll() { renderPreview(); updatePrompt(); }
+
+function copyPrompt() {
+  navigator.clipboard.writeText(document.getElementById('prompt-out').textContent).then(() => {
+    const b = document.getElementById('copy-btn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy prompt', 1200);
+  });
+}
+
+syncControls(); updateAll();
+</script>
+</body>
+</html>

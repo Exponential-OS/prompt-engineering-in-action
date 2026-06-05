@@ -32,10 +32,11 @@ docs/*.pdf
 .cursorignore
 
 # Demo production artifacts — private dev assets, live in career workspace
+# (2026-06-04: *.html rule removed — interactive playgrounds are publishable
+#  marketing assets and ship with the repo; video scaffolding stays ignored)
 plugins/co-dialectic/demo/frames/
 plugins/co-dialectic/demo/venv/
 plugins/co-dialectic/demo/*.py
-plugins/co-dialectic/demo/*.html
 plugins/co-dialectic/demo/frame-0[2-9].png
 plugins/co-dialectic/demo/hook-*.png
 plugins/co-dialectic/demo/codi-demo*.mp4
