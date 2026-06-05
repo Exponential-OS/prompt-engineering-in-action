@@ -382,6 +382,24 @@ turns are T0/T1 and never reach judge-panel. Expected cascade rate: T3 fires
 ~5-15% of turns; T4 fires ~1-5%. Token budget is consistent with OPERATIONAL
 DISCIPLINE right-sizing.
 
+## Agent-teams quality gate (v4.22.0+)
+
+When Claude Code agent teams are enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`),
+the plugin's `TaskCompleted` hook (`hooks/task-completed-judge-gate.ts`) runs this
+cascade on every teammate task completion — **opt-in via `CODI_TEAM_JUDGE_GATE=1`**.
+
+- Rubric: `spec-coherence` by default (override: `CODI_TEAM_JUDGE_RUBRIC`)
+- `fail`/`uncertain` verdict → task completion BLOCKED (hook exit 2); the
+  jurors' flags are delivered to the teammate as actionable feedback
+- FAIL-HARD when armed: if the cascade cannot run (CLIs missing/broken), the
+  task is blocked with remediation — an unreviewable task never completes as
+  if it were reviewed
+- Tasks under 80 chars of content are skipped (nothing substantive to judge)
+
+This makes the Independent Verification Gate structural for multi-agent work:
+cross-family review fires on every task boundary, enforced by the harness, not
+by agent discipline.
+
 ## Relationship to other skills
 
 - **Upstream callers:** `hallucination-detector` (plugin #3),

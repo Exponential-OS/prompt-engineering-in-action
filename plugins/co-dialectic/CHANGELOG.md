@@ -1,5 +1,39 @@
 # Changelog — Co-Dialectic
 
+## [4.22.0] — 2026-06-04 — TaskCompleted judge gate (agent teams × cross-family review)
+
+### Added — hooks/task-completed-judge-gate.ts (TaskCompleted hook)
+Wires the EXISTING judge-panel cascade (skills/judge-panel/scripts/judge_panel.ts,
+unchanged) into Claude Code's experimental agent teams. When a teammate marks a
+task complete, the gate runs the cross-family cascade (Gemini + GPT jurors) on
+the task content with the `spec-coherence` rubric.
+
+- **exit 0** on pass (silent), **exit 2** on fail → completion BLOCKED, jurors'
+  flags delivered to the teammate as feedback
+- **Opt-in**: no-op unless `CODI_TEAM_JUDGE_GATE=1` (cascade costs ~10-20s per
+  completion; agent teams are experimental)
+- **FAIL-HARD when armed**: gate on + cascade unrunnable (CLIs missing, harness
+  error, timeout) → task BLOCKED with remediation. Opting in makes cross-family
+  review load-bearing; an unreviewable task must not complete as if reviewed.
+- Rubric override via `CODI_TEAM_JUDGE_RUBRIC`; skips tasks < 80 chars (nothing
+  to judge); unparseable payload → warn + pass (schema drift must not brick
+  task flow)
+- Live-verified 2026-06-04: incoherent task (subject says date-parser fix,
+  description says auth rewrite + MongoDB migration) → BLOCKED, verdict fail,
+  confidence 99, 5 specific flags from the cross-family panel.
+
+### Design record — Workflow re-platform CANCELLED
+Spec (anand-career-os WIP/prompt-engineering-in-action-product/co-dialectic/
+spec-judge-panel-on-workflow-2026-06-04.md) originally proposed re-platforming
+judge-panel mechanics onto the Claude Code Workflow tool. Premise falsified on
+code read: judge_panel.ts already has parallel dispatch, timeouts, and typed
+JSON contracts. Workflow wrapping would add Haiku wrapper tokens + latency + a
+harness dependency that breaks codi standalone-OSS, to gain a progress UI on a
+~15s call. P1/P2/P3: rejected. The TaskCompleted gate was the part with real
+leverage — it shipped instead.
+
+---
+
 ## [4.21.1] — 2026-05-31 — BELT-AND-SUSPENDERS CAPTURE (PreCompact)
 
 ### Added — Layer 2 CAPTURE in precompact-handoff.ts

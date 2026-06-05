@@ -1,5 +1,5 @@
 {
-  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses + auto-handoff before compaction. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes. PreCompact hook (v4.21.0+) auto-triggers the codi-handoff skill before context summarization — catches the gap where Protocol 9 closure detection misses compaction events that fire without user closure phrases.",
+  "description": "Co-Dialectic hooks — persistent survival + dev-cycle visibility + foundation invariant harnesses + auto-handoff before compaction. SessionStart auto-installs survival layer. UserPromptSubmit re-injects codi context + OS-grounded datetime (temporal-grounding harness). PreToolUse(Skill) emits plugin+version+scope banner. PreToolUse(Edit/Write/MultiEdit) fires the codify-or-mark-uncodified scan on .md files in invariant-carrier locations. Stop hook fires the unit-of-work-commit reminder when workspace cwd has uncommitted changes. PreCompact hook (v4.21.0+) auto-triggers the codi-handoff skill before context summarization. TaskCompleted hook (v4.22.0+) runs the cross-family judge-panel cascade on agent-team task completions — opt-in via CODI_TEAM_JUDGE_GATE=1; exit 2 blocks completion and feeds jurors' flags back to the teammate.",
   "hooks": {
     "SessionStart": [
       {
@@ -68,6 +68,17 @@
             "type": "command",
             "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/precompact-handoff.ts\"",
             "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-judge-gate.ts\"",
+            "timeout": 120
           }
         ]
       }
