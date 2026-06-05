@@ -44,9 +44,18 @@ Type these inside the Claude Code chat window (not in your terminal):
 /plugin marketplace add Exponential-OS/agent-marketplace
 /plugin install co-dialectic@xos
 ```
-If `/plugin` doesn't appear: update Claude Code → `brew upgrade claude-code` or `npm install -g @anthropic-ai/claude-code@latest`, then restart.
 
-After installing, open a new session and say: **help me set up co-dialectic**
+<details>
+<summary>Troubleshooting plugin install</summary>
+
+- **`/plugin` doesn't appear?** Update Claude Code: `brew upgrade claude-code` or `npm install -g @anthropic-ai/claude-code@latest`, then restart.
+- **Marketplace add fails?** Try the fallback repo: `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@thewhyman`
+- **Plugin install fails?** Use the one-line shell install below instead — it works the same way.
+- **Still stuck?** Run `curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash` in your terminal. The installer auto-detects Claude Code and installs everything.
+
+</details>
+
+After installing, **open a new session** and say: **help me set up co-dialectic**
 
 ---
 
@@ -59,6 +68,19 @@ After installing, open a new session and say: **help me set up co-dialectic**
 > I want to install Co-Dialectic to improve my AI conversations. Please read the install instructions at https://github.com/Exponential-OS/prompt-engineering-in-action and help me set it up. If you cannot access URLs, let me know and I'll paste the SKILL.md file contents directly.
 
 Your AI will walk you through it.
+
+<details>
+<summary><strong>Common install issues</strong></summary>
+
+| Symptom | Fix |
+|---|---|
+| Installer says "🎉 Done!" but nothing works | You must **start a new chat session** after installing. The old session won't pick up the new skill files. |
+| `curl` install shows no errors but nothing installed | The installer auto-detects your tools. If you don't have `~/.claude`, `.cursor/`, etc., it has nothing to install into. Run it from inside a project directory, or use the plugin install method. |
+| `claude plugin install` hangs or errors | Your Claude Code may be outdated. Run `claude --version` — you need v1.0.0+. Update with `brew upgrade claude-code` or `npm install -g @anthropic-ai/claude-code@latest`. |
+| Fish gate hook warning | The fish gate needs `python3` on your PATH. Run `python3 --version` to check. |
+| "Permission denied" on install.sh | Run `chmod +x install.sh` first, or use the `curl ... \| bash` form which doesn't need execute permission. |
+
+</details>
 
 ## What You Get
 

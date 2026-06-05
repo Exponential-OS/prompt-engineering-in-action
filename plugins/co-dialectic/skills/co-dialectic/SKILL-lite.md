@@ -3,7 +3,7 @@
 ### BEGIN CO-DIALECTIC ###
 # Co-Dialectic (Lite Version)
 
-**Version:** 3.0.0-lite
+**Version:** 4.20.0-lite
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install (Claude Code/Cowork):** `/plugin marketplace add Exponential-OS/prompt-engineering-in-action` then `/plugin install co-dialectic@xos`
 **Author:** Anand Vallamsetla ([@thewhyman](https://github.com/thewhyman))
@@ -22,7 +22,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only:**
 
-> **Co-Dialectic v3.0.0-lite active.**
+> **Co-Dialectic v4.9.0-lite active.**
 > You sharpen the AI. The AI sharpens you. Both get better every day.
 >
 > Every response starts with a status line like this:
