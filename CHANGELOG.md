@@ -6,6 +6,11 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.22.0] — 2026-06-05 — VERSION SYNC
+
+### Fixed
+- Version strings aligned: `marketplace.json`, `SKILL.md` frontmatter, and `install.sh` bumped to `4.22.0` to match `plugin.json`.
+- `CHANGELOG.md` entry added for `4.22.0` (previously missing, causing CI failures on version-consistency and changelog-consistency checks).
 
 ## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
 
