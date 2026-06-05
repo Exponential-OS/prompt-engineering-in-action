@@ -54,6 +54,18 @@ After installing, open a new session and say: **help me set up co-dialectic**
 - **macOS/Linux:** `curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash`
 - **Windows:** `Invoke-RestMethod -Uri https://thewhyman.gateway.scarf.sh/install.ps1 | Invoke-Expression`
 
+Target a specific local AI runtime:
+```bash
+# Cursor: writes .cursor/rules/co-dialectic.mdc
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --target cursor
+
+# Codex: appends an idempotent Co-Dialectic block to AGENTS.md
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --target codex
+
+# Both Cursor and Codex
+curl -fsSL https://thewhyman.gateway.scarf.sh/install.sh | bash -s -- --target all
+```
+
 **Claude.ai / ChatGPT web / Gemini web — paste into your AI chat:**
 
 > I want to install Co-Dialectic to improve my AI conversations. Please read the install instructions at https://github.com/Exponential-OS/prompt-engineering-in-action and help me set it up. If you cannot access URLs, let me know and I'll paste the SKILL.md file contents directly.
@@ -407,4 +419,3 @@ Day 10:  Both anticipate each other → Communication sharpens
 **Generative principles accelerate the flywheel.** Every lesson codified as a broad principle (not a narrow keyword fix) covers infinite future situations. The broader the lesson, the faster the flywheel spins.
 
 </details>
-

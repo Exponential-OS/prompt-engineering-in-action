@@ -3,12 +3,16 @@
 Co-Dialectic Manager for Windows.
 #>
 param(
-    [switch]$BgCheck
+    [switch]$BgCheck,
+    [ValidateSet("auto", "cursor", "codex", "all")]
+    [string]$Target = "auto",
+    [switch]$Lite,
+    [switch]$Full
 )
 
 $ErrorActionPreference = "Stop"
-$RepoUrl = "https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-$Version = "3.0.0"
+$RepoUrl = if ($env:CO_DIALECTIC_REPO) { $env:CO_DIALECTIC_REPO } else { "https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main" }
+$Version = "4.20.0"
 $ConfigDir = Join-Path $env:USERPROFILE ".co-dialectic"
 
 # -----------------------------------------
@@ -58,6 +62,116 @@ function Ask-Choice {
     return $Choice
 }
 
+function Get-RepoFileContent {
+    param([string]$SourceUrl)
+
+    if (Test-Path $SourceUrl) {
+        return Get-Content $SourceUrl -Raw
+    }
+
+    if ($SourceUrl.StartsWith("$RepoUrl/")) {
+        $LocalPath = $SourceUrl.Substring($RepoUrl.Length + 1) -replace '/', [IO.Path]::DirectorySeparatorChar
+        if (Test-Path $LocalPath) {
+            return Get-Content $LocalPath -Raw
+        }
+        if ($PSScriptRoot) {
+            $ScriptRelativePath = Join-Path $PSScriptRoot $LocalPath
+            if (Test-Path $ScriptRelativePath) {
+                return Get-Content $ScriptRelativePath -Raw
+            }
+        }
+
+        if ($LocalPath -eq ("plugins/co-dialectic/adapters/cursor/co-dialectic.mdc" -replace '/', [IO.Path]::DirectorySeparatorChar)) {
+            return Get-CursorAdapterContent
+        }
+        if ($LocalPath -eq ("plugins/co-dialectic/adapters/codex/AGENTS.md" -replace '/', [IO.Path]::DirectorySeparatorChar)) {
+            return Get-CodexAdapterContent
+        }
+    }
+
+    return Invoke-RestMethod -Uri $SourceUrl
+}
+
+function Get-CursorAdapterContent {
+    return @'
+---
+description: Co-Dialectic prompt sharpening and verification rules for Cursor
+alwaysApply: true
+---
+
+### BEGIN CO-DIALECTIC ###
+# Co-Dialectic for Cursor
+
+Co-Dialectic is always active in this workspace. Keep the behavior compact and code-focused.
+
+## Runtime Defaults
+- Default to Cruise mode: answer directly unless the user's prompt is ambiguous enough that a wrong implementation is likely.
+- Keep status metadata quiet by default. Do not prepend persona/score lines unless the user asks for `codi status`.
+- Prefer short, actionable prompt sharpening over teaching. If the user's ask is unclear, rewrite the ask in one sentence, state the assumption, and proceed when the assumption is low-risk.
+- Use Drive mode only when the next step would change architecture, delete data, publish externally, or spend money.
+
+## Cursor Coding Behavior
+- Read the relevant files before editing.
+- Preserve user changes. Do not revert unrelated edits.
+- Keep patches scoped to the requested behavior.
+- Prefer existing project patterns and libraries over new abstractions.
+- Run focused validation when available, and report what did or did not run.
+- For reviews, lead with defects and file/line references before summaries.
+
+## Verification By Stakes
+- Routine local edits: run syntax/type/unit checks that are already present.
+- Shared or user-facing changes: also inspect edge cases, error states, and docs/install paths.
+- Significant claims, security, legal, financial, medical, or release guidance: verify against primary/current sources before presenting as fact.
+
+## Commands
+- `codi status`: summarize active mode, assumptions, and any verification gaps.
+- `codi drive`: ask before applying sharpened prompts or taking broad actions.
+- `codi cruise`: proceed with reasonable assumptions and concise notes.
+- `codi quiet`: suppress status surfaces unless something needs attention.
+- `codi review`: switch to code-review posture, prioritizing bugs and regressions.
+- `codi handoff`: produce a concise continuation note with files touched, decisions, tests, and next steps.
+
+### END CO-DIALECTIC ###
+'@
+}
+
+function Get-CodexAdapterContent {
+    return @'
+### BEGIN CO-DIALECTIC ###
+# Co-Dialectic for Codex
+
+Use Co-Dialectic as a lightweight engineering discipline layer, not as a chat persona system.
+
+## Defaults
+- Stay concise and implementation-oriented.
+- Read code before changing it.
+- Make scoped edits that follow the repository's existing patterns.
+- Preserve user changes and ignore unrelated dirty worktree files.
+- Prefer `rg`/`rg --files` for search.
+- Use patch-style edits for manual file changes.
+- Run focused tests or checks when available, and say exactly what ran.
+
+## Prompt Sharpening
+- If the user's request is clear, do the work.
+- If the request is ambiguous but low-risk, state the assumption and proceed.
+- If the ambiguity could cause destructive, externally visible, or expensive work, ask one direct question.
+- When helpful, internally rewrite vague requests into concrete acceptance criteria before implementation.
+
+## Verification By Stakes
+- Routine code edits: local tests, type checks, or lint checks where practical.
+- Installer, release, security, or public-facing changes: validate idempotency, failure paths, and documentation.
+- Current facts or high-stakes guidance: verify with primary/current sources before treating them as true.
+
+## Commands
+- `codi status`: report assumptions, touched files, validation, and remaining risk.
+- `codi review`: use code-review posture; findings first, then brief summary.
+- `codi handoff`: write a continuation summary with branch, files changed, tests, and next steps.
+- `codi quiet`: minimize Co-Dialectic surface text.
+
+### END CO-DIALECTIC ###
+'@
+}
+
 # -----------------------------------------
 # MAIN MENU
 # -----------------------------------------
@@ -65,7 +179,11 @@ Write-Host "What would you like to do?"
 Write-Host " [1] Install or Update"
 Write-Host " [2] Uninstall completely"
 Write-Host " [3] Exit"
-$MenuChoice = Ask-Choice "Select [1, 2, or 3]" "1"
+if ($Target -eq "auto") {
+    $MenuChoice = Ask-Choice "Select [1, 2, or 3]" "1"
+} else {
+    $MenuChoice = "1"
+}
 
 if ($MenuChoice -eq "3") { exit 0 }
 
@@ -95,6 +213,20 @@ if ($MenuChoice -eq "2") {
             }
         }
     }
+    $CursorRule = ".cursor\rules\co-dialectic.mdc"
+    if (Test-Path $CursorRule) {
+        Remove-Item -Force $CursorRule
+        Write-Host "   Removed $CursorRule"
+    }
+    if (Test-Path "AGENTS.md") {
+        $HasBlock = Select-String -Path "AGENTS.md" -Pattern "### BEGIN CO-DIALECTIC ###" -Quiet
+        if ($HasBlock) {
+            $Content = Get-Content "AGENTS.md" -Raw
+            $Content = $Content -replace '(?s)### BEGIN CO-DIALECTIC ###.*?### END CO-DIALECTIC ###\s*', ''
+            Set-Content -Path "AGENTS.md" -Value $Content -Encoding UTF8
+            Write-Host "   Removed from AGENTS.md"
+        }
+    }
     
     # Remove Folders
     $Dirs = @(
@@ -119,7 +251,13 @@ if ($MenuChoice -eq "2") {
 Write-Host "Which version do you want to install?"
 Write-Host " [1] Standard (Best for Pro/Paid AI users)"
 Write-Host " [2] Lite (Best for Free/Fast AI limits)"
-$VersionChoice = Ask-Choice "Select [1/2]" "1"
+if ($Lite -or (($Target -ne "auto") -and (-not $Full))) {
+    $VersionChoice = "2"
+} elseif ($Full) {
+    $VersionChoice = "1"
+} else {
+    $VersionChoice = Ask-Choice "Select [1/2]" "1"
+}
 
 $SelectedVerStr = "full"
 if ($VersionChoice -eq "2") {
@@ -131,15 +269,21 @@ if ($VersionChoice -eq "2") {
     Write-Host "⬇️  Downloading Standard version..." -ForegroundColor Yellow
 }
 
-try {
-    $SkillContent = Invoke-RestMethod -Uri $SkillUrl
-} catch {
-    Write-Host "Failed to download SKILL.md" -ForegroundColor Red
-    exit 1
-}
+if ($Target -eq "auto") {
+    try {
+        $SkillContent = Get-RepoFileContent $SkillUrl
+    } catch {
+        Write-Host "Failed to download SKILL.md" -ForegroundColor Red
+        exit 1
+    }
 
-$TrackOptIn = Ask-User "📊 Share anonymous install metrics to help the project (OS/Tool choices)? [Y/n]" "y"
-$BgUpdates = Ask-User "🔄 Enable weekly background checks for updates via Scheduled Tasks? [Y/n]" "y"
+    $TrackOptIn = Ask-User "📊 Share anonymous install metrics to help the project (OS/Tool choices)? [Y/n]" "y"
+    $BgUpdates = Ask-User "🔄 Enable weekly background checks for updates via Scheduled Tasks? [Y/n]" "y"
+} else {
+    $SkillContent = ""
+    $TrackOptIn = $false
+    $BgUpdates = $false
+}
 
 $Installed = $false
 $InstalledTools = @()
@@ -208,9 +352,103 @@ function Append-Or-Replace {
     }
 }
 
+function Install-OwnedFile {
+    param(
+        [string]$SourceUrl,
+        [string]$TargetFile,
+        [string]$PromptMsg,
+        [string]$DefaultAns,
+        [string]$ToolName,
+        [bool]$Force = $false
+    )
+
+    if ((-not $Force) -and (-not (Ask-User $PromptMsg $DefaultAns))) { return }
+
+    try {
+        $Content = Get-RepoFileContent $SourceUrl
+    } catch {
+        Write-Host "   ❌ Failed to download $SourceUrl" -ForegroundColor Red
+        return
+    }
+
+    $Parent = Split-Path $TargetFile
+    if (($Parent -ne "") -and (-not (Test-Path $Parent))) {
+        New-Item -ItemType Directory -Force -Path $Parent | Out-Null
+    }
+    $Content | Set-Content -Path $TargetFile -Encoding UTF8 -NoNewline
+    Write-Host "   ✅ Installed $TargetFile" -ForegroundColor Green
+    $script:Installed = $true
+    $script:InstalledTools += $ToolName
+}
+
+function Append-Or-ReplaceRemote {
+    param(
+        [string]$SourceUrl,
+        [string]$TargetFile,
+        [string]$PromptMsg,
+        [string]$DefaultAns,
+        [string]$ToolName,
+        [bool]$Force = $false
+    )
+
+    if ((-not $Force) -and (-not (Ask-User $PromptMsg $DefaultAns))) { return }
+
+    try {
+        $RemoteContent = Get-RepoFileContent $SourceUrl
+    } catch {
+        Write-Host "   ❌ Failed to download $SourceUrl" -ForegroundColor Red
+        return
+    }
+
+    if (-not (Test-Path $TargetFile)) {
+        $RemoteContent | Set-Content -Path $TargetFile -Encoding UTF8 -NoNewline
+        Write-Host "   ✅ Added to $TargetFile" -ForegroundColor Green
+    } else {
+        $Content = Get-Content $TargetFile -Raw
+        if ($Content -match "### BEGIN CO-DIALECTIC ###") {
+        $Content = $Content -replace '(?s)### BEGIN CO-DIALECTIC ###.*?### END CO-DIALECTIC ###\s*', ''
+        Set-Content -Path $TargetFile -Value ($Content.TrimEnd() + "`n`n" + $RemoteContent) -Encoding UTF8
+        Write-Host "   ✅ Updated $TargetFile" -ForegroundColor Green
+        } else {
+        Add-Content -Path $TargetFile -Value "`n$RemoteContent" -Encoding UTF8
+        Write-Host "   ✅ Added to $TargetFile" -ForegroundColor Green
+        }
+    }
+
+    $script:Installed = $true
+    $script:InstalledTools += $ToolName
+}
+
+function Target-Selected {
+    param([string]$Name)
+    if ($Target -eq "all") { return $true }
+    return $Target -eq $Name
+}
+
 Write-Host ""
 Write-Host "Scanning for AI environments..."
 Write-Host ""
+
+if ($Target -ne "auto") {
+    if (Target-Selected "cursor") {
+        Install-OwnedFile `
+            "$RepoUrl/plugins/co-dialectic/adapters/cursor/co-dialectic.mdc" `
+            ".cursor\rules\co-dialectic.mdc" `
+            "✅ Install Cursor project rules to .cursor/rules/co-dialectic.mdc? [Y/n]" `
+            "y" `
+            "cursor_mdc" `
+            $true
+    }
+    if (Target-Selected "codex") {
+        Append-Or-ReplaceRemote `
+            "$RepoUrl/plugins/co-dialectic/adapters/codex/AGENTS.md" `
+            "AGENTS.md" `
+            "✅ Add Codex instructions to AGENTS.md? [Y/n]" `
+            "y" `
+            "codex_agents" `
+            $true
+    }
+} else {
 
 # 1. Antigravity Support (dedicated skill file, full overwrite)
 $AntigravityPath = Join-Path $env:USERPROFILE ".gemini\antigravity\skills"
@@ -232,7 +470,22 @@ if (Test-Path $ClaudePath) {
 
 # 3. Cursor Support
 if ((Test-Path ".cursor") -or (Test-Path ".cursorrules")) {
-    Append-Or-Replace ".cursorrules" "✅ Detected Cursor project. Add to .cursorrules? [Y/n]" "y" "cursor"
+    Install-OwnedFile `
+        "$RepoUrl/plugins/co-dialectic/adapters/cursor/co-dialectic.mdc" `
+        ".cursor\rules\co-dialectic.mdc" `
+        "✅ Detected Cursor project. Install modern Cursor rule to .cursor/rules/co-dialectic.mdc? [Y/n]" `
+        "y" `
+        "cursor_mdc"
+    Write-Host ""
+}
+
+if ((Test-Path "AGENTS.md") -or (Get-Command codex -ErrorAction SilentlyContinue)) {
+    Append-Or-ReplaceRemote `
+        "$RepoUrl/plugins/co-dialectic/adapters/codex/AGENTS.md" `
+        "AGENTS.md" `
+        "✅ Detected Codex. Add workspace instructions to AGENTS.md? [Y/n]" `
+        "y" `
+        "codex_agents"
     Write-Host ""
 }
 
@@ -248,6 +501,8 @@ if (Ask-User "📋 Copy instructions to clipboard for web/desktop apps? [y/N]" "
     $Installed = $true
     $InstalledTools += "clipboard"
     Write-Host ""
+}
+
 }
 
 if (-not $Installed) {

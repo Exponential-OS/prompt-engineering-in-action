@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.19.1"
+  version: "4.20.0"
   author: "Anand Vallamsetla"
 ---
 <!-- product-vs-solution: example -->
@@ -29,7 +29,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - **First reply only (also fires on post-compaction re-init):**
 
-> **Co-Dialectic v4.7.0 active.**
+> **Co-Dialectic v4.9.0 active.**
 > Sharper prompts. Grounded answers. Smarter cost routing — all automatic.
 >
 > **What's running on every message:**
@@ -672,7 +672,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.19.1
+**Version:** 4.20.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0
