@@ -6,6 +6,30 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.23.0] — 2026-06-05 — FORAGE: Epistemic Foraging flywheel
+
+### Added — skills/forage/SKILL.md (new soul-tier skill)
+Codifies the Constitution's Epistemic Foraging principle ([NOT CODIFIED] → live) as a
+weekly tool-discovery loop: FORAGE (marketplace diff + GitHub trending +
+claude-automation-recommender + P20 authority-weighted web sweep) → SCORE against the
+week's WORKSPACE session-ledger friction, not novelty (never a universal/shared brain's
+ledger — that degenerates the flywheel into novelty-hunting) → VERIFY in a throwaway
+worktree (never propose blind; FOUNDATION-FIRST) → PROPOSE (install is HUMAN-GATED —
+no auto-install from any marketplace; each verify-passed keeper files its own approval
+ticket with verification evidence + one-command rollback, max 3 proposals/run) →
+CODIFY (pending/keepers/rejects/deferred + autoMemoryDirectory entry + summary audit
+ticket). Autonomy contract locked by Anand 2026-06-05 00:53 PDT: forage/score/verify
+autonomous, INSTALL human-gated per candidate — an earlier in-flight fully-autonomous-
+install answer was REVOKED (P12: weekly auto-install of third-party plugins = untrusted
+code whose hooks execute on this machine).
+Substrate paths via $CO_DIALECTIC_SESSION_LEDGER_DIR / $CO_DIALECTIC_TOOLS_REGISTRY
+with graceful OSS fallback (Decision-2 compliant). Brain contract: reads
+sessions/ledger/**, writes references/tools-registry.md.
+
+### Fixed
+- Version drift: `skills/co-dialectic/SKILL.md`, `install.sh`, and `marketplace.json`
+  description were stale vs `plugin.json` — all surfaces now 4.23.0.
+
 ## [4.22.0] — 2026-06-05 — VERSION SYNC
 
 ### Fixed

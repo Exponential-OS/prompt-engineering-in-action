@@ -1,5 +1,39 @@
 # Changelog — Co-Dialectic
 
+## [4.23.0] — 2026-06-05 — FORAGE: Epistemic Foraging flywheel
+
+### Added — skills/forage/SKILL.md (new soul-tier skill)
+Codifies the Constitution's Epistemic Foraging principle ([NOT CODIFIED] → live) as a
+weekly tool-discovery loop:
+
+- **FORAGE** — marketplace diff (`claude plugin marketplace list` vs installed) +
+  GitHub trending + `claude-automation-recommender` (composed, not rebuilt) +
+  P20 authority-weighted web sweep.
+- **SCORE** — against the week's WORKSPACE session-ledger friction, not novelty.
+  Never a universal/shared brain's ledger (that degenerates the flywheel into
+  novelty-hunting). Ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` → workspace brain
+  `sessions/ledger/` → OSS fallback (conversation + git history).
+- **VERIFY** — throwaway worktree, project-scope install, smoke-test, token cost,
+  collision check. Never propose blind (FOUNDATION-FIRST).
+- **PROPOSE** — **install is HUMAN-GATED, no auto-install from any marketplace.**
+  Each verify-passed keeper files its own approval ticket (Linear, xOS Team) with
+  verification evidence + exact one-command rollback. Max 3 proposals/run.
+  Autonomy contract locked by Anand 2026-06-05 00:53 PDT — an earlier in-flight
+  fully-autonomous-install answer was REVOKED (P12: weekly auto-install of
+  third-party plugins = untrusted code whose hooks execute on this machine).
+- **CODIFY** — tools-registry (PENDING/KEEPERS/REJECTED/DEFERRED, surgical appends)
+  + autoMemoryDirectory entry + summary audit ticket; optional `/dream` close.
+
+Brain contract: reads `sessions/ledger/**`, writes `references/tools-registry.md`
+(via `$CO_DIALECTIC_TOOLS_REGISTRY` with OSS fallback — Decision-2 compliant).
+
+### Fixed
+- Version drift: root CHANGELOG.md, skills/co-dialectic/SKILL.md (4.19.1),
+  install.sh (4.19.1), and marketplace.json description (4.20.0) were stale vs
+  plugin.json (4.22.0) — all surfaces now 4.23.0.
+
+---
+
 ## [4.22.0] — 2026-06-04 — TaskCompleted judge gate (agent teams × cross-family review)
 
 ### Added — hooks/task-completed-judge-gate.ts (TaskCompleted hook)
