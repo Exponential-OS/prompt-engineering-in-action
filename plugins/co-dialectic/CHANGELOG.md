@@ -24,19 +24,23 @@ leverage, it appends exactly one line:
 
 `⚡ Productivity: <the prompt you should have typed, given this env> — <tool>, <why better>`
 
-### Added — session-end and weekly learning triggers
+### Added — shipped learning triggers and deferred weekly digest instruction
+Shipped learning triggers are the per-turn `⚡ Productivity` footer, explicit
+`learning time` / `teach me today`, and the session-close teaser.
+
 `skills/handoff/SKILL.md` now appends the session-close teaser:
 
 `📚 Today's 1%: <headline> — say 'learning time' for the 60-sec version.`
 
-Teachme also records the Sunday `/schedule` digest instruction: top-3
-inefficiencies, adoption scorecard, and two-strikes hookify-candidate
-escalations. No cron infrastructure ships in this release.
+Teachme also records the deferred Sunday `/schedule` digest instruction: when
+cron infrastructure is built, report top-3 inefficiencies, adoption scorecard,
+and two-strikes hookify-candidate escalations. No cron infrastructure ships in
+this release.
 
 ### Changed — skills/teachme/growth.schema.json
-Adds `event_type: "tool_lesson"` with local cited evidence, inefficiency class,
-tool, yield estimate, `taught_at`, `adopted`, `teach_count`, optional lesson
-headline/practice-prompt hash/escalation, and optional cyborg-side fix metadata.
+Adds `event_type: "tool_lesson"` with required fields `cited_log_evidence`,
+`inefficiency_class`, `tool`, `yield_estimate`, `taught_at`, `adopted`, and
+`teach_count`.
 Existing `sharpening_turn` records keep their required fields through
 event-specific schema requirements.
 

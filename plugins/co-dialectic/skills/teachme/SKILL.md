@@ -49,10 +49,10 @@ Triggers (any one) — see frontmatter. Most common entry points:
 - `why dialectic` — explain when dialectic is worth the 3x cost
 - `learning time` / `teach me today` — teach today's highest-yield tool-usage lesson from local logs
 
-Session-end and weekly triggers:
+Session-end trigger and deferred weekly digest instruction:
 
 - `codi-handoff` appends `📚 Today's 1%: <headline> — say 'learning time' for the 60-sec version.`
-- Sunday `/schedule` digest reports the top-3 inefficiencies and adoption scorecard; no cron infrastructure lives in this skill.
+- Sunday `/schedule` digest instruction is defined for future cron wiring: report the top-3 inefficiencies, adoption scorecard, and two-strikes escalations. No cron infrastructure lives in this skill.
 
 ## Origin
 
@@ -270,7 +270,7 @@ Adoption check on the next audit:
 
 **Weekly digest instruction:**
 
-The Sunday `/schedule` digest reads the same `tool_lesson` records and reports: top-3 inefficiencies, adoption scorecard, and two-strikes escalations. This skill only defines the instruction; v1 does not build cron infrastructure.
+When cron infrastructure is built, the Sunday `/schedule` digest reads the same `tool_lesson` records and reports: top-3 inefficiencies, adoption scorecard, and two-strikes escalations. This skill only defines the instruction; v1 does not build cron infrastructure.
 
 ## Telemetry — xOS-hydration-compatible
 
@@ -363,7 +363,6 @@ Privacy: `prompt_hash` is sha256(prompt) — **prompt content is never stored**.
 ## v1.1 (not yet built)
 
 - Weekly `/schedule` digest cron.
-- Bidirectional cyborg-side codification stream: unify `flywheel-capture`, `fish-dispatch`, and `codify-scan`.
-- Adoption 2-strikes → `hookify-candidate` escalation.
+- Cross-machine aggregation (laptop + Mac-mini, post hardware-split).
 
 ### END TEACHME ###
