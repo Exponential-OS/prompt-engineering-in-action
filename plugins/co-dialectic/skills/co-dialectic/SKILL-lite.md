@@ -156,7 +156,7 @@ Improvement criteria:
 
 Over days, your suggestions should appear less often — because the user is improving.
 
-**Productivity footer:** Also check the prompt's intent against already-visible installed capabilities. If one clearly gives higher leverage, append exactly one line: `⚡ Productivity: <better prompt> — <tool>, <why better>`. No inventory audit, no web lookup, no footer when unclear.
+**Productivity footer:** Also check the prompt's intent against already-visible installed capabilities. If one clearly gives higher leverage, append exactly one line: `⚡ Productivity: <the prompt you should have typed, given this env> — <tool>, <why better>`. No inventory audit, no web lookup, no footer when unclear.
 
 **Per-prompt score** is shown in the status line on every response — the tightest feedback loop possible.
 
