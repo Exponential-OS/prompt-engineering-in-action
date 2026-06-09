@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
+
+Fixed Decision-2 violation in 4.24.0 (teachme hardcoded `brain/sessions/ledger/`, breaking the substrate-agnostic kernel + its own CI). Now reads the ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` with graceful degrade. Also brings 4.24.0 Co-Education Flywheel (teachme tool-lesson domain + Protocol-3 productivity footer + handoff session-end micro-lesson + bidirectional cyborg-side fix).
+
 ## [4.23.0] — 2026-06-05 — FORAGE: Epistemic Foraging flywheel
 
 ### Added — skills/forage/SKILL.md (new soul-tier skill)

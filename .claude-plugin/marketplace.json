@@ -12,7 +12,7 @@
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "Co-Dialectic v4.23.0 - FORAGE: Epistemic Foraging flywheel. Weekly /forage tool-discovery loop: FORAGE (marketplace diff + GitHub trending + recommender + P20 web sweep) -> SCORE against the week's WORKSPACE session-ledger friction (not novelty) -> VERIFY in a throwaway worktree -> PROPOSE (install HUMAN-GATED, no auto-install; per-candidate approval ticket with evidence + rollback, max 3/run) -> CODIFY (pending/keepers/rejects/deferred + memory entry + audit ticket).",
-      "version": "4.23.0",
+      "version": "4.24.1",
       "category": "productivity"
     },
     {

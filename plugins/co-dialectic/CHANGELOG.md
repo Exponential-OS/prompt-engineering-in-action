@@ -1,5 +1,14 @@
 # Changelog — Co-Dialectic
 
+## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
+
+### Fixed — Decision-2 violation in 4.24.0 (shipped CI-red by a concurrent session)
+The 4.24.0 Co-Education Flywheel hardcoded `brain/sessions/ledger/` (the career-os substrate)
+in teachme — violating Decision 2 (co-dialectic is the substrate-agnostic kernel; it must not
+name the workspace). The plugin would not work standalone and failed its own `test-plugin.sh`.
+Fix: read the session ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` (workspace-registered),
+degrade to in-session conversation + git history when unset. Example `source_ref` also de-hardcoded.
+
 ## [4.24.0] — 2026-06-09 — Co-Education Flywheel (teachme tool lessons)
 
 ### Added — skills/teachme/SKILL.md
