@@ -200,7 +200,7 @@ Teach the highest-yield tool-usage lesson from the user's own local logs. This i
 
 **Inputs (all local, privacy-preserving):**
 
-- `brain/sessions/ledger/<today>.md` for both sides of the session ledger when present (v0.68.0+). If `$CO_DIALECTIC_SESSION_LEDGER_DIR` is configured, read that first; otherwise use the workspace `brain/sessions/ledger/` path; if unavailable, degrade to conversation context + git history.
+- The session ledger (both sides of the conversation), supplied by the workspace via `$CO_DIALECTIC_SESSION_LEDGER_DIR` — the workspace adapter registers where its ledger lives; co-dialectic never names the substrate (Decision 2). Read `$CO_DIALECTIC_SESSION_LEDGER_DIR/<today>.md` when the env var is set; if unset or unavailable, degrade to the in-session conversation context + git history.
 - Git history for the session: commits, changed files, repeated fix/retry patterns, and unfinished work visible from `git log` / `git status`.
 - Installed-tool inventory already available in the environment: Claude Code natives (`Workflow`, agent teams, `/schedule`, `/dream`), loaded skill inventory, `claude plugin list`, MCP list, agent/preset configs, fish/presets, YOLO/containment presets, and skill-version-banner traces.
 - Existing agent-side warning streams as signals only: `flywheel-capture` (`UserPromptSubmit`), `fish-dispatch` Stop audit, and `codify-or-mark-uncodified` (`PreToolUse`). Route their signals into this RANK→one-lesson pipeline; do not rebuild their hooks here.
@@ -316,7 +316,7 @@ Privacy: `prompt_hash` is sha256(prompt) — **prompt content is never stored**.
   "cited_log_evidence": [
     {
       "source_type": "ledger",
-      "source_ref": "brain/sessions/ledger/2026-06-09.md:42",
+      "source_ref": "$CO_DIALECTIC_SESSION_LEDGER_DIR/2026-06-09.md:42",
       "signal": "manual review agents spawned while Workflow was installed",
       "evidence_hash": "{sha256 of cited local snippet}"
     }
