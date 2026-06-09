@@ -1,18 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/Exponential-OS/co-dialectic/raw/main/plugins/co-dialectic/skills/teachme/growth.schema.json",
-  "title": "Co-Dialectic Growth Telemetry \u2014 xOS-Hydratable Per-Turn Record",
-  "description": "Schema for a single line in ~/.codialectic/growth.jsonl. Each line is self-describing (per SHARED-STATE HYDRATION INVARIANT) so a future xOS consumer can ingest the file without co-dialectic source code. Prompt content is NEVER stored \u2014 only its sha256 hash truncated to 16 chars.",
+  "title": "Co-Dialectic Growth Telemetry \u2014 xOS-Hydratable Per-Turn and Tool-Lesson Record",
+  "description": "Schema for a single line in ~/.codialectic/growth.jsonl. Each line is self-describing (per SHARED-STATE HYDRATION INVARIANT) so a future xOS consumer can ingest the file without co-dialectic source code. Prompt content is NEVER stored \u2014 only its full sha256 hash.",
   "version": "1.0.0",
   "type": "object",
   "required": [
     "schema_version",
     "event_type",
     "ts",
-    "session_id",
-    "prompt_hash",
-    "original_score",
-    "tiers"
+    "session_id"
   ],
   "properties": {
     "schema_version": {
@@ -32,7 +29,8 @@
         "micro_lesson_surfaced",
         "micro_lesson_dismissed",
         "technique_practiced",
-        "session_summary"
+        "session_summary",
+        "tool_lesson"
       ],
       "description": "Discriminator for downstream aggregation. Most lines will be sharpening_turn."
     },
@@ -123,8 +121,97 @@
         "type": "string"
       },
       "description": "Technique slugs the user has muted in this session."
+    },
+    "cited_log_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/logEvidenceRecord"
+      },
+      "description": "Local evidence used for a tool_lesson. References ledger/git/config/hook signals by source and hash; raw prompt content is never stored."
+    },
+    "inefficiency_class": {
+      "type": "string",
+      "enum": [
+        "manual-where-tool-exists",
+        "base-use-of-power-tool",
+        "repeated-friction",
+        "installed-never-invoked",
+        "approval-grind"
+      ],
+      "description": "The human-side tool-usage inefficiency class detected by the co-education audit."
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Installed tool, skill, native command, MCP, preset, or workflow that would have served the user's intent at higher leverage."
+    },
+    "yield_estimate": {
+      "$ref": "#/definitions/yieldEstimate",
+      "description": "Estimated lesson yield, calculated as time burned multiplied by recurrence."
+    },
+    "taught_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp when the tool lesson was taught."
+    },
+    "adopted": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether the next audit found adoption. null means not checked yet."
+    },
+    "teach_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How many times this lesson has been taught. Two teaches without adoption escalates to hookify-candidate."
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "sharpening_turn"
+          }
+        },
+        "required": [
+          "event_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "prompt_hash",
+          "original_score",
+          "tiers"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "tool_lesson"
+          }
+        },
+        "required": [
+          "event_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "cited_log_evidence",
+          "inefficiency_class",
+          "tool",
+          "yield_estimate",
+          "taught_at",
+          "adopted",
+          "teach_count"
+        ]
+      }
+    }
+  ],
   "definitions": {
     "tierRecord": {
       "type": "object",
@@ -160,6 +247,68 @@
           "type": "number",
           "minimum": 0,
           "description": "Estimated USD cost of generating this tier's rewrite. Dialectic synthesis is included only if the tier was actually generated (eager mode or user-picked)."
+        }
+      }
+    },
+    "logEvidenceRecord": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "source_ref",
+        "signal",
+        "evidence_hash"
+      ],
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "ledger",
+            "git",
+            "installed_tool_inventory",
+            "skill_version_banner",
+            "hook_signal",
+            "config",
+            "conversation_context"
+          ],
+          "description": "Local evidence source category."
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Local file path + line, commit SHA, hook trace id, or config path. No raw prompt content."
+        },
+        "signal": {
+          "type": "string",
+          "description": "Short redacted signal explaining what the evidence showed."
+        },
+        "evidence_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "sha256 of the cited local snippet or event payload. Stores proof identity without storing prompt content."
+        }
+      }
+    },
+    "yieldEstimate": {
+      "type": "object",
+      "required": [
+        "time_burned_minutes",
+        "recurrence_count",
+        "score"
+      ],
+      "properties": {
+        "time_burned_minutes": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated minutes burned by the inefficiency in this audit window."
+        },
+        "recurrence_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many times the same friction pattern appeared."
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "description": "time_burned_minutes multiplied by recurrence_count."
         }
       }
     }

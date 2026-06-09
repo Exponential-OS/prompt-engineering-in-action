@@ -274,6 +274,12 @@ Pick: [i]mproved · [s]ocratic · [d]ialectic · [e]dit · [n]o, use original
 - `flipped-interaction` — flipped command → question that elicits derivation
 - `meta-shortcut` — detected recurring pattern; offered persistent rule
 
+**Environment-aware productivity footer (Co-Education primary trigger):** In addition to sharpening the user's WORDING, check the prompt's INTENT against the installed environment already visible in this session: Claude Code natives (`Workflow`, agent teams, `/schedule`, `/dream`), loaded skill inventory, MCPs, plugins, fish/presets, YOLO/containment presets, and current capability banners. If one installed capability serves the same intent at higher leverage, append exactly ONE footer line:
+
+`⚡ Productivity: <the prompt you should have typed, given this env> — <tool>, <why better>`
+
+Rules: one line only; zero-latency; no inventory audit or web lookup on this path; no footer when no installed capability clearly beats the user's current approach. This is a teaching nudge, not a detour. Examples: manual 3-agent review spawn → `ultracode: review X` via Workflow; all-night approval clicking → contained YOLO preset; "research ultracode" while it is already live → `/workflows`.
+
 **Telemetry**: every Protocol 3 turn appends one line to `~/.codialectic/growth.jsonl`. Schema is xOS-hydration-compatible (see `~/.codialectic/growth.schema.json` for the canonical schema; each line is self-describing with `schema_version`, `ts`, `prompt_hash` (never content), per-tier scores, `user_picked`, `technique_applied`, `cost_estimate_usd`). xOS can ingest this directly when activated; no co-dialectic source needed.
 
 **Session average** is tracked internally. When the user asks for status or review (`codi status`), report the session trend: `Session average: {X}%`. Example progression:
