@@ -93,10 +93,31 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  const proc = Bun.spawn(
-    ["bun", "run", harness, "--rubric", RUBRIC, "--artifact", artifact, "--silent"],
-    { stdout: "pipe", stderr: "pipe" },
-  );
+  // Write artifact to a temp file (0600) to avoid argv exposure via `ps`.
+  const tmpFile = `/tmp/judge-gate-artifact-${Date.now()}-${process.pid}.txt`;
+  await Bun.write(tmpFile, artifact);
+  try {
+    await Bun.spawn(["chmod", "0600", tmpFile]).exited;
+  } catch {
+    // chmod failure is non-fatal — file is short-lived; proceed.
+  }
+
+  let proc: ReturnType<typeof Bun.spawn>;
+  try {
+    proc = Bun.spawn(
+      ["bun", "run", harness, "--rubric", RUBRIC, "--artifact-file", tmpFile, "--silent"],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+  } catch (err) {
+    await Bun.file(tmpFile).exists().then(() => Bun.spawn(["rm", "-f", tmpFile]).exited).catch(() => {});
+    console.error(
+      `[judge-gate] BLOCKED (FAIL-HARD): could not spawn judge cascade: ${err}.\n` +
+        `Fix: run \`bun run ${harness} --rubric ${RUBRIC} --artifact-file <file>\` manually, ` +
+        `or unset ${GATE_ENV} to disable the gate.`,
+    );
+    return 2;
+  }
+
   const timeoutMs = 90_000;
   const timer = setTimeout(() => proc.kill(), timeoutMs);
   const [stdout, stderr] = await Promise.all([
@@ -106,14 +127,18 @@ async function main(): Promise<number> {
   const exitCode = await proc.exited;
   clearTimeout(timer);
 
+  // Clean up temp file regardless of outcome.
+  await Bun.spawn(["rm", "-f", tmpFile]).exited.catch(() => {});
+
   let verdict: Record<string, unknown>;
   try {
     verdict = JSON.parse(stdout);
   } catch {
+    const timedOut = exitCode === null || (exitCode !== 0 && stdout.trim() === "");
     console.error(
-      `[judge-gate] BLOCKED (FAIL-HARD): cascade did not return JSON (exit ${exitCode}).\n` +
+      `[judge-gate] BLOCKED (FAIL-HARD): cascade ${timedOut ? "timed out after 90s" : "did not return JSON"} (exit ${exitCode}).\n` +
         `stderr: ${stderr.slice(0, 400)}\n` +
-        `Fix: run \`bun run ${harness} --rubric ${RUBRIC} --artifact "test"\` manually, ` +
+        `Fix: run \`bun run ${harness} --rubric ${RUBRIC} --artifact-file <file>\` manually, ` +
         `or unset ${GATE_ENV} to disable the gate.`,
     );
     return 2;

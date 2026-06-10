@@ -1,5 +1,27 @@
 # Changelog — Co-Dialectic
 
+## [4.24.2] — 2026-06-10 — hook-review fixes: timeout units, argv exposure, error message, statusMessage (XOS-6)
+
+### Fixed — hooks.json: timeout values normalized from ms to seconds
+All hooks.json timeout values were authored in milliseconds (3000, 5000, 7000, 2000)
+but the Claude Code schema treats the field as seconds — resulting in effectively
+no timeout enforcement. Normalized to 3, 5, 7, 2 seconds respectively.
+TaskCompleted gate (120) was already correct.
+
+### Fixed — task-completed-judge-gate.ts: argv exposure via --artifact
+Task content was passed as a CLI argument (`--artifact <text>`), making it visible
+in `ps` output. Switched to `--artifact-file` with a mkstemp-style temp file
+(mode 0600, cleaned up after the cascade completes).
+
+### Fixed — task-completed-judge-gate.ts: timeout error message is now explicit
+When the judge cascade times out (90s kill), the FAIL-HARD block previously emitted
+"cascade did not return JSON". The message now explicitly names the timeout:
+"cascade timed out after 90s".
+
+### Added — hooks.json: statusMessage on TaskCompleted hook
+Added `"statusMessage": "Cross-family judge panel reviewing task…"` to the
+TaskCompleted hook entry so Claude Code shows a spinner while the cascade runs.
+
 ## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
 
 ### Fixed — Decision-2 violation in 4.24.0 (shipped CI-red by a concurrent session)
