@@ -1,5 +1,17 @@
 # Changelog — Co-Dialectic
 
+## [4.24.2] — 2026-06-23 — judge-panel: migrate dead Gemini CLI → agy (XOS-58)
+
+### Fixed — cross-family review was down
+The `gemini` CLI became ineligible (`IneligibleTierError: Gemini Code Assist for individuals
+no longer supported → migrate to Antigravity`), so judge-panel's Google lane returned
+`verdict=error` — breaking cross-family review (a load-bearing SDLC Stage-6 gate). Migrated
+the Google lane (`_run_gemini`) to the **`agy`** (Antigravity) CLI on the user's Google AI
+Ultra subscription: `agy --model "<display>" --dangerously-skip-permissions --sandbox -p`.
+Model pins → agy display names (small `Gemini 3.5 Flash (Low)`, tiebreaker `Gemini 3.1 Pro (High)`),
+env-overridable; `family="google"` preserved (cross-family guarantee holds); OAuth env-strip kept.
+Functional smoke: Google(agy)+OpenAI both returned real verdicts on a wrong-facts artifact (fail/100, fail/99).
+
 ## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
 
 ### Fixed — Decision-2 violation in 4.24.0 (shipped CI-red by a concurrent session)

@@ -6,16 +6,15 @@ Escalate to one big-fish cross-family tiebreaker on disagreement or low confiden
 
 Both judges run via OAuth-authenticated local CLIs over the user's paid
 subscriptions — NO API keys required:
-  - Google → `gemini` CLI (Gemini Pro / Advanced subscription via gcloud OAuth)
+  - Google → `agy` CLI (Antigravity OAuth / Ultra entitlement)
   - OpenAI → `codex` CLI (ChatGPT Plus/Pro subscription via codex login OAuth)
 
 Pre-conditions (one-time per machine):
-  1. `gemini` on PATH and authenticated:
-       npm i -g @google/generative-ai-cli   # or vendor instructions
-       gcloud auth login                    # OAuth flow
-       (or: gemini auth login if vendored)
-     OAuth creds land at ~/.gemini/oauth_creds.json. The script does NOT
-     pass GEMINI_API_KEY; the CLI will prefer OAuth when no key is set.
+  1. `agy` on PATH and authenticated:
+       agy --model "Gemini 3.5 Flash (Low)" --dangerously-skip-permissions \
+         --sandbox --print-timeout 120s -p "..."
+     The script does NOT pass GEMINI_API_KEY / GOOGLE_API_KEY /
+     GOOGLE_GENAI_API_KEY; agy uses OAuth / Ultra entitlement.
   2. `codex` on PATH and authenticated:
        codex login                          # OAuth flow opens browser
      Creds land at ~/.codex/auth.json. The CLI uses ChatGPT Plus/Pro
@@ -125,12 +124,12 @@ def _load_env(path: Path) -> dict:
 
 _ENV = _load_env(CYBORG_ENV)
 # NOTE: OAuth path — we deliberately do NOT export *_API_KEY env vars here.
-# The local CLIs (`gemini`, `codex`) authenticate via their own OAuth flows
-# (gcloud / codex login). Setting *_API_KEY would cause some CLIs to prefer
-# the key over OAuth and silently bill against an API account instead of
-# the user's paid Pro subscription.
+# The local CLIs (`agy`, `codex`) authenticate via their own OAuth flows
+# (Antigravity / codex login). Setting *_API_KEY would cause some CLIs to
+# prefer the key over OAuth and silently bill against an API account instead
+# of the user's paid Pro subscription.
 
-SMALL_GEMINI = _ENV.get("GEMINI_CLI_DEFAULT_MODEL", "gemini-3.1-flash-lite-preview")
+SMALL_GEMINI = _ENV.get("GEMINI_CLI_DEFAULT_MODEL", "Gemini 3.5 Flash (Low)")
 # OAuth caveat: ChatGPT-account-auth Codex CLI rejects nano/mini-tier API
 # models with "The 'gpt-5.4-nano' model is not supported when using Codex
 # with a ChatGPT account." So we use a dedicated pin for the OAuth path:
@@ -144,7 +143,7 @@ _OPENAI_OAUTH_DEFAULT = _ENV.get("JUDGE_PANEL_OPENAI_OAUTH_MODEL",
                                   os.environ.get("JUDGE_PANEL_OPENAI_OAUTH_MODEL", "gpt-5.4"))
 SMALL_OPENAI = _OPENAI_OAUTH_DEFAULT
 BIG_OPENAI = _ENV.get("OPENAI_BIG_JUDGE_MODEL", "gpt-5.4")
-BIG_GEMINI = _ENV.get("GEMINI_CLI_PREMIUM_MODEL", "gemini-3.1-pro-preview")
+BIG_GEMINI = _ENV.get("GEMINI_CLI_PREMIUM_MODEL", "Gemini 3.1 Pro (High)")
 # Default tiebreaker: Gemini Pro — cross-family AND cross-tier vs. the
 # small-fish panel (Gemini-Flash + GPT-5.4). On OAuth, both small judges
 # are at the same tier (the cheapest tier each subscription permits), so
@@ -160,6 +159,7 @@ CONFIDENCE_THRESHOLD = int(_ENV.get("JUDGE_PANEL_CONF_THRESHOLD", "80"))
 CALL_TIMEOUT_S = int(_ENV.get("JUDGE_PANEL_TIMEOUT_S", "120"))
 
 # CLI binaries — overridable via env for testing / non-default install paths.
+AGY_BIN = _ENV.get("JUDGE_PANEL_AGY_BIN", os.environ.get("JUDGE_PANEL_AGY_BIN", "agy"))
 GEMINI_BIN = _ENV.get("JUDGE_PANEL_GEMINI_BIN", os.environ.get("JUDGE_PANEL_GEMINI_BIN", "gemini"))
 CODEX_BIN = _ENV.get("JUDGE_PANEL_CODEX_BIN", os.environ.get("JUDGE_PANEL_CODEX_BIN", "codex"))
 
@@ -472,29 +472,32 @@ def _run_openai_api(model: str, prompt: str) -> JurorResult:
 
 
 def _run_gemini(model: str, prompt: str) -> JurorResult:
-    """Call Google Gemini via the OAuth-authenticated `gemini` CLI.
+    """Call Google Gemini via the OAuth-authenticated `agy` CLI.
 
-    Uses the user's gcloud / Gemini Pro subscription. We deliberately do NOT
-    set GEMINI_API_KEY in the subprocess env — the CLI prefers OAuth creds
-    at ~/.gemini/oauth_creds.json when no key is set, which is what we want.
+    Uses the user's Antigravity OAuth / Ultra entitlement. We deliberately do
+    NOT set Gemini API-key env vars in the subprocess env so agy uses OAuth.
 
     API fallback (paid billing, NOT subscription) fires ONLY when:
-      (a) `gemini` is not installed on PATH, AND
+      (a) `agy` is not installed on PATH, AND
       (b) `_API_FALLBACK_APPROVED_GEMINI` is True (CLI flag or env var).
     CLI installed but auth-fail / runtime-error → returns CLI error,
     no fallback (fix CLI setup, do not silently bill API).
     """
-    if not _cli_installed(GEMINI_BIN):
+    if not _cli_installed(AGY_BIN):
         if _API_FALLBACK_APPROVED_GEMINI:
             return _run_gemini_api(model, prompt)
-        return _ensure_cli(GEMINI_BIN, "google", model)  # CLI_NOT_INSTALLED error
+        return _ensure_cli(AGY_BIN, "google", model)  # CLI_NOT_INSTALLED error
     start = time.time()
     # Strip API-key env vars so the CLI uses OAuth (not pay-per-token API).
     child_env = {k: v for k, v in os.environ.items()
                  if k not in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY")}
     try:
         proc = subprocess.run(
-            [GEMINI_BIN, "-m", model, "-p", prompt],
+            [
+                AGY_BIN, "--model", model, "--dangerously-skip-permissions",
+                "--sandbox", "--print-timeout", f"{CALL_TIMEOUT_S}s",
+                "-p", prompt,
+            ],
             capture_output=True, text=True, timeout=CALL_TIMEOUT_S, check=False,
             stdin=subprocess.DEVNULL, env=child_env,
         )
@@ -509,12 +512,11 @@ def _run_gemini(model: str, prompt: str) -> JurorResult:
         return JurorResult(
             model=model, family="google", verdict="error", confidence=0,
             flags=[], latency_ms=latency_ms,
-            error=f"gemini exit {proc.returncode}: {proc.stderr[:500]}",
+            error=f"agy exit {proc.returncode}: {proc.stderr[:500]}",
         )
     raw = proc.stdout.strip()
-    # Gemini CLI prepends informational lines (e.g. "MCP issues detected...").
-    # _parse_verdict already does a regex JSON-object search, so cruft is
-    # tolerated, but record the original raw for debugging.
+    # agy prints clean model output, but _parse_verdict still tolerates wrapper
+    # text via regex JSON-object search.
     return _parse_verdict(
         raw, model=model, family="google",
         tokens_in=_estimate_tokens(prompt), tokens_out=_estimate_tokens(raw),
@@ -628,9 +630,9 @@ def _run_small_panel(prompt: str) -> list:
 
 
 def _run_tiebreaker(prompt: str, tiebreaker_model: str) -> JurorResult:
-    # Default tiebreaker: GPT-5.4 (OpenAI via codex) — cross-family vs Claude
-    # author and cross-family vs Gemini-Flash small judge.
-    if tiebreaker_model.startswith("gemini"):
+    # Default tiebreaker: Gemini Pro (Google via agy) — cross-family vs
+    # Claude author and cross-family vs the GPT small juror.
+    if tiebreaker_model.lower().startswith("gemini"):
         return _run_gemini(tiebreaker_model, prompt)
     return _run_codex(tiebreaker_model, prompt)
 
@@ -638,9 +640,7 @@ def _run_tiebreaker(prompt: str, tiebreaker_model: str) -> JurorResult:
 def _estimate_cost(jurors: list) -> float:
     total = 0.0
     for j in jurors:
-        p = PRICING.get(j.model)
-        if not p:
-            continue
+        p = PRICING.get(j.model, {"in": 0, "out": 0})
         total += (j.tokens_in / 1_000_000) * p["in"]
         total += (j.tokens_out / 1_000_000) * p["out"]
     return round(total, 6)
