@@ -40,7 +40,9 @@ directions. Dreaming is the final CODIFY step here, not the engine.
 
 - Trigger phrases: `forage`, `/forage`, `epistemic foraging`, `tool discovery`,
   `what new tools`, `scan the tool landscape`, `codi forage`
-- Weekly scheduled cron (the default trigger — see Cadence below)
+- Optional weekly scheduled cron (see Cadence below). **Default invocation is
+  MANUAL** — run `/forage` by hand at whatever cadence fits. The cron is an
+  opt-in convenience, not a requirement; the loop is identical either way.
 
 ## Autonomy contract (locked 2026-06-05 00:53 PDT, Anand — supersedes any earlier answer)
 
@@ -193,9 +195,14 @@ Append rows; never rewrite the file wholesale (P15 surgical edits).
 
 ## Cadence
 
-**Weekly.** The tool landscape moves in weeks — faster burns tokens on a
-slow-moving landscape; slower misses adoption windows. The cron passes
-`/forage` as the prompt; the skill is also manually invocable any time.
+**Weekly is the target rhythm** — the tool landscape moves in weeks; faster
+burns tokens on a slow-moving landscape, slower misses adoption windows.
+
+**Invocation is MANUAL by default** (decided 2026-06-23): run `/forage` by hand
+~weekly. An automatic cron is optional and currently NOT wired — a prior
+claude.ai-routine attempt was unreliable (account-scoped triggers + auto-disable
+on repo-access loss). If/when a cron is added it simply passes `/forage` as the
+prompt; the loop is identical to a manual run.
 
 ## Rules
 
