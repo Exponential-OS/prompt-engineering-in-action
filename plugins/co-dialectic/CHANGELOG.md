@@ -1,5 +1,10 @@
 # Changelog — Co-Dialectic
 
+## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
+
+### Fixed — success-path terminal noise
+The unit-of-work-check Stop hook counted the WHOLE dirty tree (`git status --short`) and warned on any change, so a workspace with standing ambient cruft (.claude/settings.local.json, .cursorrules, .mcp.json, untracked dirs) nagged every Stop forever — committing the agent's work never cleared it. Now it baselines the ambient dirty set per session and warns ONLY about paths NEW since session start (committed work clears naturally). Workspace gate + FAIL-HARD preserved.
+
 ## [4.24.2] — 2026-06-23 — judge-panel: migrate dead Gemini CLI → agy (XOS-58)
 
 ### Fixed — cross-family review was down
