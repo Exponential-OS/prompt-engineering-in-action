@@ -6,6 +6,14 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
+
+Fixed success-path terminal noise: the unit-of-work-check Stop hook counted the whole dirty tree and nagged every Stop in any workspace with standing ambient cruft. Now baselines the ambient dirty set per session and warns only about paths new since session start. Workspace gate + FAIL-HARD preserved.
+
+## [4.24.2] — 2026-06-23 — judge-panel: migrate dead Gemini CLI → agy (XOS-58)
+
+Fixed cross-family review: the `gemini` CLI became ineligible (IneligibleTierError → Antigravity), so judge-panel's Google lane returned verdict=error. Migrated the Google lane to the `agy` (Antigravity) CLI on Google AI Ultra; family=google preserved; OAuth env-strip kept.
+
 ## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
 
 Fixed Decision-2 violation in 4.24.0 (teachme hardcoded `brain/sessions/ledger/`, breaking the substrate-agnostic kernel + its own CI). Now reads the ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` with graceful degrade. Also brings 4.24.0 Co-Education Flywheel (teachme tool-lesson domain + Protocol-3 productivity footer + handoff session-end micro-lesson + bidirectional cyborg-side fix).
