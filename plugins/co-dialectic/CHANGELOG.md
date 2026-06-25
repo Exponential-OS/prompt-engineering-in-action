@@ -1,5 +1,10 @@
 # Changelog — Co-Dialectic
 
+## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
+
+### Fixed — cross-plugin Stop-hook race
+In a career-os workspace, career-intelligence's session-logger auto-commits the session's files on every Stop, while this check also runs on Stop — and cross-plugin Stop order is undefined. The check could read `git status` before the session-logger's commit landed and nag about a file (e.g. a WIP handoff) the session-logger commits milliseconds later (then re-dirties next turn → perpetual false alarm). Now it detects an active auto-committer (recent `session-log:` commits in HEAD) and defers — that committer owns the unit-of-work commit there. In workspaces WITHOUT it, the check fires as before. Workspace gate + session-delta + FAIL-HARD preserved.
+
 ## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
 
 ### Fixed — success-path terminal noise

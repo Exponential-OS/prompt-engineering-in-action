@@ -133,6 +133,19 @@ function emitReminder(banner: string, context: string): never {
   process.exit(0);
 }
 
+function sessionLoggerActive(cwd: string): boolean {
+  // XOS-63: a workspace-native auto-committer (career-intelligence's session-logger)
+  // commits the session's files (brain/, WIP/ handoffs, ledger) on EVERY Stop. This
+  // generic check also fires on Stop, and cross-plugin Stop order is undefined — so we
+  // can read `git status` BEFORE the session-logger's commit lands and false-nag about a
+  // file it commits milliseconds later (then re-dirties next turn = perpetual false alarm).
+  // If that committer is active, it owns the unit-of-work commit here → defer (stay silent).
+  // In workspaces WITHOUT it (no `session-log:` commits), this check still fires normally.
+  const log = spawnSync("git", ["-C", cwd, "log", "-6", "--format=%s"], { encoding: "utf8", timeout: 5000 });
+  if (log.status !== 0) return false;
+  return /^session-log:/m.test(log.stdout || "");
+}
+
 async function main(): Promise<void> {
   let input: HookInput = {};
   try {
@@ -145,6 +158,10 @@ async function main(): Promise<void> {
 
   const cwd = input.cwd ?? process.cwd();
   if (!isCareerOsWorkspace(cwd)) emitSilent();
+
+  // XOS-63: if a workspace-native auto-committer (session-logger) is active, it owns the
+  // unit-of-work commit every Stop — this check is redundant and races it. Defer.
+  if (sessionLoggerActive(cwd)) emitSilent();
 
   const currentPaths = gitDirtyPaths(cwd);
   if (!currentPaths) emitSilent(); // not a git repo, can't reason about it

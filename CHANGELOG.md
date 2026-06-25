@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
+
+Cross-plugin Stop-hook race fix: in a career-os workspace the session-logger auto-commits every Stop and this check also runs on Stop with undefined relative order, so it could nag about a file the session-logger commits milliseconds later. Now defers when an auto-committer is active (recent `session-log:` commits). Fires normally elsewhere.
+
 ## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
 
 Fixed success-path terminal noise: the unit-of-work-check Stop hook counted the whole dirty tree and nagged every Stop in any workspace with standing ambient cruft. Now baselines the ambient dirty set per session and warns only about paths new since session start. Workspace gate + FAIL-HARD preserved.
