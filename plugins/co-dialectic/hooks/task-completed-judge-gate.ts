@@ -132,7 +132,7 @@ async function main(): Promise<number> {
     console.error(
       `[judge-gate] BLOCKED (FAIL-HARD): cascade verdict=${final}, flags=[${flags.join(", ")}].\n` +
         `Cross-family CLIs unreachable or failing — the task cannot be verified.\n` +
-        `Fix: check \`gemini --version\` and \`codex --version\` auth, or unset ${GATE_ENV}.`,
+        `Fix: check \`agy --version\` and \`codex --version\` auth, or unset ${GATE_ENV}.`,
     );
     return 2;
   }

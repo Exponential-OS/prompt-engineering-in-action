@@ -49,7 +49,7 @@ FAIL-HARD discipline so the whale never silently absorbs the cost.
 | Tier | Status | Examples |
 |---|---|---|
 | **Local** (free) | Disabled — enable when local LLM installed | DeepSeek-R1 7B, Llama 3.1 8B, Mistral 7B, Phi-4 via Ollama |
-| **Cheap OAuth CLI** | Primary | Gemini Flash Lite (`gemini` CLI), GPT-5.4 via codex CLI (OAuth) |
+| **Cheap OAuth CLI** | Primary | Gemini Flash via `agy`, GPT-5.4 via codex CLI (OAuth) |
 | **Premium API** | NEVER | gpt-4o, claude-* anything, gemini-pro |
 | **Active session model (whale)** | NEVER for orchestration | Sonnet, Opus, Haiku |
 
@@ -110,8 +110,8 @@ When co-dialectic activates, Codi Agents probes the agent pool and reports
 inline. The probe is two independent checks; all run in parallel.
 
 ```bash
-# 1. Gemini OAuth CLI
-command -v gemini >/dev/null && gemini --version >/dev/null 2>&1
+# 1. Antigravity OAuth CLI (Google)
+command -v agy >/dev/null && agy --version >/dev/null 2>&1
 
 # 2. Codex OAuth CLI (OpenAI via ChatGPT subscription)
 command -v codex >/dev/null && codex --version >/dev/null 2>&1
@@ -218,7 +218,7 @@ harness, same cascade, different rubrics, different escalation thresholds.
 ## How to verify Codi Agents are healthy (one command)
 
 ```bash
-( command -v gemini >/dev/null && echo "gemini: ✓" || echo "gemini: ✗" ) ; \
+( command -v agy >/dev/null && echo "agy: ✓" || echo "agy: ✗" ) ; \
 ( command -v codex >/dev/null && echo "codex: ✓" || echo "codex: ✗" )
 ```
 

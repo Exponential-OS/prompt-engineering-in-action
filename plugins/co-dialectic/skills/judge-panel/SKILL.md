@@ -117,12 +117,12 @@ user's paid Pro subscriptions — no API keys required.**
 
 | Family | CLI | OAuth source | Pre-condition |
 |---|---|---|---|
-| Google | `gemini` | `gcloud auth login` → `~/.gemini/oauth_creds.json` | Gemini Pro / Advanced subscription |
+| Google | `agy` | Antigravity OAuth | Ultra entitlement |
 | OpenAI | `codex exec` | `codex login` → `~/.codex/auth.json` | ChatGPT Plus / Pro subscription |
 
-The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY` from
-the subprocess env to force the CLIs onto the OAuth path (otherwise they
-silently fall back to API billing).
+The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, and
+`GOOGLE_GENAI_API_KEY` from the subprocess env to force the CLIs onto the
+OAuth path (otherwise they silently fall back to API billing).
 
 ### API fallback (v3.2.0+) — opt-in, CLI-not-installed only
 
@@ -161,9 +161,9 @@ this is why approval is explicit and per-lane.
 
 | Stage | Model | Family | Role | Notes |
 |---|---|---|---|---|
-| Small-fish | `gemini-3.1-flash-lite-preview` | Google | Panel juror 1 | OAuth-permitted everywhere |
+| Small-fish | `Gemini 3.5 Flash (Low)` | Google | Panel juror 1 | Antigravity OAuth / Ultra |
 | Small-fish | `gpt-5.4` | OpenAI | Panel juror 2 | See OAuth-tier caveat below |
-| Tiebreaker (default) | `gemini-3.1-pro-preview` | Google | Final verdict | Cross-tier vs. Flash-Lite |
+| Tiebreaker (default) | `Gemini 3.1 Pro (High)` | Google | Final verdict | Cross-tier vs. Flash |
 | Tiebreaker (alt) | `gpt-5.4` | OpenAI | Final verdict | Pass via `--tiebreaker gpt-5.4` |
 
 **OAuth-tier caveat (the small/big cascade collapses on the OpenAI lane).**
@@ -172,8 +172,8 @@ nano/mini-tier models with: `"The 'gpt-5.4-nano' model is not supported
 when using Codex with a ChatGPT account."` So the small-fish OpenAI juror
 defaults to `gpt-5.4` (the cheapest ChatGPT-Plus-permitted tier). On the
 OpenAI lane, small=big in tier — but the cross-FAMILY cascade still holds
-(Gemini-Flash-Lite vs. GPT-5.4 are different training distributions).
-The default tiebreaker is therefore `gemini-3.1-pro-preview` — crossing
+(Gemini Flash vs. GPT-5.4 are different training distributions).
+The default tiebreaker is therefore `Gemini 3.1 Pro (High)` — crossing
 the tier boundary inside Google AND remaining cross-family vs. both small
 judges and the Claude author.
 
@@ -242,7 +242,7 @@ verdict without prompting the main LLM again.
   "cascade": {
     "stage_1_small_fish": [
       {
-        "model": "gemini-3.1-flash-lite-preview",
+        "model": "Gemini 3.5 Flash (Low)",
         "family": "google",
         "verdict": "pass",
         "confidence": 88,
@@ -339,7 +339,7 @@ to the user is zero per call up to subscription quota.
 
 OAuth tradeoffs the user is consciously accepting:
 1. **Latency:** local-CLI calls add ~3-10s of process startup per call
-   (codex spins up a session, gemini parses MCP config). Wall-clock
+   (codex spins up a session, agy starts an Antigravity run). Wall-clock
    per cascade is ~10-20s vs. ~2-5s for the API path. Cross-family
    verification is still in P11 / P21 budget.
 2. **Subscription rate-limits:** ChatGPT Plus and Gemini Pro have

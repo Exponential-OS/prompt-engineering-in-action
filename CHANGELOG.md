@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.24.5] — 2026-06-25 — judge-panel: migrate canonical judge_panel.ts → agy + delete stale .py (XOS-73)
+
+Cross-family review was broken on the live path: XOS-58 migrated the dead `judge_panel.py`, leaving the canonical `judge_panel.ts` on the defunct `gemini` CLI. Now `.ts` uses `agy` (OAuth); `.py` deleted (dual-source killed); eval + refs repointed. Functional: real verdict returned.
+
 ## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
 
 Cross-plugin Stop-hook race fix: in a career-os workspace the session-logger auto-commits every Stop and this check also runs on Stop with undefined relative order, so it could nag about a file the session-logger commits milliseconds later. Now defers when an auto-committer is active (recent `session-log:` commits). Fires normally elsewhere.

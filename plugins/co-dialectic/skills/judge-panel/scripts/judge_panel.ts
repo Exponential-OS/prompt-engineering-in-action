@@ -7,13 +7,15 @@
  *
  * Both judges run via OAuth-authenticated local CLIs over the user's paid
  * subscriptions — NO API keys required:
- *   - Google → `gemini` CLI (Gemini Pro / Advanced subscription via gcloud OAuth)
+ *   - Google → `agy` CLI (Antigravity OAuth / Ultra entitlement)
  *   - OpenAI → `codex` CLI (ChatGPT Plus/Pro subscription via codex login OAuth)
  *
  * Pre-conditions (one-time per machine):
- *   1. `gemini` on PATH and authenticated.
- *      OAuth creds at ~/.gemini/oauth_creds.json. The script does NOT pass
- *      GEMINI_API_KEY; the CLI prefers OAuth when no key is set.
+ *   1. `agy` on PATH and authenticated:
+ *      agy --model "Gemini 3.5 Flash (Low)" --dangerously-skip-permissions \
+ *        --sandbox --print-timeout 120s -p "..."
+ *      The script does NOT pass GEMINI_API_KEY / GOOGLE_API_KEY /
+ *      GOOGLE_GENAI_API_KEY; agy uses OAuth / Ultra entitlement.
  *   2. `codex` on PATH and authenticated (`codex login`).
  *      Creds at ~/.codex/auth.json. CLI uses ChatGPT Plus/Pro entitlements.
  *
@@ -154,7 +156,7 @@ function loadEnv(path: string): Record<string, string> {
 const ENV_FILE = loadEnv(CYBORG_ENV);
 
 const SMALL_GEMINI =
-  ENV_FILE["GEMINI_CLI_DEFAULT_MODEL"] ?? "gemini-3.1-flash-lite-preview";
+  ENV_FILE["GEMINI_CLI_DEFAULT_MODEL"] ?? "Gemini 3.5 Flash (Low)";
 
 // OAuth caveat: ChatGPT-account-auth Codex CLI rejects nano/mini-tier API models.
 // JUDGE_PANEL_OPENAI_OAUTH_MODEL takes precedence; default gpt-5.4.
@@ -165,7 +167,7 @@ const OPENAI_OAUTH_DEFAULT =
 const SMALL_OPENAI = OPENAI_OAUTH_DEFAULT;
 const BIG_OPENAI = ENV_FILE["OPENAI_BIG_JUDGE_MODEL"] ?? "gpt-5.4";
 const BIG_GEMINI =
-  ENV_FILE["GEMINI_CLI_PREMIUM_MODEL"] ?? "gemini-3.1-pro-preview";
+  ENV_FILE["GEMINI_CLI_PREMIUM_MODEL"] ?? "Gemini 3.1 Pro (High)";
 
 // Default tiebreaker: Gemini Pro — cross-family + cross-tier vs. the small-fish panel.
 const DEFAULT_TIEBREAKER =
@@ -180,10 +182,10 @@ const CONFIDENCE_THRESHOLD = parseInt(
 const CALL_TIMEOUT_S = parseInt(ENV_FILE["JUDGE_PANEL_TIMEOUT_S"] ?? "120", 10);
 const CALL_TIMEOUT_MS = CALL_TIMEOUT_S * 1000;
 
-const GEMINI_BIN =
-  ENV_FILE["JUDGE_PANEL_GEMINI_BIN"] ??
-  process.env.JUDGE_PANEL_GEMINI_BIN ??
-  "gemini";
+const AGY_BIN =
+  ENV_FILE["JUDGE_PANEL_AGY_BIN"] ??
+  process.env.JUDGE_PANEL_AGY_BIN ??
+  "agy";
 const CODEX_BIN =
   ENV_FILE["JUDGE_PANEL_CODEX_BIN"] ??
   process.env.JUDGE_PANEL_CODEX_BIN ??
@@ -712,13 +714,14 @@ function envWithoutKeys(removeKeys: string[]): Record<string, string | undefined
 }
 
 async function runGemini(model: string, prompt: string): Promise<JurorResult> {
-  if (!cliInstalled(GEMINI_BIN)) {
+  if (!cliInstalled(AGY_BIN)) {
     if (API_FALLBACK_APPROVED_GEMINI) {
       return runGeminiApi(model, prompt);
     }
-    return ensureCli(GEMINI_BIN, "google", model) as JurorResult;
+    return ensureCli(AGY_BIN, "google", model) as JurorResult;
   }
   const start = Date.now();
+  // Strip API-key env vars so agy uses OAuth (not pay-per-token API).
   const childEnv = envWithoutKeys([
     "GEMINI_API_KEY",
     "GOOGLE_API_KEY",
@@ -728,7 +731,17 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
   let result: { exitCode: number; stdout: string; stderr: string; timedOut: boolean };
   try {
     result = await spawnWithTimeout(
-      [GEMINI_BIN, "-m", model, "-p", prompt],
+      [
+        AGY_BIN,
+        "--model",
+        model,
+        "--dangerously-skip-permissions",
+        "--sandbox",
+        "--print-timeout",
+        `${CALL_TIMEOUT_S}s`,
+        "-p",
+        prompt,
+      ],
       childEnv,
       CALL_TIMEOUT_MS,
     );
@@ -738,7 +751,7 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
       model,
       "google",
       [],
-      `gemini spawn failed: ${msg}`,
+      `agy spawn failed: ${msg}`,
       Date.now() - start,
     );
   }
@@ -762,7 +775,7 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
       model,
       "google",
       [],
-      `gemini exit ${result.exitCode}: ${result.stderr.slice(0, 500)}`,
+      `agy exit ${result.exitCode}: ${result.stderr.slice(0, 500)}`,
       latencyMs,
     );
   }
@@ -942,7 +955,7 @@ async function runTiebreaker(
   prompt: string,
   tiebreakerModel: string,
 ): Promise<JurorResult> {
-  if (tiebreakerModel.startsWith("gemini")) {
+  if (tiebreakerModel.toLowerCase().startsWith("gemini")) {
     return runGemini(tiebreakerModel, prompt);
   }
   return runCodex(tiebreakerModel, prompt);

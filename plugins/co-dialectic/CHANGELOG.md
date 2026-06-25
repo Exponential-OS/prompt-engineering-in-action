@@ -1,5 +1,10 @@
 # Changelog — Co-Dialectic
 
+## [4.24.5] — 2026-06-25 — judge-panel: migrate CANONICAL judge_panel.ts → agy + delete stale .py (XOS-73)
+
+### Fixed — cross-family review was broken on the live path
+XOS-58 migrated the Google lane gemini→agy on `judge_panel.py`, but `.py` was the **deprecated** harness — the canonical one is `judge_panel.ts` (hooks, SKILL.md, installer, CI all invoke it), which still shelled out to the dead `gemini` CLI (`IneligibleTierError`). So XOS-58 was a no-op on the path that runs, and the stray `.py` made it look migrated. Now: `judge_panel.ts` Google lane uses the `agy` (Antigravity) CLI over OAuth (mirrors the `.py` template; family=google; API-key env-strip preserved); `judge_panel.py` **deleted** (kills the dual source — signal-pollution invariant); `tests/judge_panel_eval.py` + SKILL/ARCHITECTURE refs repointed to `.ts`. Functional: canonical harness returns a real verdict, not the gemini error.
+
 ## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
 
 ### Fixed — cross-plugin Stop-hook race

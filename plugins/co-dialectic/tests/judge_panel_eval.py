@@ -25,7 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS_DIR = ROOT / "tests" / "corpus"
-HARNESS = ROOT / "skills" / "judge-panel" / "scripts" / "judge_panel.py"
+HARNESS = ROOT / "skills" / "judge-panel" / "scripts" / "judge_panel.ts"
 
 
 def load_corpus(filter_id: str | None = None) -> list[dict]:
@@ -42,7 +42,7 @@ def run_case(case: dict) -> dict:
     start = time.time()
     proc = subprocess.run(
         [
-            "python3", str(HARNESS),
+            "bun", "run", str(HARNESS),
             "--rubric", case["rubric"],
             "--artifact", case["artifact"],
             "--silent",

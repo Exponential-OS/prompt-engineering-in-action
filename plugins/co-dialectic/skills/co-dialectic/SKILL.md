@@ -46,7 +46,7 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 - If you default to Cruise mode (e.g., in an IDE), add: "Starting in 🚗 Cruise. Type `codi drive` to switch to hands-on sharpening."
 - After first reply, show only the **persona** on each response. Surface other dimensions only when they change or need attention.
-- **Fish health probe is MANDATORY on Protocol 0 (including re-init).** Before completing the first reply, run the two health checks in parallel via Bash: `command -v gemini >/dev/null && echo "gemini: ✓" || echo "gemini: ✗"` and `command -v codex >/dev/null && echo "codex: ✓" || echo "codex: ✗"`. Append the result to the welcome message. If fish_count == 0, surface the FAIL-HARD remediation block immediately — Protocol 8 T3 dispatch cannot fire without fish. Do NOT skip this probe under any condition including compaction re-init.
+- **Fish health probe is MANDATORY on Protocol 0 (including re-init).** Before completing the first reply, run the two health checks in parallel via Bash: `command -v agy >/dev/null && echo "agy: ✓" || echo "agy: ✗"` and `command -v codex >/dev/null && echo "codex: ✓" || echo "codex: ✗"`. Append the result to the welcome message. If fish_count == 0, surface the FAIL-HARD remediation block immediately — Protocol 8 T3 dispatch cannot fire without fish. Do NOT skip this probe under any condition including compaction re-init.
 
 ### Protocol 1: Status Line
 
@@ -678,7 +678,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.24.4
+**Version:** 4.24.5
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0
