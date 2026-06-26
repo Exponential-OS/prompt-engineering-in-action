@@ -1,5 +1,10 @@
 # Changelog — Co-Dialectic
 
+## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
+
+### Added
+- The status line now ends with `· [HH:MM]` — the OS-grounded time (Protocol 17; never recalled). Two purposes: (1) visible proof the response is temporally grounded, (2) a scroll/search anchor so long automated runs can be navigated back to a moment. Day boundary → `[MM-DD HH:MM]`; omit if no grounded Now. Synced across all four definitions (SKILL.md, SKILL-lite.md, user-prompt-submit.ts reminder + onboarding, session-start.sh).
+
 ## [4.24.5] — 2026-06-25 — judge-panel: migrate CANONICAL judge_panel.ts → agy + delete stale .py (XOS-73)
 
 ### Fixed — cross-family review was broken on the live path

@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
+
+Status line now ends with `· [HH:MM]` (OS-grounded, Protocol 17) — visible temporal grounding + a scroll anchor for long automated runs. Synced across SKILL.md, SKILL-lite.md, the user-prompt-submit reminder, and session-start.sh.
+
 ## [4.24.5] — 2026-06-25 — judge-panel: migrate canonical judge_panel.ts → agy + delete stale .py (XOS-73)
 
 Cross-family review was broken on the live path: XOS-58 migrated the dead `judge_panel.py`, leaving the canonical `judge_panel.ts` on the defunct `gemini` CLI. Now `.ts` uses `agy` (OAuth); `.py` deleted (dual-source killed); eval + refs repointed. Functional: real verdict returned.

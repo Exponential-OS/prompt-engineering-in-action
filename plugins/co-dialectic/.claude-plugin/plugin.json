@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
   "description": "Co-Dialectic v4.23.0 - FORAGE: Epistemic Foraging flywheel. New /forage skill codifies the Constitution's Epistemic Foraging principle as a weekly tool-discovery loop: FORAGE (marketplace diff + GitHub trending + claude-automation-recommender + P20 authority-weighted web sweep) -> SCORE against the week's WORKSPACE session-ledger friction (not novelty, never a shared brain's ledger) -> VERIFY in a throwaway worktree (never propose blind; FOUNDATION-FIRST) -> PROPOSE: install is HUMAN-GATED, no auto-install from any marketplace; each verify-passed keeper files its own approval ticket with evidence + one-command rollback, max 3 per run -> CODIFY (pending/keepers/rejects/deferred + memory entry + summary audit ticket). Substrate paths resolved via $CO_DIALECTIC_SESSION_LEDGER_DIR / $CO_DIALECTIC_TOOLS_REGISTRY workspace-adapter vars with graceful OSS fallback (Decision-2 compliant).",
-  "version": "4.24.5",
+  "version": "4.24.6",
   "depends_on_kernel": [
     "brain-kernel >= 1.0.0",
     "co-dialectic >= 4.16.0"
