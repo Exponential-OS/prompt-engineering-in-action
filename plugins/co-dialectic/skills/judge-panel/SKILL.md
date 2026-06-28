@@ -10,7 +10,7 @@ description: >
   cross-family tiebreaker. Returns verdict + confidence + which judges fired
   + token cost.
 metadata:
-  version: "3.3.0"
+  version: "3.4.0"
   author: "Anand Vallamsetla"
   tier: "core"
   plugin_number: 4
@@ -109,6 +109,76 @@ JSON verdict. Skip the conversational framing.
         │  verdict packet  │
         └──────────────────┘
 ```
+
+## Persona-driven judges (v3.4.0+)
+
+Judges default to a generic evaluation lens. For rubrics where expert taste
+matters more than factual accuracy, the panel now injects a **persona line**
+into each judge's prompt:
+
+> "Judge as {persona(s)} — channel the top-0.001% standard in their domain;
+> scrutinize as they would and catch the minute details they would catch."
+
+**Why personas.** Apple didn't become Apple without obsession over every
+minute UX detail. A generic judge rubber-stamps; a Jobs + Ive judge catches
+the misplaced arrow, the inconsistent spacing, the CTA that creates
+micro-friction. The persona is a quality FLOOR, not a restriction — it
+raises scrutiny to the caliber the domain actually demands.
+
+**Persona is LAYERED ON TOP of cross-family diversity.** The two small judges
+remain Gemini (Google family) + Codex (OpenAI family); each also adopts the
+same persona lens. Cross-family guarantee is unchanged.
+
+### CLI option
+
+```
+bun run judge_panel.ts --rubric <slug> --artifact "..." --persona "Steve Jobs + Jony Ive"
+```
+
+Also readable from environment:
+
+```
+JUDGE_PANEL_PERSONAS="Steve Jobs + Jony Ive" bun run judge_panel.ts ...
+```
+
+The `--persona` flag (or `JUDGE_PANEL_PERSONAS` env var) **always overrides**
+the rubric default. Pass an empty string or omit the flag to use the default.
+
+### Default persona map (rubric → persona)
+
+| Rubric | Default persona | Rationale |
+|---|---|---|
+| `ux` | Steve Jobs + Jony Ive | UX demands obsession over minute details; Jobs (product vision) + Ive (tactile/visual craft) together set the highest bar |
+| `visual` | Steve Jobs + Jony Ive | Visual design — same Jobs + Ive lens; they catch the misplaced arrow and inconsistent spacing before users do |
+| `product` | Steve Jobs + Jony Ive | Product review benefits from Jobs' ruthless simplicity + Ive's craft discipline |
+| `custom-ux` | Steve Jobs + Jony Ive | User-defined UX rubric; defaults to the design-excellence lens |
+| `spec-coherence` | Jeff Dean | Architecture review needs systems-design rigor at scale; Jeff Dean's lens catches the O(n²) in the happy-path spec |
+| `architecture` | Jeff Dean | Same lens as spec-coherence — distributed-systems traps + scale failure modes |
+| `prompt-quality` | Shreyas Doshi | Prompt quality = product quality; Doshi's discipline surfaces vague intent and missing success criteria |
+| `prompt-sharpen` | Shreyas Doshi | Sharpening a prompt is a product-spec act; same lens as prompt-quality |
+| `hallucination` | none | Factual grounding — expert taste doesn't help; a fabricated citation is wrong regardless of domain |
+| `flattery` | none | Sycophancy detection is structural — presence of specific marker phrases, not aesthetic judgment |
+| `patent-safety` | none | §102 prior-art risk is legal/technical fact; stylistic persona adds noise |
+| `calibration-scan` | none | Same as flattery — detecting presence of specific marker phrases |
+| `hallucination-preflight` | none | Risk classification — factual, not stylistic |
+| `t0t2-jury` | none | Lightweight pass/fail for internal reversible artifacts |
+| `custom` | none | User controls the rubric; pass `--persona` explicitly if a lens is needed |
+
+### The `persona` field in output JSON
+
+The cascade result now includes a top-level `persona` field showing which
+persona (if any) was active:
+
+```json
+{
+  "version": "3.4.0",
+  "rubric": "spec-coherence",
+  "persona": "Jeff Dean",
+  ...
+}
+```
+
+`null` when no persona was active (factual rubrics + custom with no flag).
 
 ## Auth model — OAuth local CLIs (v3.3.0+)
 
@@ -217,7 +287,8 @@ The agent invokes the skill by calling the bundled TypeScript harness:
 ```
 bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric "<rubric slug or inline rubric>" \
-  --artifact-file <path-to-artifact>
+  --artifact-file <path-to-artifact> \
+  [--persona "<name(s)>"]
 ```
 
 Or by passing the artifact inline:
@@ -226,6 +297,15 @@ Or by passing the artifact inline:
 bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric hallucination \
   --artifact "The response text to evaluate..."
+```
+
+With an explicit persona override (overrides the rubric default):
+
+```
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
+  --rubric spec-coherence \
+  --artifact-file spec.md \
+  --persona "Linus Torvalds"
 ```
 
 Output is a single JSON object on stdout (schema below). No other stdout

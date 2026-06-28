@@ -49,7 +49,7 @@ import {
 import { homedir, tmpdir } from "os";
 import { join } from "path";
 
-const VERSION = "3.2.0";
+const VERSION = "3.4.0";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,6 +71,7 @@ interface JurorResult {
 interface CascadeResult {
   version: string;
   rubric: string;
+  persona: string | null;
   cascade: {
     stage_1_small_fish: JurorResult[];
     agreement: string;
@@ -91,6 +92,7 @@ interface ParsedArgs {
   artifact: string | null;
   artifactFile: string | null;
   tiebreaker: string | null;
+  persona: string | null;
   silent: boolean;
   apiFallbackApproved: boolean;
   apiFallbackApprovedGemini: boolean;
@@ -263,8 +265,69 @@ verdict = pass (ship it — meets bar for T0-T2); fail (block — specific defec
 flags[0] = ONE-LINE reason (what makes it pass/fail/uncertain). Be terse. T3-T4 artifacts should escalate to the full judge-panel cascade — say so in flags if the artifact's stakes are higher than T2.`,
 };
 
-function buildPrompt(rubricText: string, artifact: string): string {
-  return `${rubricText}
+// ─── Persona-driven judges ───────────────────────────────────────────────────
+//
+// A persona line is prepended to each judge's prompt so the judge channels a
+// specific expert lens rather than producing a generic LLM review.
+//
+// Factual/sycophancy rubrics (hallucination, flattery, patent-safety,
+// calibration-scan, hallucination-preflight) intentionally have null defaults
+// — these require grounded detection, not stylistic judgment.
+//
+// The --persona CLI flag (or JUDGE_PANEL_PERSONAS env var) always wins over
+// the rubric default.
+
+export const RUBRIC_DEFAULT_PERSONAS: Record<string, string | null> = {
+  // Factual / sycophancy rubrics — grounded detection, not stylistic judgment.
+  // Expert taste adds noise here; a fabricated citation is wrong regardless of lens.
+  hallucination: null,
+  flattery: null,
+  "patent-safety": null,
+  "calibration-scan": null,
+  "hallucination-preflight": null,
+  "persona-detect": null,
+  "t0t2-jury": null,
+  custom: null,
+
+  // Design / UX / product rubrics — these demand the minute-details lens of world-class
+  // product and design thinkers.  Steve Jobs + Jony Ive together cover product vision
+  // (Jobs) and tactile/visual craft (Ive).
+  ux: "Steve Jobs + Jony Ive",
+  visual: "Steve Jobs + Jony Ive",
+  product: "Steve Jobs + Jony Ive",
+  "custom-ux": "Steve Jobs + Jony Ive",
+
+  // Architecture / systems rubrics — Jeff Dean's lens catches the O(n²) you missed
+  // in the happy-path spec and the distributed-systems traps lurking in the design.
+  "spec-coherence": "Jeff Dean",
+  architecture: "Jeff Dean",
+
+  // Prompt-engineering rubrics — sharpening/quality is a product-spec act;
+  // Doshi's product-quality discipline surfaces vague intent and missing success criteria.
+  "prompt-quality": "Shreyas Doshi",
+  "prompt-sharpen": "Shreyas Doshi",
+};
+
+/**
+ * Resolve which persona (if any) to inject into each judge prompt.
+ *
+ * Priority: cliPersona (--persona flag / JUDGE_PANEL_PERSONAS env) >
+ *           rubric default from RUBRIC_DEFAULT_PERSONAS >
+ *           null (no injection)
+ */
+export function resolvePersona(
+  rubric: string,
+  cliPersona: string | null,
+): string | null {
+  if (cliPersona && cliPersona.trim()) return cliPersona.trim();
+  return RUBRIC_DEFAULT_PERSONAS[rubric] ?? null;
+}
+
+export function buildPrompt(rubricText: string, artifact: string, persona?: string | null): string {
+  const personaPrefix = persona && persona.trim()
+    ? `Judge as ${persona.trim()} — channel the top-0.001% standard in their domain; scrutinize as they would and catch the minute details they would catch.\n\n`
+    : "";
+  return `${personaPrefix}${rubricText}
 
 ARTIFACT:
 \`\`\`
@@ -977,6 +1040,7 @@ async function runCascade(
   artifact: string,
   rubricText: string | null,
   tiebreaker: string | null,
+  cliPersona: string | null = null,
 ): Promise<CascadeResult> {
   const tb = tiebreaker ?? DEFAULT_TIEBREAKER;
   let template: string;
@@ -991,7 +1055,8 @@ async function runCascade(
     template = t;
   }
 
-  const prompt = buildPrompt(template, artifact);
+  const effectivePersona = resolvePersona(rubricSlug, cliPersona);
+  const prompt = buildPrompt(template, artifact, effectivePersona);
 
   // Stage 1 — small-fish panel
   const small = await runSmallPanel(prompt);
@@ -1059,6 +1124,7 @@ async function runCascade(
   return {
     version: VERSION,
     rubric: rubricSlug,
+    persona: effectivePersona,
     cascade: {
       stage_1_small_fish: small,
       agreement,
@@ -1081,10 +1147,21 @@ function printUsageError(msg: string): never {
     `judge_panel.ts: ${msg}\n\n` +
       "Usage: bun run judge_panel.ts --rubric <slug> (--artifact <text> | --artifact-file <path>)\n" +
       "                                  [--rubric-text <text>] [--tiebreaker <model>]\n" +
+      "                                  [--persona <name(s)>]\n" +
       "                                  [--silent]\n" +
       "                                  [--api-fallback-approved]\n" +
       "                                  [--api-fallback-approved-gemini]\n" +
-      "                                  [--api-fallback-approved-openai]\n",
+      "                                  [--api-fallback-approved-openai]\n" +
+      "\n" +
+      "  --persona        Inject a persona lens into every judge prompt.\n" +
+      "                   E.g.: --persona \"Steve Jobs + Jony Ive\"\n" +
+      "                   Also readable from env: JUDGE_PANEL_PERSONAS\n" +
+      "                   Overrides any rubric default from RUBRIC_DEFAULT_PERSONAS.\n" +
+      "                   Built-in defaults by rubric:\n" +
+      "                     spec-coherence   → Jeff Dean\n" +
+      "                     prompt-quality   → Shreyas Doshi\n" +
+      "                     prompt-sharpen   → Shreyas Doshi\n" +
+      "                     hallucination / flattery / patent-safety → none\n",
   );
   process.exit(2);
 }
@@ -1096,6 +1173,8 @@ function parseArgs(argv: string[]): ParsedArgs {
     artifact: null,
     artifactFile: null,
     tiebreaker: null,
+    // Seed from env first; CLI flag (parsed below) wins over it.
+    persona: process.env["JUDGE_PANEL_PERSONAS"] ?? null,
     silent: false,
     apiFallbackApproved: false,
     apiFallbackApprovedGemini: false,
@@ -1116,6 +1195,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 
     if (a === "--rubric") {
       args.rubric = needsValue("--rubric");
+    } else if (a === "--persona") {
+      args.persona = needsValue("--persona");
     } else if (a === "--rubric-text") {
       args.rubricText = needsValue("--rubric-text");
     } else if (a === "--artifact") {
@@ -1209,6 +1290,7 @@ async function main(): Promise<number> {
       artifact,
       args.rubricText,
       args.tiebreaker,
+      args.persona,
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -1236,12 +1318,14 @@ async function main(): Promise<number> {
   return 0;
 }
 
-main()
-  .then((code) => process.exit(code))
-  .catch((err: unknown) => {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(
-      JSON.stringify({ version: VERSION, error: `uncaught: ${msg}` }) + "\n",
-    );
-    process.exit(2);
-  });
+if (import.meta.main) {
+  main()
+    .then((code) => process.exit(code))
+    .catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      process.stderr.write(
+        JSON.stringify({ version: VERSION, error: `uncaught: ${msg}` }) + "\n",
+      );
+      process.exit(2);
+    });
+}
