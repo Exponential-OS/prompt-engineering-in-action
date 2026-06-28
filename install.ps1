@@ -47,19 +47,42 @@ Write-Host "🧠 Co-Dialectic Manager (v$Version)" -ForegroundColor Cyan
 Write-Host "=================================="
 Write-Host ""
 
+function Read-InstallerPrompt {
+    param([string]$PromptText, [string]$DefaultValue)
+
+    $Choice = $null
+    $CanPrompt = $false
+    try {
+        $CanPrompt = [Environment]::UserInteractive -and (-not [Console]::IsInputRedirected)
+    } catch {
+        $CanPrompt = $false
+    }
+
+    if ($CanPrompt) {
+        try {
+            $Choice = Read-Host "$PromptText"
+        } catch {
+            $Choice = $DefaultValue
+        }
+    } else {
+        Write-Host "$PromptText $DefaultValue (auto-selected)"
+        $Choice = $DefaultValue
+    }
+
+    if ([string]::IsNullOrWhiteSpace($Choice)) { return $DefaultValue }
+    return $Choice
+}
+
 function Ask-User {
     param([string]$PromptText, [string]$DefaultValue)
-    $Choice = Read-Host "$PromptText"
-    if ([string]::IsNullOrWhiteSpace($Choice)) { $Choice = $DefaultValue }
+    $Choice = Read-InstallerPrompt $PromptText $DefaultValue
     if ($Choice -match "^[Yy]") { return $true }
     return $false
 }
 
 function Ask-Choice {
     param([string]$PromptText, [string]$DefaultValue)
-    $Choice = Read-Host "$PromptText"
-    if ([string]::IsNullOrWhiteSpace($Choice)) { return $DefaultValue }
-    return $Choice
+    return Read-InstallerPrompt $PromptText $DefaultValue
 }
 
 function Get-RepoFileContent {
@@ -461,7 +484,8 @@ if (Test-Path $AntigravityPath) {
 
 # 2. Claude Code Support (dedicated skill file, full overwrite)
 $ClaudePath = Join-Path $env:USERPROFILE ".claude"
-if (Test-Path $ClaudePath) {
+$ClaudeCli = Get-Command claude -ErrorAction SilentlyContinue
+if ((Test-Path $ClaudePath) -or $ClaudeCli) {
     $Target = Join-Path $ClaudePath "skills\co-dialectic\SKILL.md"
     if (-not (Test-Path (Split-Path $Target))) { New-Item -ItemType Directory -Force -Path (Split-Path $Target) | Out-Null }
     Install-Skill $Target "✅ Detected Claude Code. Install here? [Y/n]" "y" "claude_code"

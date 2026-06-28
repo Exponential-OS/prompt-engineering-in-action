@@ -83,6 +83,23 @@ sessions/ledger/**, writes references/tools-registry.md.
 
 See `plugins/co-dialectic/CHANGELOG.md` for the full per-file detail.
 
+## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
+
+### Added — named-person-claim-grounding semantic gate
+- New cyborg rule (three-layer TS+Bun): PreToolUse hook on Write|Edit scans proposed content for biographical/logistical/relational claims about named people and BLOCKs unverified claims, fail-closed on error. Covers the 5 acceptance shapes from issue #11 (pronoun, geography, schedule, vague-they, voice attribution).
+- Constitution Ground Zero stub: NAMED-PERSON-CLAIM-GROUNDING INVARIANT.
+
+### Added — Protocol 3 referent-ambiguity detection
+- `SKILL-lite.md` Protocol 3 gains a "Referent ambiguity" criterion: when a prompt contains a pronoun / possessive / vague subject with ≥2 candidate antecedents, do NOT infer — disambiguate or ask ONE clarify question first.
+
+### Fixed — honesty:undefined cosmetic bug in survival reminder
+- `buildReminder()` emitted the literal `"honesty:undefined"` when `state.json` lacked the `honesty` field. Now only appends the suffix when honesty is a non-empty, non-default string; same defensive treatment for `state.mode` and `state.wildcard`. 6 new tests added.
+
+### Why this exists
+- **Issue #11 CRITICAL** — 5 same-class named-person hallucinations shipped in one ~50-minute session. Pattern was structural (referent ambiguity → partial-signal inference → confident ship), not "be more careful." This release ships the structural fix.
+
+See `plugins/co-dialectic/CHANGELOG.md` for the full per-file detail.
+
 ## [4.19.1] — 2026-05-22 — HOTFIX: Stop hook schema compliance (unit-of-work-check)
 
 ### Fixed

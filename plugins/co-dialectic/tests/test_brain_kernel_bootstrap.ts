@@ -70,9 +70,14 @@ async function initGitRepo(dir: string): Promise<void> {
   await commit.exited;
 }
 
-// Resolve paths relative to the test file
+// Resolve paths relative to the test file. Prefer the real sibling xos checkout
+// when present, but keep the package test self-contained for clean worktrees.
 const PLUGIN_ROOT = join(import.meta.dir, "..");
-const BRAIN_KERNEL_PATH = join(PLUGIN_ROOT, "..", "..", "..", "xos", "plugins", "brain-kernel", "kernel.ts");
+const REAL_BRAIN_KERNEL_PATH = join(PLUGIN_ROOT, "..", "..", "..", "xos", "plugins", "brain-kernel", "kernel.ts");
+const FIXTURE_BRAIN_KERNEL_PATH = join(import.meta.dir, "fixtures", "brain-kernel", "kernel.ts");
+const BRAIN_KERNEL_PATH = existsSync(REAL_BRAIN_KERNEL_PATH)
+  ? REAL_BRAIN_KERNEL_PATH
+  : FIXTURE_BRAIN_KERNEL_PATH;
 const BOOTSTRAP_PATH = join(PLUGIN_ROOT, "brain-kernel-bootstrap.ts");
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
