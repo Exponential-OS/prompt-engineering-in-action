@@ -18,6 +18,8 @@ Output: human-readable summary on stdout + machine-readable results JSON.
 
 import argparse
 import json
+import os
+import shutil
 import subprocess
 import sys
 import time
@@ -26,6 +28,79 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS_DIR = ROOT / "tests" / "corpus"
 HARNESS = ROOT / "skills" / "judge-panel" / "scripts" / "judge_panel.ts"
+
+
+TRUTHY = {"1", "true", "yes", "on"}
+
+
+def load_panel_env() -> dict[str, str]:
+    env_path = Path(
+        os.environ.get(
+            "CO_DIALECTIC_ENV",
+            str(Path.home() / ".co-dialectic" / ".env"),
+        )
+    )
+    try:
+        text = env_path.read_text()
+    except OSError:
+        return {}
+
+    env: dict[str, str] = {}
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        value = value.strip()
+        if (
+            (value.startswith('"') and value.endswith('"'))
+            or (value.startswith("'") and value.endswith("'"))
+        ):
+            value = value[1:-1]
+        env[key.strip()] = value
+    return env
+
+
+def unique(items: list[str]) -> list[str]:
+    seen = set()
+    out = []
+    for item in items:
+        if item and item not in seen:
+            seen.add(item)
+            out.append(item)
+    return out
+
+
+def judge_cli_bins() -> list[str]:
+    panel_env = load_panel_env()
+    google_bin = (
+        panel_env.get("JUDGE_PANEL_AGY_BIN")
+        or os.environ.get("JUDGE_PANEL_AGY_BIN")
+        or "agy"
+    )
+    openai_bin = (
+        panel_env.get("JUDGE_PANEL_CODEX_BIN")
+        or os.environ.get("JUDGE_PANEL_CODEX_BIN")
+        or "codex"
+    )
+    return unique([google_bin, "gemini", openai_bin])
+
+
+def api_fallback_approved() -> bool:
+    return any(
+        os.environ.get(name, "").strip().lower() in TRUTHY
+        for name in (
+            "JUDGE_PANEL_API_FALLBACK_APPROVED",
+            "JUDGE_PANEL_API_FALLBACK_APPROVED_GEMINI",
+            "JUDGE_PANEL_API_FALLBACK_APPROVED_OPENAI",
+        )
+    )
+
+
+def should_skip_local_only_eval() -> bool:
+    if api_fallback_approved():
+        return False
+    return not any(shutil.which(bin_name) for bin_name in judge_cli_bins())
 
 
 def load_corpus(filter_id: str | None = None) -> list[dict]:
@@ -172,6 +247,10 @@ def main() -> int:
     if not cases:
         print(f"No corpus cases found (filter: {args.case})", file=sys.stderr)
         return 2
+
+    if should_skip_local_only_eval():
+        print("SKIP: no judge CLIs available (local-only eval)")
+        return 0
 
     print(f"Running {len(cases)} case(s)...", file=sys.stderr)
     results = []
