@@ -10,8 +10,8 @@
  *    a drafted artifact — update AGENT_STATUS.yaml and git commit+push."
  *
  * Fires on Stop. If cwd is a Career-OS-style workspace AND there are
- * uncommitted changes, surface a banner reminding the user that the unit of
- * work hasn't closed yet.
+ * uncommitted changes beyond the session's ambient dirty baseline, surface a
+ * banner reminding the user that the unit of work hasn't closed yet.
  *
  * WORKSPACE-IDENTITY GATE — same pattern as the v0.66 session-logger fix:
  *   - $CAREER_HOME env var matches cwd, OR
@@ -31,11 +31,16 @@
  */
 
 import { spawnSync } from "child_process";
-import { existsSync } from "fs";
-import { join } from "path";
+import { createHash } from "crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { homedir } from "os";
+import { basename, dirname, join } from "path";
 
 interface HookInput {
   cwd?: string;
+  session_id?: string;
+  sessionId?: string;
+  transcript_path?: string;
 }
 
 function isCareerOsWorkspace(cwd: string): boolean {
@@ -46,14 +51,68 @@ function isCareerOsWorkspace(cwd: string): boolean {
   return false;
 }
 
-function gitStatusShort(cwd: string): { changes: number; sample: string[] } | null {
+function dirtyPathFromStatusLine(line: string): string | null {
+  const status = line.slice(0, 2);
+  let path = line.length > 3 ? line.slice(3).trim() : "";
+  if ((status.includes("R") || status.includes("C")) && path.includes(" -> ")) {
+    path = path.slice(path.lastIndexOf(" -> ") + 4).trim();
+  }
+  return path.length > 0 ? path : null;
+}
+
+function gitDirtyPaths(cwd: string): string[] | null {
   // Confirm cwd is inside a git repo first
   const inRepo = spawnSync("git", ["-C", cwd, "rev-parse", "--is-inside-work-tree"], { encoding: "utf8" });
   if (inRepo.status !== 0) return null;
   const result = spawnSync("git", ["-C", cwd, "status", "--short"], { encoding: "utf8", timeout: 5000 });
   if (result.status !== 0) return null;
   const lines = result.stdout.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  return { changes: lines.length, sample: lines.slice(0, 5) };
+  const paths = lines
+    .map((line) => dirtyPathFromStatusLine(line))
+    .filter((path): path is string => path !== null);
+  return Array.from(new Set(paths)).sort();
+}
+
+function safeSessionKey(raw: string): string {
+  const trimmed = raw.trim();
+  const sanitized = trimmed.replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+$/, "");
+  if (sanitized.length > 0 && sanitized.length <= 96) return sanitized;
+
+  const digest = createHash("sha256").update(trimmed).digest("hex").slice(0, 12);
+  const prefix = sanitized.slice(0, 80) || "session";
+  return `${prefix}-${digest}`;
+}
+
+function sessionKey(input: HookInput, cwd: string): string {
+  if (typeof input.session_id === "string" && input.session_id.trim().length > 0) {
+    return safeSessionKey(input.session_id);
+  }
+  if (typeof input.sessionId === "string" && input.sessionId.trim().length > 0) {
+    return safeSessionKey(input.sessionId);
+  }
+  if (typeof input.transcript_path === "string" && input.transcript_path.trim().length > 0) {
+    const transcriptBase = basename(input.transcript_path);
+    if (transcriptBase.trim().length > 0) return safeSessionKey(transcriptBase);
+  }
+
+  const cwdHash = createHash("sha256").update(cwd).digest("hex").slice(0, 12);
+  return `cwd-${cwdHash}`;
+}
+
+function baselinePath(input: HookInput, cwd: string): string {
+  const stateRoot = process.env.CLAUDE_PLUGIN_DATA?.trim() || join(process.env.HOME || homedir(), ".career-os-state");
+  return join(stateRoot, "unit-of-work-baseline", `${sessionKey(input, cwd)}.json`);
+}
+
+function readBaseline(path: string): Set<string> {
+  const parsed = JSON.parse(readFileSync(path, "utf8"));
+  if (!Array.isArray(parsed)) throw new Error("Invalid unit-of-work baseline");
+  return new Set(parsed.filter((entry): entry is string => typeof entry === "string"));
+}
+
+function writeBaseline(path: string, paths: string[]): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(paths, null, 2) + "\n");
 }
 
 function emitSilent(): never {
@@ -74,6 +133,19 @@ function emitReminder(banner: string, context: string): never {
   process.exit(0);
 }
 
+function sessionLoggerActive(cwd: string): boolean {
+  // XOS-63: a workspace-native auto-committer (career-intelligence's session-logger)
+  // commits the session's files (brain/, WIP/ handoffs, ledger) on EVERY Stop. This
+  // generic check also fires on Stop, and cross-plugin Stop order is undefined — so we
+  // can read `git status` BEFORE the session-logger's commit lands and false-nag about a
+  // file it commits milliseconds later (then re-dirties next turn = perpetual false alarm).
+  // If that committer is active, it owns the unit-of-work commit here → defer (stay silent).
+  // In workspaces WITHOUT it (no `session-log:` commits), this check still fires normally.
+  const log = spawnSync("git", ["-C", cwd, "log", "-6", "--format=%s"], { encoding: "utf8", timeout: 5000 });
+  if (log.status !== 0) return false;
+  return /^session-log:/m.test(log.stdout || "");
+}
+
 async function main(): Promise<void> {
   let input: HookInput = {};
   try {
@@ -87,20 +159,34 @@ async function main(): Promise<void> {
   const cwd = input.cwd ?? process.cwd();
   if (!isCareerOsWorkspace(cwd)) emitSilent();
 
-  const status = gitStatusShort(cwd);
-  if (!status) emitSilent();              // not a git repo, can't reason about it
-  if (status.changes === 0) emitSilent(); // clean tree — unit of work either had no writes or was committed
+  // XOS-63: if a workspace-native auto-committer (session-logger) is active, it owns the
+  // unit-of-work commit every Stop — this check is redundant and races it. Defer.
+  if (sessionLoggerActive(cwd)) emitSilent();
 
-  // Uncommitted changes exist in a workspace cwd. Surface as reminder.
-  const fileList = status.sample.map((l) => `  ${l}`).join("\n");
-  const more = status.changes > status.sample.length ? `\n  … and ${status.changes - status.sample.length} more` : "";
+  const currentPaths = gitDirtyPaths(cwd);
+  if (!currentPaths) emitSilent(); // not a git repo, can't reason about it
 
-  const banner = `⚠ Unit-of-work not committed: ${status.changes} file${status.changes === 1 ? "" : "s"} changed in workspace. Commit + push before the next prompt (CLAUDE.md UNIT-OF-WORK protocol).`;
+  const stateFile = baselinePath(input, cwd);
+  if (!existsSync(stateFile)) {
+    writeBaseline(stateFile, currentPaths);
+    emitSilent(); // first Stop in this session snapshots ambient dirty state
+  }
+
+  const baseline = readBaseline(stateFile);
+  const newPaths = currentPaths.filter((path) => !baseline.has(path));
+  if (newPaths.length === 0) emitSilent(); // clean session delta — unit of work either had no writes or was committed
+
+  // Uncommitted changes from this session exist in a workspace cwd. Surface as reminder.
+  const sample = newPaths.slice(0, 5);
+  const fileList = sample.map((path) => `  ${path}`).join("\n");
+  const more = newPaths.length > sample.length ? `\n  … and ${newPaths.length - sample.length} more` : "";
+
+  const banner = `⚠ Unit-of-work not committed: ${newPaths.length} file${newPaths.length === 1 ? "" : "s"} from this session uncommitted. Commit + push before the next prompt (CLAUDE.md UNIT-OF-WORK protocol).`;
 
   const context = [
     `╭─ unit-of-work-check harness (Stop hook) ────────`,
     `│ Workspace: ${cwd}`,
-    `│ Uncommitted files: ${status.changes}`,
+    `│ Uncommitted files from this session: ${newPaths.length}`,
     `╰────`,
     ``,
     `Files:`,

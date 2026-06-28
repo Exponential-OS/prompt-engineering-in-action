@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) BLOCKs unverified biographical/logistical/relational claims about named people (GH #11 CRITICAL — 5 hallucinations in one session). Protocol 3 sharpening adds referent-ambiguity detection. Fixes honesty:undefined cosmetic bug. RELOAD REQUIRED — stale cached plugins on older project scopes run v4.14–v4.16 hooks; reinstall picks up v4.20.0 + retroactively unlocks v4.18 task-first persona routing + v4.19 concise-by-default.",
-      "version": "4.20.0",
+      "description": "Co-Dialectic v4.23.0 - FORAGE: Epistemic Foraging flywheel. Weekly /forage tool-discovery loop: FORAGE (marketplace diff + GitHub trending + recommender + P20 web sweep) -> SCORE against the week's WORKSPACE session-ledger friction (not novelty) -> VERIFY in a throwaway worktree -> PROPOSE (install HUMAN-GATED, no auto-install; per-candidate approval ticket with evidence + rollback, max 3/run) -> CODIFY (pending/keepers/rejects/deferred + memory entry + audit ticket).",
+      "version": "4.25.0",
       "category": "productivity"
     },
     {

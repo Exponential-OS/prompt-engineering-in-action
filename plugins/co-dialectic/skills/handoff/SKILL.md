@@ -61,7 +61,8 @@ it on every quiet pause is noise.
 
 ## What to do
 
-On trigger, perform the four phases below. All four phases run; phase 4
+On trigger, perform the six phases below. Phases 1-5 preserve the existing
+handoff contract; phase 6 appends the Co-Education teaser line. Phase 4
 fail-hard blocks if a `required` hook exits non-zero.
 
 ### Phase 1 — Scan the conversation
@@ -194,9 +195,26 @@ can copy-persist or wire up an adapter. Per FAIL-HARD INVARIANT: missing
 adapter is degraded operation, not failure; missing adapter must still emit
 visibly.
 
+### Phase 6 — Co-Education teaser
+
+Run the cheap teachme tool-lesson audit headline pass over the same local
+session evidence: session ledger, git history, installed-tool inventory
+(`claude plugin list`, MCP list, agent/preset configs), and the existing
+agent-side warning streams (`flywheel-capture` UserPromptSubmit,
+`fish-dispatch` Stop audit, `codify-or-mark-uncodified` PreToolUse). Do not
+emit the full lesson here. Pick the highest-yield headline only and append
+exactly one line after the confirmation output:
+
+`📚 Today's 1%: <headline> — say 'learning time' for the 60-sec version.`
+
+This line is a trigger into `teachme`'s tool-lesson mode. It catches
+whole-session patterns the per-turn productivity footer missed. If there is no
+cited local evidence, use a neutral headline such as `No tool-usage lesson had
+enough evidence today`; do not invent a lesson.
+
 ## Confirmation output
 
-After phases 1-5, print this compact status block:
+After phases 1-6, print this compact status block:
 
 ```
 Co-Dialectic · Handoff — session codified.
@@ -210,6 +228,8 @@ Co-Dialectic · Handoff — session codified.
   Handoff persisted by <hook-name>.
   Handoff printed to stdout — register an adapter to persist.
   ⚠️ <hook-name>: <command> <args> exited <code> — <stderr-first-line>
+
+📚 Today's 1%: <headline> — say 'learning time' for the 60-sec version.
 ```
 
 Do NOT echo the full JSON packet to the user unless explicitly asked OR

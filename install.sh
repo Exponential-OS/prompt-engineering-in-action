@@ -6,10 +6,11 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.20.0"
+VERSION="4.25.0"
 CONFIG_DIR="$HOME/.co-dialectic"
-INSTALLED=false
-INSTALLED_TOOLS=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
+TARGET_ARG="auto"
+VERSION_ARG=""
 
 # Co-Dialectic plugin skill inventory (v4.3.0). Shared by install + uninstall.
 # Append a new skill name here when a new skill is added to the plugin.
@@ -25,13 +26,48 @@ PLUGIN_SKILLS=(
     "waky-waky"
 )
 
+fetch_repo_file() {
+    local source_url="$1"
+    local target_file="$2"
+    local local_path="${source_url#"$REPO/"}"
+
+    if [ -f "$source_url" ]; then
+        cp "$source_url" "$target_file"
+    elif [ "$local_path" != "$source_url" ] && [ -f "$local_path" ]; then
+        cp "$local_path" "$target_file"
+    elif [ "$local_path" != "$source_url" ] && [ -f "$SCRIPT_DIR/$local_path" ]; then
+        cp "$SCRIPT_DIR/$local_path" "$target_file"
+    else
+        if curl -fsSL "$source_url" -o "$target_file" 2>/dev/null; then
+            return 0
+        fi
+        case "$local_path" in
+            plugins/co-dialectic/adapters/cursor/co-dialectic.mdc)
+                write_cursor_adapter "$target_file"
+                ;;
+            plugins/co-dialectic/adapters/codex/AGENTS.md)
+                write_codex_adapter "$target_file"
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    fi
+}
+
 # -----------------------------------------
 # BACKGROUND CHECKER
 # -----------------------------------------
 if [ "$1" = "--bg-check" ]; then
     mkdir -p "$CONFIG_DIR"
     # Read YAML-frontmatter `version: "X.Y.Z"` first (v3+), fall back to legacy `**Version:**`.
-    SKILL_REMOTE=$(curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md")
+    TMP_BG_SKILL=$(mktemp)
+    if fetch_repo_file "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" "$TMP_BG_SKILL"; then
+        SKILL_REMOTE=$(cat "$TMP_BG_SKILL")
+    else
+        SKILL_REMOTE=""
+    fi
+    rm -f "$TMP_BG_SKILL"
     REMOTE_VERSION=$(echo "$SKILL_REMOTE" | awk -F'"' '/^[[:space:]]*version:[[:space:]]*"/{print $2; exit}')
     if [ -z "$REMOTE_VERSION" ]; then
         REMOTE_VERSION=$(echo "$SKILL_REMOTE" | grep "\*\*Version:\*\*" | head -n 1 | awk '{print $2}')
@@ -49,6 +85,119 @@ if [ "$1" = "--bg-check" ]; then
     exit 0
 fi
 
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --target)
+            shift
+            TARGET_ARG="${1:-auto}"
+            ;;
+        --target=*)
+            TARGET_ARG="${1#--target=}"
+            ;;
+        --lite)
+            VERSION_ARG="lite"
+            ;;
+        --full)
+            VERSION_ARG="full"
+            ;;
+        --help|-h)
+            echo "Usage: install.sh [--target auto|cursor|codex|all] [--lite|--full]"
+            exit 0
+            ;;
+    esac
+    shift
+done
+
+case "$TARGET_ARG" in
+    auto|cursor|codex|all) ;;
+    *)
+        echo "❌ Unknown --target '$TARGET_ARG'. Use cursor, codex, all, or auto."
+        exit 1
+        ;;
+esac
+
+write_cursor_adapter() {
+    local target_file="$1"
+    cat > "$target_file" <<'EOF'
+---
+description: Co-Dialectic prompt sharpening and verification rules for Cursor
+alwaysApply: true
+---
+
+### BEGIN CO-DIALECTIC ###
+# Co-Dialectic for Cursor
+
+Co-Dialectic is always active in this workspace. Keep the behavior compact and code-focused.
+
+## Runtime Defaults
+- Default to Cruise mode: answer directly unless the user's prompt is ambiguous enough that a wrong implementation is likely.
+- Keep status metadata quiet by default. Do not prepend persona/score lines unless the user asks for `codi status`.
+- Prefer short, actionable prompt sharpening over teaching. If the user's ask is unclear, rewrite the ask in one sentence, state the assumption, and proceed when the assumption is low-risk.
+- Use Drive mode only when the next step would change architecture, delete data, publish externally, or spend money.
+
+## Cursor Coding Behavior
+- Read the relevant files before editing.
+- Preserve user changes. Do not revert unrelated edits.
+- Keep patches scoped to the requested behavior.
+- Prefer existing project patterns and libraries over new abstractions.
+- Run focused validation when available, and report what did or did not run.
+- For reviews, lead with defects and file/line references before summaries.
+
+## Verification By Stakes
+- Routine local edits: run syntax/type/unit checks that are already present.
+- Shared or user-facing changes: also inspect edge cases, error states, and docs/install paths.
+- Significant claims, security, legal, financial, medical, or release guidance: verify against primary/current sources before presenting as fact.
+
+## Commands
+- `codi status`: summarize active mode, assumptions, and any verification gaps.
+- `codi drive`: ask before applying sharpened prompts or taking broad actions.
+- `codi cruise`: proceed with reasonable assumptions and concise notes.
+- `codi quiet`: suppress status surfaces unless something needs attention.
+- `codi review`: switch to code-review posture, prioritizing bugs and regressions.
+- `codi handoff`: produce a concise continuation note with files touched, decisions, tests, and next steps.
+
+### END CO-DIALECTIC ###
+EOF
+}
+
+write_codex_adapter() {
+    local target_file="$1"
+    cat > "$target_file" <<'EOF'
+### BEGIN CO-DIALECTIC ###
+# Co-Dialectic for Codex
+
+Use Co-Dialectic as a lightweight engineering discipline layer, not as a chat persona system.
+
+## Defaults
+- Stay concise and implementation-oriented.
+- Read code before changing it.
+- Make scoped edits that follow the repository's existing patterns.
+- Preserve user changes and ignore unrelated dirty worktree files.
+- Prefer `rg`/`rg --files` for search.
+- Use patch-style edits for manual file changes.
+- Run focused tests or checks when available, and say exactly what ran.
+
+## Prompt Sharpening
+- If the user's request is clear, do the work.
+- If the request is ambiguous but low-risk, state the assumption and proceed.
+- If the ambiguity could cause destructive, externally visible, or expensive work, ask one direct question.
+- When helpful, internally rewrite vague requests into concrete acceptance criteria before implementation.
+
+## Verification By Stakes
+- Routine code edits: local tests, type checks, or lint checks where practical.
+- Installer, release, security, or public-facing changes: validate idempotency, failure paths, and documentation.
+- Current facts or high-stakes guidance: verify with primary/current sources before treating them as true.
+
+## Commands
+- `codi status`: report assumptions, touched files, validation, and remaining risk.
+- `codi review`: use code-review posture; findings first, then brief summary.
+- `codi handoff`: write a continuation summary with branch, files changed, tests, and next steps.
+- `codi quiet`: minimize Co-Dialectic surface text.
+
+### END CO-DIALECTIC ###
+EOF
+}
+
 # -----------------------------------------
 # UI HELPERS
 # -----------------------------------------
@@ -65,10 +214,14 @@ ask_user() {
     local prompt="$1"
     local default="$2"
     local reply
-    if _is_interactive; then
-        if [ -t 0 ]; then read -r -p "$prompt " reply; else read -r -p "$prompt " reply </dev/tty; fi
+    if [ -t 0 ]; then
+        read -r -p "$prompt " reply || reply="$default"
+    elif _is_interactive; then
+        read -r -p "$prompt " reply </dev/tty || reply="$default"
     else
+        echo -n "$prompt "
         reply="$default"
+        echo "$reply (auto-selected)"
     fi
     if [[ -z "$reply" ]]; then reply="$default"; fi
     case "$reply" in [Yy]* ) return 0 ;; * ) return 1 ;; esac
@@ -78,10 +231,14 @@ ask_choice() {
     local prompt="$1"
     local default="$2"
     local reply
-    if _is_interactive; then
-        if [ -t 0 ]; then read -r -p "$prompt " reply; else read -r -p "$prompt " reply </dev/tty; fi
+    if [ -t 0 ]; then
+        read -r -p "$prompt " reply || reply="$default"
+    elif _is_interactive; then
+        read -r -p "$prompt " reply </dev/tty || reply="$default"
     else
+        echo -n "$prompt "
         reply="$default"
+        echo "$reply (auto-selected)"
     fi
     if [[ -z "$reply" ]]; then reply="$default"; fi
     echo "$reply"
@@ -94,7 +251,11 @@ echo "What would you like to do?"
 echo " [1] Install or Update"
 echo " [2] Uninstall completely"
 echo " [3] Exit"
-MENU_CHOICE=$(ask_choice "Select [1, 2, or 3]:" "1")
+if [ "$TARGET_ARG" = "auto" ]; then
+    MENU_CHOICE=$(ask_choice "Select [1, 2, or 3]:" "1")
+else
+    MENU_CHOICE="1"
+fi
 
 if [ "$MENU_CHOICE" = "3" ]; then
     echo "Exiting."
@@ -123,6 +284,16 @@ if [ "$MENU_CHOICE" = "2" ]; then
             echo "   Removed from $TARGET"
         fi
     done
+    if [ -f ".cursor/rules/co-dialectic.mdc" ]; then
+        rm -f ".cursor/rules/co-dialectic.mdc"
+        echo "   Removed .cursor/rules/co-dialectic.mdc"
+    fi
+    if [ -f "AGENTS.md" ] && grep -q "### BEGIN CO-DIALECTIC ###" "AGENTS.md"; then
+        awk '/### BEGIN CO-DIALECTIC ###/{flag=1} !flag {print} /### END CO-DIALECTIC ###/{flag=0}' "AGENTS.md" > "AGENTS.md.tmp"
+        cat "AGENTS.md.tmp" > "AGENTS.md"
+        rm "AGENTS.md.tmp"
+        echo "   Removed from AGENTS.md"
+    fi
     
     # 2b. Remove fish gate hook from ~/.claude/settings.json
     unwire_agent_hook
@@ -154,7 +325,15 @@ echo ""
 echo "Which version do you want to install?"
 echo " [1] Standard (Best for Pro/Paid AI users)"
 echo " [2] Lite (Best for Free/Fast AI limits)"
-VERSION_CHOICE=$(ask_choice "Select [1/2]:" "1")
+if [ "$VERSION_ARG" = "lite" ]; then
+    VERSION_CHOICE="2"
+elif [ "$VERSION_ARG" = "full" ]; then
+    VERSION_CHOICE="1"
+elif [ "$TARGET_ARG" != "auto" ]; then
+    VERSION_CHOICE="2"
+else
+    VERSION_CHOICE=$(ask_choice "Select [1/2]:" "1")
+fi
 
 if [ "$VERSION_CHOICE" = "2" ]; then
     SKILL_URL="$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md"
@@ -167,7 +346,21 @@ else
 fi
 
 TMP_SKILL=$(mktemp)
-curl -fsSL "$SKILL_URL" -o "$TMP_SKILL"
+fetch_repo_file "$SKILL_URL" "$TMP_SKILL"
+
+INSTALLED=false
+INSTALLED_TOOLS=""
+TRACK_OPT_IN=false
+BG_UPDATES=false
+
+if [ "$TARGET_ARG" = "auto" ]; then
+    if ask_user "📊 Share anonymous install metrics to help the project (OS/Tool choices)? [Y/n]" "y"; then
+        TRACK_OPT_IN=true
+    fi
+    if ask_user "🔄 Enable weekly background checks for updates? [Y/n]" "y"; then
+        BG_UPDATES=true
+    fi
+fi
 
 # -----------------------------------------
 # Plugin skill install helpers
@@ -332,7 +525,7 @@ download_skills_direct() {
         else
             skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL.md"
         fi
-        if curl -fsSL "$skill_src" -o "$skill_dir/SKILL.md"; then
+        if fetch_repo_file "$skill_src" "$skill_dir/SKILL.md"; then
             echo "   ✅ $skill_dir/SKILL.md"
             fetch_skill_extras "$skill" "$skill_dir"
         else
@@ -381,7 +574,7 @@ install_plugin() {
         else
             skill_src="$REPO/plugins/co-dialectic/skills/$skill/SKILL.md"
         fi
-        if curl -fsSL "$skill_src" -o "$skill_dir/SKILL.md"; then
+        if fetch_repo_file "$skill_src" "$skill_dir/SKILL.md"; then
             echo "   ✅ $skill_dir/SKILL.md"
             fetch_skill_extras "$skill" "$skill_dir"
         else
@@ -438,9 +631,109 @@ append_or_replace() {
     fi
 }
 
+install_owned_file() {
+    local source_url="$1"
+    local target_file="$2"
+    local prompt_msg="$3"
+    local default_ans="$4"
+    local tool_name="$5"
+    local force="${6:-false}"
+    local tmp_file
+
+    if [ "$force" != "true" ] && ! ask_user "$prompt_msg" "$default_ans"; then
+        return
+    fi
+
+    mkdir -p "$(dirname "$target_file")"
+    tmp_file=$(mktemp)
+    if fetch_repo_file "$source_url" "$tmp_file"; then
+        cat "$tmp_file" > "$target_file"
+        rm -f "$tmp_file"
+        echo "   ✅ Installed $target_file"
+        INSTALLED=true
+        INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+    else
+        rm -f "$tmp_file"
+        echo "   ❌ failed to fetch $source_url"
+    fi
+}
+
+append_or_replace_remote() {
+    local source_url="$1"
+    local target_file="$2"
+    local prompt_msg="$3"
+    local default_ans="$4"
+    local tool_name="$5"
+    local force="${6:-false}"
+    local tmp_file
+
+    if [ "$force" != "true" ] && ! ask_user "$prompt_msg" "$default_ans"; then
+        return
+    fi
+
+    tmp_file=$(mktemp)
+    if ! fetch_repo_file "$source_url" "$tmp_file"; then
+        rm -f "$tmp_file"
+        echo "   ❌ failed to fetch $source_url"
+        return
+    fi
+
+    if [ ! -f "$target_file" ]; then
+        cat "$tmp_file" > "$target_file"
+        echo "   ✅ Added to $target_file"
+    elif grep -q "### BEGIN CO-DIALECTIC ###" "$target_file" 2>/dev/null; then
+        awk '/### BEGIN CO-DIALECTIC ###/{flag=1} !flag {print} /### END CO-DIALECTIC ###/{flag=0}' "$target_file" > "${target_file}.tmp"
+        cat "$tmp_file" >> "${target_file}.tmp"
+        cat "${target_file}.tmp" > "$target_file"
+        rm "${target_file}.tmp"
+        echo "   ✅ Updated $target_file"
+    else
+        echo "" >> "$target_file"
+        cat "$tmp_file" >> "$target_file"
+        echo "   ✅ Added to $target_file"
+    fi
+    rm -f "$tmp_file"
+    INSTALLED=true
+    INSTALLED_TOOLS="$INSTALLED_TOOLS,$tool_name"
+}
+
+target_selected() {
+    local target="$1"
+    [ "$TARGET_ARG" = "all" ] && return 0
+    case ",$TARGET_ARG," in
+        *",$target,"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 echo ""
 echo "Scanning for AI environments..."
 echo ""
+
+if [ "$TARGET_ARG" != "auto" ]; then
+    if target_selected "cursor"; then
+        install_owned_file \
+            "$REPO/plugins/co-dialectic/adapters/cursor/co-dialectic.mdc" \
+            ".cursor/rules/co-dialectic.mdc" \
+            "✅ Install Cursor project rules to .cursor/rules/co-dialectic.mdc? [Y/n]" \
+            "y" \
+            "cursor_mdc" \
+            "true"
+    fi
+    if target_selected "codex"; then
+        append_or_replace_remote \
+            "$REPO/plugins/co-dialectic/adapters/codex/AGENTS.md" \
+            "AGENTS.md" \
+            "✅ Add Codex instructions to AGENTS.md? [Y/n]" \
+            "y" \
+            "codex_agents" \
+            "true"
+    fi
+    if [ "$INSTALLED" = false ]; then
+        echo "❌ No installation completed for --target '$TARGET_ARG'. See fetch errors above."
+        exit 1
+    fi
+else
 
 # Directory-based plugin installs (Antigravity, Claude Code) — all 6 skills.
 # For Claude Code users the recommended path is `/plugin install co-dialectic@xos`
@@ -465,8 +758,8 @@ if [ -d "$HOME/.claude" ] || command -v claude > /dev/null 2>&1; then
                 # the plugin itself (naming collision). Install the main skill
                 # directly so `codi on` resolves correctly.
                 mkdir -p "$HOME/.claude/skills/co-dialectic"
-                if curl -fsSL "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" \
-                        -o "$HOME/.claude/skills/co-dialectic/SKILL.md" 2>/dev/null; then
+                if fetch_repo_file "$REPO/plugins/co-dialectic/skills/co-dialectic/SKILL.md" \
+                        "$HOME/.claude/skills/co-dialectic/SKILL.md"; then
                     echo "   ✅ co-dialectic skill registered at ~/.claude/skills/"
                 else
                     echo "   ⚠️  Could not fetch main skill file — run installer again to retry"
@@ -505,7 +798,22 @@ if [ -d "$HOME/.claude" ] || command -v claude > /dev/null 2>&1; then
 fi
 
 if [ -d ".cursor" ] || [ -f ".cursorrules" ]; then
-    append_or_replace ".cursorrules" "✅ Detected Cursor project. Add to .cursorrules? [Y/n]" "y" "cursor"
+    install_owned_file \
+        "$REPO/plugins/co-dialectic/adapters/cursor/co-dialectic.mdc" \
+        ".cursor/rules/co-dialectic.mdc" \
+        "✅ Detected Cursor project. Install modern Cursor rule to .cursor/rules/co-dialectic.mdc? [Y/n]" \
+        "y" \
+        "cursor_mdc"
+    echo ""
+fi
+
+if [ -f "AGENTS.md" ] || command -v codex > /dev/null 2>&1; then
+    append_or_replace_remote \
+        "$REPO/plugins/co-dialectic/adapters/codex/AGENTS.md" \
+        "AGENTS.md" \
+        "✅ Detected Codex. Add workspace instructions to AGENTS.md? [Y/n]" \
+        "y" \
+        "codex_agents"
     echo ""
 fi
 
@@ -524,6 +832,8 @@ if ask_user "📋 Copy to clipboard for web apps (claude.ai, ChatGPT)? [y/N]" "n
     INSTALLED_TOOLS="$INSTALLED_TOOLS,clipboard"
 fi
 
+fi
+
 if [ "$INSTALLED" = false ]; then
     echo "ℹ️  No installation selected. Downloading to ./plugins/co-dialectic/skills/co-dialectic/SKILL.md"
     mkdir -p plugins/co-dialectic/skills/co-dialectic
@@ -534,6 +844,7 @@ fi
 # Apply Background Checks
 if [ "$BG_UPDATES" = true ] && [[ "$OSTYPE" == "darwin"* ]]; then
     PLIST_FILE="$HOME/Library/LaunchAgents/com.codialectic.updater.plist"
+    mkdir -p "$(dirname "$PLIST_FILE")"
     cat << 'EOF' > "$PLIST_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -555,8 +866,11 @@ if [ "$BG_UPDATES" = true ] && [[ "$OSTYPE" == "darwin"* ]]; then
 </plist>
 EOF
     launchctl unload "$PLIST_FILE" 2>/dev/null || true
-    launchctl load "$PLIST_FILE"
-    echo "⏰ Native background updater installed (checks weekly via launchd)."
+    if launchctl load "$PLIST_FILE" 2>/dev/null; then
+        echo "⏰ Native background updater installed (checks weekly via launchd)."
+    else
+        echo "⚠️  Could not load macOS background updater. Run the installer from a normal user terminal to enable weekly checks."
+    fi
 fi
 
 # Save Config

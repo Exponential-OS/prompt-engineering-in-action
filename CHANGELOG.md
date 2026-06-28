@@ -6,6 +6,82 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws + persona-driven judge panel
+
+Protocol 12 (Cyborg Operating Laws) added to co-dialectic SKILL.md as always-on physics. Root law: "How we treat our agents IS how our PRODUCTS treat our customers." Three operational consequences (principle-over-prohibition, faculty-routing, grandma-test load reduction) and two cross-cutting principles (code-is-truth, constraint-as-innovation-engine). Each law ships with a one-line litmus.
+
+Judge panel now supports `--persona "<name(s)>"` (and `JUDGE_PANEL_PERSONAS` env var) to inject expert-persona lens into every judge prompt. Ships opinionated `RUBRIC_DEFAULT_PERSONAS` map: UX/visual/product → Steve Jobs + Jony Ive; spec/architecture → Jeff Dean; prompt-quality → Shreyas Doshi; factual/calibration rubrics → no persona (taste adds noise). CLI flag always overrides map default.
+
+## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
+
+Status line now ends with `· [HH:MM]` (OS-grounded, Protocol 17) — visible temporal grounding + a scroll anchor for long automated runs. Synced across SKILL.md, SKILL-lite.md, the user-prompt-submit reminder, and session-start.sh.
+
+## [4.24.5] — 2026-06-25 — judge-panel: migrate canonical judge_panel.ts → agy + delete stale .py (XOS-73)
+
+Cross-family review was broken on the live path: XOS-58 migrated the dead `judge_panel.py`, leaving the canonical `judge_panel.ts` on the defunct `gemini` CLI. Now `.ts` uses `agy` (OAuth); `.py` deleted (dual-source killed); eval + refs repointed. Functional: real verdict returned.
+
+## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
+
+Cross-plugin Stop-hook race fix: in a career-os workspace the session-logger auto-commits every Stop and this check also runs on Stop with undefined relative order, so it could nag about a file the session-logger commits milliseconds later. Now defers when an auto-committer is active (recent `session-log:` commits). Fires normally elsewhere.
+
+## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
+
+Fixed success-path terminal noise: the unit-of-work-check Stop hook counted the whole dirty tree and nagged every Stop in any workspace with standing ambient cruft. Now baselines the ambient dirty set per session and warns only about paths new since session start. Workspace gate + FAIL-HARD preserved.
+
+## [4.24.2] — 2026-06-23 — judge-panel: migrate dead Gemini CLI → agy (XOS-58)
+
+Fixed cross-family review: the `gemini` CLI became ineligible (IneligibleTierError → Antigravity), so judge-panel's Google lane returned verdict=error. Migrated the Google lane to the `agy` (Antigravity) CLI on Google AI Ultra; family=google preserved; OAuth env-strip kept.
+
+## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
+
+Fixed Decision-2 violation in 4.24.0 (teachme hardcoded `brain/sessions/ledger/`, breaking the substrate-agnostic kernel + its own CI). Now reads the ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` with graceful degrade. Also brings 4.24.0 Co-Education Flywheel (teachme tool-lesson domain + Protocol-3 productivity footer + handoff session-end micro-lesson + bidirectional cyborg-side fix).
+
+## [4.23.0] — 2026-06-05 — FORAGE: Epistemic Foraging flywheel
+
+### Added — skills/forage/SKILL.md (new soul-tier skill)
+Codifies the Constitution's Epistemic Foraging principle ([NOT CODIFIED] → live) as a
+weekly tool-discovery loop: FORAGE (marketplace diff + GitHub trending +
+claude-automation-recommender + P20 authority-weighted web sweep) → SCORE against the
+week's WORKSPACE session-ledger friction, not novelty (never a universal/shared brain's
+ledger — that degenerates the flywheel into novelty-hunting) → VERIFY in a throwaway
+worktree (never propose blind; FOUNDATION-FIRST) → PROPOSE (install is HUMAN-GATED —
+no auto-install from any marketplace; each verify-passed keeper files its own approval
+ticket with verification evidence + one-command rollback, max 3 proposals/run) →
+CODIFY (pending/keepers/rejects/deferred + autoMemoryDirectory entry + summary audit
+ticket). Autonomy contract locked by Anand 2026-06-05 00:53 PDT: forage/score/verify
+autonomous, INSTALL human-gated per candidate — an earlier in-flight fully-autonomous-
+install answer was REVOKED (P12: weekly auto-install of third-party plugins = untrusted
+code whose hooks execute on this machine).
+Substrate paths via $CO_DIALECTIC_SESSION_LEDGER_DIR / $CO_DIALECTIC_TOOLS_REGISTRY
+with graceful OSS fallback (Decision-2 compliant). Brain contract: reads
+sessions/ledger/**, writes references/tools-registry.md.
+
+### Fixed
+- Version drift: `skills/co-dialectic/SKILL.md`, `install.sh`, and `marketplace.json`
+  description were stale vs `plugin.json` — all surfaces now 4.23.0.
+
+## [4.22.0] — 2026-06-05 — VERSION SYNC
+
+### Fixed
+- Version strings aligned: `marketplace.json`, `SKILL.md` frontmatter, and `install.sh` bumped to `4.22.0` to match `plugin.json`.
+- `CHANGELOG.md` entry added for `4.22.0` (previously missing, causing CI failures on version-consistency and changelog-consistency checks).
+
+## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
+
+### Added — named-person-claim-grounding semantic gate
+- New cyborg rule (three-layer TS+Bun): PreToolUse hook on Write|Edit scans proposed content for biographical/logistical/relational claims about named people and BLOCKs unverified claims, fail-closed on error. Covers the 5 acceptance shapes from issue #11 (pronoun, geography, schedule, vague-they, voice attribution).
+- Constitution Ground Zero stub: NAMED-PERSON-CLAIM-GROUNDING INVARIANT.
+
+### Added — Protocol 3 referent-ambiguity detection
+- `SKILL-lite.md` Protocol 3 gains a "Referent ambiguity" criterion: when a prompt contains a pronoun / possessive / vague subject with ≥2 candidate antecedents, do NOT infer — disambiguate or ask ONE clarify question first.
+
+### Fixed — honesty:undefined cosmetic bug in survival reminder
+- `buildReminder()` emitted the literal `"honesty:undefined"` when `state.json` lacked the `honesty` field. Now only appends the suffix when honesty is a non-empty, non-default string; same defensive treatment for `state.mode` and `state.wildcard`. 6 new tests added.
+
+### Why this exists
+- **Issue #11 CRITICAL** — 5 same-class named-person hallucinations shipped in one ~50-minute session. Pattern was structural (referent ambiguity → partial-signal inference → confident ship), not "be more careful." This release ships the structural fix.
+
+See `plugins/co-dialectic/CHANGELOG.md` for the full per-file detail.
 
 ## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
 

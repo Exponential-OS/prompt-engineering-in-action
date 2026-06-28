@@ -122,6 +122,32 @@ for path in $(grep -o '\$REPO/[^ "]*' install.sh | sed 's/\$REPO\///' | grep -v 
     [ -f "$path" ] && pass "$path" || fail "$path missing locally"
 done
 
+# Regression: Cursor target must still install when the adapter asset is absent
+# from the configured REPO, matching the "raw main .mdc returns 404" failure mode.
+TMP_CURSOR_FALLBACK=$(mktemp -d)
+REPO_ROOT_FOR_FALLBACK=$(pwd)
+mkdir -p \
+    "$TMP_CURSOR_FALLBACK/fake-repo/plugins/co-dialectic/skills/co-dialectic" \
+    "$TMP_CURSOR_FALLBACK/project/.cursor" \
+    "$TMP_CURSOR_FALLBACK/home"
+cp plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md \
+    "$TMP_CURSOR_FALLBACK/fake-repo/plugins/co-dialectic/skills/co-dialectic/SKILL-lite.md"
+if (cd "$TMP_CURSOR_FALLBACK/project" && \
+    HOME="$TMP_CURSOR_FALLBACK/home" \
+    CO_DIALECTIC_REPO="$TMP_CURSOR_FALLBACK/fake-repo" \
+    bash "$REPO_ROOT_FOR_FALLBACK/install.sh" --target cursor) \
+    > "$TMP_CURSOR_FALLBACK/install.log" 2>&1; then
+    if cmp -s "$TMP_CURSOR_FALLBACK/project/.cursor/rules/co-dialectic.mdc" \
+              plugins/co-dialectic/adapters/cursor/co-dialectic.mdc; then
+        pass "Cursor fallback installs .mdc when adapter asset is missing from REPO"
+    else
+        fail "Cursor fallback .mdc differs from adapter template"
+    fi
+else
+    fail "Cursor fallback install failed (see $TMP_CURSOR_FALLBACK/install.log)"
+fi
+rm -rf "$TMP_CURSOR_FALLBACK"
+
 # -----------------------------------------------
 # 9. README relative links
 # -----------------------------------------------

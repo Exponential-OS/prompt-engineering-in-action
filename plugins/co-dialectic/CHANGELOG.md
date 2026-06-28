@@ -1,5 +1,228 @@
 # Changelog — Co-Dialectic
 
+## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws (always-on)
+
+### Added — skills/co-dialectic/SKILL.md
+
+**Protocol 12: Cyborg Operating Laws** — five generative roots that load every session as physics, not advice. Origin: a human-AI dialectic session that produced operating laws kept only in passive session memory (the "swing" problem: regresses to default next session). Converting them to a codi protocol makes them always-on for every codi user.
+
+**Root law (the framing):** "How we treat our agents IS how our PRODUCTS treat our customers." Establishes the causal pipe: agent-treatment → product-character → customer-experience. Collapses ethics into engineering. The product is the transmission belt.
+
+**Three operational consequences of the root:**
+1. **Act from love, not fear** (Trust + principle > enumeration + threat) — give the generative WHY, never a fear-list. A prohibition covers what you anticipated; a principle covers what you didn't.
+2. **Faculty-routing** — WHY + WHAT + constraints to engineers; never HOW. Prescribing implementation limits expertise and installs your incomplete mental model as cargo-cult. Improvements get PRODUCTIZED into the owning product, not buried in memos.
+3. **Lower their load; never raise it** (grandma-test, explicitly named) — every interaction must reduce cognitive tax. Raising load without value is the prime abandon trigger.
+
+**Two cross-cutting principles:**
+- Mockup = style reference; code = data truth. Verify on real data through real code — never pixels.
+- Constraint is the mother of innovation. Hard budgets are forcing functions for compression.
+
+Each law ships with a one-line litmus. Does not duplicate sycophancy detection or persona system — references and extends those protocols.
+
+## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
+
+### Added
+- The status line now ends with `· [HH:MM]` — the OS-grounded time (Protocol 17; never recalled). Two purposes: (1) visible proof the response is temporally grounded, (2) a scroll/search anchor so long automated runs can be navigated back to a moment. Day boundary → `[MM-DD HH:MM]`; omit if no grounded Now. Synced across all four definitions (SKILL.md, SKILL-lite.md, user-prompt-submit.ts reminder + onboarding, session-start.sh).
+
+## [4.24.5] — 2026-06-25 — judge-panel: migrate CANONICAL judge_panel.ts → agy + delete stale .py (XOS-73)
+
+### Fixed — cross-family review was broken on the live path
+XOS-58 migrated the Google lane gemini→agy on `judge_panel.py`, but `.py` was the **deprecated** harness — the canonical one is `judge_panel.ts` (hooks, SKILL.md, installer, CI all invoke it), which still shelled out to the dead `gemini` CLI (`IneligibleTierError`). So XOS-58 was a no-op on the path that runs, and the stray `.py` made it look migrated. Now: `judge_panel.ts` Google lane uses the `agy` (Antigravity) CLI over OAuth (mirrors the `.py` template; family=google; API-key env-strip preserved); `judge_panel.py` **deleted** (kills the dual source — signal-pollution invariant); `tests/judge_panel_eval.py` + SKILL/ARCHITECTURE refs repointed to `.ts`. Functional: canonical harness returns a real verdict, not the gemini error.
+
+## [4.24.4] — 2026-06-24 — unit-of-work-check: defer to the session-logger auto-committer (XOS-63)
+
+### Fixed — cross-plugin Stop-hook race
+In a career-os workspace, career-intelligence's session-logger auto-commits the session's files on every Stop, while this check also runs on Stop — and cross-plugin Stop order is undefined. The check could read `git status` before the session-logger's commit landed and nag about a file (e.g. a WIP handoff) the session-logger commits milliseconds later (then re-dirties next turn → perpetual false alarm). Now it detects an active auto-committer (recent `session-log:` commits in HEAD) and defers — that committer owns the unit-of-work commit there. In workspaces WITHOUT it, the check fires as before. Workspace gate + session-delta + FAIL-HARD preserved.
+
+## [4.24.3] — 2026-06-23 — unit-of-work-check: session-delta, not absolute dirty tree (XOS-60)
+
+### Fixed — success-path terminal noise
+The unit-of-work-check Stop hook counted the WHOLE dirty tree (`git status --short`) and warned on any change, so a workspace with standing ambient cruft (.claude/settings.local.json, .cursorrules, .mcp.json, untracked dirs) nagged every Stop forever — committing the agent's work never cleared it. Now it baselines the ambient dirty set per session and warns ONLY about paths NEW since session start (committed work clears naturally). Workspace gate + FAIL-HARD preserved.
+
+## [4.24.2] — 2026-06-23 — judge-panel: migrate dead Gemini CLI → agy (XOS-58)
+
+### Fixed — cross-family review was down
+The `gemini` CLI became ineligible (`IneligibleTierError: Gemini Code Assist for individuals
+no longer supported → migrate to Antigravity`), so judge-panel's Google lane returned
+`verdict=error` — breaking cross-family review (a load-bearing SDLC Stage-6 gate). Migrated
+the Google lane (`_run_gemini`) to the **`agy`** (Antigravity) CLI on the user's Google AI
+Ultra subscription: `agy --model "<display>" --dangerously-skip-permissions --sandbox -p`.
+Model pins → agy display names (small `Gemini 3.5 Flash (Low)`, tiebreaker `Gemini 3.1 Pro (High)`),
+env-overridable; `family="google"` preserved (cross-family guarantee holds); OAuth env-strip kept.
+Functional smoke: Google(agy)+OpenAI both returned real verdicts on a wrong-facts artifact (fail/100, fail/99).
+
+## [4.24.1] — 2026-06-09 — Co-Education Flywheel substrate-decouple fix (XOS-25 follow-up)
+
+### Fixed — Decision-2 violation in 4.24.0 (shipped CI-red by a concurrent session)
+The 4.24.0 Co-Education Flywheel hardcoded `brain/sessions/ledger/` (the career-os substrate)
+in teachme — violating Decision 2 (co-dialectic is the substrate-agnostic kernel; it must not
+name the workspace). The plugin would not work standalone and failed its own `test-plugin.sh`.
+Fix: read the session ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` (workspace-registered),
+degrade to in-session conversation + git history when unset. Example `source_ref` also de-hardcoded.
+
+## [4.24.0] — 2026-06-09 — Co-Education Flywheel (teachme tool lessons)
+
+### Added — skills/teachme/SKILL.md
+Extends the existing teachme skill with a second lesson domain: **tool usage**
+alongside prompt techniques. The new `learning time` / `teach me today` mode
+runs a local, cheap-tier audit over session ledger, git history, installed-tool
+inventory, and existing hook signals; detects the five inefficiency classes;
+ranks by `yield = time burned × recurrence`; teaches the single highest-yield
+lesson in teachme format; and tracks adoption in `growth.jsonl`.
+
+The same audit is bidirectional: it emits one human-side tool lesson and one
+cyborg-side codified fix per session, routing existing `flywheel-capture`,
+`fish-dispatch`, and `codify-or-mark-uncodified` signals into the same
+RANK→one-lesson pipeline instead of rebuilding those hooks.
+
+### Added — Protocol 3 productivity footer
+`skills/co-dialectic/SKILL.md` now instructs the prompt sharpener to compare
+the user's intent against the installed environment already visible in session
+(Workflow, agent teams, `/schedule`, `/dream`, loaded skills, MCPs, plugins,
+fish/presets, YOLO containment). When an installed capability is higher
+leverage, it appends exactly one line:
+
+`⚡ Productivity: <the prompt you should have typed, given this env> — <tool>, <why better>`
+
+### Added — shipped learning triggers and deferred weekly digest instruction
+Shipped learning triggers are the per-turn `⚡ Productivity` footer, explicit
+`learning time` / `teach me today`, and the session-close teaser.
+
+`skills/handoff/SKILL.md` now appends the session-close teaser:
+
+`📚 Today's 1%: <headline> — say 'learning time' for the 60-sec version.`
+
+Teachme also records the deferred Sunday `/schedule` digest instruction: when
+cron infrastructure is built, report top-3 inefficiencies, adoption scorecard,
+and two-strikes hookify-candidate escalations. No cron infrastructure ships in
+this release.
+
+### Changed — skills/teachme/growth.schema.json
+Adds `event_type: "tool_lesson"` with required fields `cited_log_evidence`,
+`inefficiency_class`, `tool`, `yield_estimate`, `taught_at`, `adopted`, and
+`teach_count`.
+Existing `sharpening_turn` records keep their required fields through
+event-specific schema requirements.
+
+---
+
+## [4.23.0] — 2026-06-05 — FORAGE: Epistemic Foraging flywheel
+
+### Added — skills/forage/SKILL.md (new soul-tier skill)
+Codifies the Constitution's Epistemic Foraging principle ([NOT CODIFIED] → live) as a
+weekly tool-discovery loop:
+
+- **FORAGE** — marketplace diff (`claude plugin marketplace list` vs installed) +
+  GitHub trending + `claude-automation-recommender` (composed, not rebuilt) +
+  P20 authority-weighted web sweep.
+- **SCORE** — against the week's WORKSPACE session-ledger friction, not novelty.
+  Never a universal/shared brain's ledger (that degenerates the flywheel into
+  novelty-hunting). Ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR` → workspace brain
+  `sessions/ledger/` → OSS fallback (conversation + git history).
+- **VERIFY** — throwaway worktree, project-scope install, smoke-test, token cost,
+  collision check. Never propose blind (FOUNDATION-FIRST).
+- **PROPOSE** — **install is HUMAN-GATED, no auto-install from any marketplace.**
+  Each verify-passed keeper files its own approval ticket (Linear, xOS Team) with
+  verification evidence + exact one-command rollback. Max 3 proposals/run.
+  Autonomy contract locked by Anand 2026-06-05 00:53 PDT — an earlier in-flight
+  fully-autonomous-install answer was REVOKED (P12: weekly auto-install of
+  third-party plugins = untrusted code whose hooks execute on this machine).
+- **CODIFY** — tools-registry (PENDING/KEEPERS/REJECTED/DEFERRED, surgical appends)
+  + autoMemoryDirectory entry + summary audit ticket; optional `/dream` close.
+
+Brain contract: reads `sessions/ledger/**`, writes `references/tools-registry.md`
+(via `$CO_DIALECTIC_TOOLS_REGISTRY` with OSS fallback — Decision-2 compliant).
+
+### Fixed
+- Version drift: root CHANGELOG.md, skills/co-dialectic/SKILL.md (4.19.1),
+  install.sh (4.19.1), and marketplace.json description (4.20.0) were stale vs
+  plugin.json (4.22.0) — all surfaces now 4.23.0.
+
+---
+
+## [4.22.0] — 2026-06-04 — TaskCompleted judge gate (agent teams × cross-family review)
+
+### Added — hooks/task-completed-judge-gate.ts (TaskCompleted hook)
+Wires the EXISTING judge-panel cascade (skills/judge-panel/scripts/judge_panel.ts,
+unchanged) into Claude Code's experimental agent teams. When a teammate marks a
+task complete, the gate runs the cross-family cascade (Gemini + GPT jurors) on
+the task content with the `spec-coherence` rubric.
+
+- **exit 0** on pass (silent), **exit 2** on fail → completion BLOCKED, jurors'
+  flags delivered to the teammate as feedback
+- **Opt-in**: no-op unless `CODI_TEAM_JUDGE_GATE=1` (cascade costs ~10-20s per
+  completion; agent teams are experimental)
+- **FAIL-HARD when armed**: gate on + cascade unrunnable (CLIs missing, harness
+  error, timeout) → task BLOCKED with remediation. Opting in makes cross-family
+  review load-bearing; an unreviewable task must not complete as if reviewed.
+- Rubric override via `CODI_TEAM_JUDGE_RUBRIC`; skips tasks < 80 chars (nothing
+  to judge); unparseable payload → warn + pass (schema drift must not brick
+  task flow)
+- Live-verified 2026-06-04: incoherent task (subject says date-parser fix,
+  description says auth rewrite + MongoDB migration) → BLOCKED, verdict fail,
+  confidence 99, 5 specific flags from the cross-family panel.
+
+### Design record — Workflow re-platform CANCELLED
+Spec (anand-career-os WIP/prompt-engineering-in-action-product/co-dialectic/
+spec-judge-panel-on-workflow-2026-06-04.md) originally proposed re-platforming
+judge-panel mechanics onto the Claude Code Workflow tool. Premise falsified on
+code read: judge_panel.ts already has parallel dispatch, timeouts, and typed
+JSON contracts. Workflow wrapping would add Haiku wrapper tokens + latency + a
+harness dependency that breaks codi standalone-OSS, to gain a progress UI on a
+~15s call. P1/P2/P3: rejected. The TaskCompleted gate was the part with real
+leverage — it shipped instead.
+
+---
+
+## [4.21.1] — 2026-05-31 — BELT-AND-SUSPENDERS CAPTURE (PreCompact)
+
+### Added — Layer 2 CAPTURE in precompact-handoff.ts
+Extends v4.21.0's RECOMMEND-only design with a second layer:
+
+1. **Layer 1 RECOMMEND (existing)** — emits `hookSpecificOutput.additionalContext` with strong system-reminder telling Claude to invoke the `codi-handoff` skill IMMEDIATELY before compaction proceeds.
+2. **Layer 2 CAPTURE (NEW)** — writes a structured deterministic packet to `~/.codialectic/precompact-packet-<timestamp>.json` BEFORE emitting the reminder. The packet contains:
+   - Timestamp, trigger, cwd, session_id, transcript_path
+   - Full git state: branch, HEAD SHA + subject, uncommitted file count, uncommitted file list (capped at 50), last 10 commits (sha + subject)
+   - `has_uncommitted_handoff_doc` flag — detects if NEXT_SESSION_HANDOFF.md or HANDOFF.md is uncommitted (signal that handoff work was in-flight)
+   - `notes` + `next_step_for_post_compact_claude` arrays — instructions baked into the packet so post-compact Claude can hydrate without prior context
+3. **Marker file updated** to v1.1.0 schema — includes `packet_file` path so post-compact Claude can find the packet immediately, plus `git_uncommitted_count` + `git_branch` for quick triage.
+
+### Why both layers
+- Layer 1 alone fails when Claude is mid-tool-use and can't act before compaction completes, OR when Claude pattern-matches incorrectly and writes the handoff manually instead of invoking the skill (which happened 2026-05-17).
+- Layer 2 alone is structurally limited — only knows what's in the OS, not what's in the conversation. Misses the "unfinished work semantic" that requires understanding the dialogue.
+- Together: deterministic floor (Layer 2 — always captures git state) + conversational ceiling (Layer 1 — when the skill fires, it adds the semantic richness).
+
+### systemMessage now includes verification status
+v4.21.0 systemMessage was just `"PreCompact firing — auto-handoff triggered"`. v4.21.1 shows actual capture status: `"PreCompact firing — auto-handoff captured (trigger=manual, packet=✓, git_uncommitted=3)"` — user immediately sees whether the packet write succeeded and what state was captured.
+
+### Restart required
+Same as v4.21.0 — PreCompact hook only takes effect after Claude Code reloads hooks. Run `claude plugin reinstall co-dialectic@xos` or restart the session.
+
+## [4.21.0] — 2026-05-31 — AUTO-HANDOFF BEFORE COMPACTION
+
+### Added — PreCompact hook (hooks/precompact-handoff.ts)
+- New PreCompact hook fires when Claude Code is about to summarize the context window. Before compaction proceeds, the hook:
+  1. Writes a marker file at `~/.codialectic/last-precompact.json` (timestamp + trigger + transcript path + cwd + session_id) so post-compaction Claude can verify a handoff was attempted.
+  2. Emits a strong `<system-reminder>` via `hookSpecificOutput.additionalContext` telling Claude to INVOKE the `codi-handoff` skill IMMEDIATELY before the conversation context is lost to summarization.
+- hooks.json wires `PreCompact` event with 5s timeout. Fail-safe: hook ALWAYS exits 0 — never blocks compaction.
+
+### Why this exists
+- User flagged 2026-05-31: "for session end - write to handoff doc hook is not there either for codi or claude. what happened?"
+- Diagnosis: the codi-handoff skill (Protocol 9 — auto closure detection) was designed to fire on conversation closure signals ("bye", "wrap up", "EOD", etc.). It works when the user types a closure phrase. It FAILS when:
+  - Compaction fires silently because the context window is full (the most common case for long working sessions)
+  - The user's last message doesn't contain a closure phrase
+  - Claude pattern-matches the trigger but writes the handoff manually instead of invoking the skill (which happened on 2026-05-17 — manual NEXT_SESSION_HANDOFF.md write instead of skill invocation)
+- Claude Code DOES have a `PreCompact` event that fires before summarization. No prior codi version wired it (`git log --grep="PreCompact"` returned zero across full history).
+- This hook closes the gap: every compaction now triggers an explicit handoff capture before context is lost.
+
+### Design choice — option (b) reminder, not direct file write
+- Considered (a) write handoff packet directly to NEXT_SESSION_HANDOFF.md from the hook
+- Chose (b) inject reminder → let Claude invoke the codi-handoff skill
+- Rationale: the codi-handoff skill already owns Protocol 9 closure-detection logic, structured-packet schema (v4.1 spec with model nested + uuid-v4 session_id + schema_version 1.0), workspace-substrate dispatch (GitHub Issues / HANDOFF.md / etc.). Duplicating that in TypeScript would diverge over time. Hook stays minimal — single responsibility (trigger). Skill invocation lets the active persona + caliber rules shape the handoff content.
+
+### Restart required
+PreCompact hook only takes effect after Claude Code reloads its hooks from the cached plugin. Per the v4.20.0 RELOAD-REQUIRED note: older project-scope installs (v4.9–v4.16) need `claude plugin reinstall co-dialectic@xos` or session restart to pick up the new hook event.
+
 ## [4.20.0] — 2026-05-22 — TRUST THESIS REPAIR (GH #11 CRITICAL)
 
 ### Added — named-person-claim-grounding semantic gate

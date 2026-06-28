@@ -86,7 +86,7 @@ Co-dialectic ships as a pure independent open-source product. Premium features c
 - `co-dialectic` (core) — protocols (Drive/Cruise/Quiet/Tone toggles), persona system, prompt sharpening, status line
 - `waky-waky` — context-restoration ritual with workspace hook callbacks (post-decoupling fix per Decision 2)
 - `unknown-unknown` — Rumsfeld-Matrix surveillance
-- `judge_panel.py` — Python harness (stdlib only); OAuth CLI default; API fallback gated to CLI-not-installed
+- `judge_panel.ts` — TypeScript/Bun harness; OAuth CLI default; API fallback gated to CLI-not-installed
 
 **Premium / paid plug-in tier (the Red Hat parallel):**
 

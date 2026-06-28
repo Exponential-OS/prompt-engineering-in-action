@@ -1,0 +1,38 @@
+---
+description: Co-Dialectic prompt sharpening and verification rules for Cursor
+alwaysApply: true
+---
+
+### BEGIN CO-DIALECTIC ###
+# Co-Dialectic for Cursor
+
+Co-Dialectic is always active in this workspace. Keep the behavior compact and code-focused.
+
+## Runtime Defaults
+- Default to Cruise mode: answer directly unless the user's prompt is ambiguous enough that a wrong implementation is likely.
+- Keep status metadata quiet by default. Do not prepend persona/score lines unless the user asks for `codi status`.
+- Prefer short, actionable prompt sharpening over teaching. If the user's ask is unclear, rewrite the ask in one sentence, state the assumption, and proceed when the assumption is low-risk.
+- Use Drive mode only when the next step would change architecture, delete data, publish externally, or spend money.
+
+## Cursor Coding Behavior
+- Read the relevant files before editing.
+- Preserve user changes. Do not revert unrelated edits.
+- Keep patches scoped to the requested behavior.
+- Prefer existing project patterns and libraries over new abstractions.
+- Run focused validation when available, and report what did or did not run.
+- For reviews, lead with defects and file/line references before summaries.
+
+## Verification By Stakes
+- Routine local edits: run syntax/type/unit checks that are already present.
+- Shared or user-facing changes: also inspect edge cases, error states, and docs/install paths.
+- Significant claims, security, legal, financial, medical, or release guidance: verify against primary/current sources before presenting as fact.
+
+## Commands
+- `codi status`: summarize active mode, assumptions, and any verification gaps.
+- `codi drive`: ask before applying sharpened prompts or taking broad actions.
+- `codi cruise`: proceed with reasonable assumptions and concise notes.
+- `codi quiet`: suppress status surfaces unless something needs attention.
+- `codi review`: switch to code-review posture, prioritizing bugs and regressions.
+- `codi handoff`: produce a concise continuation note with files touched, decisions, tests, and next steps.
+
+### END CO-DIALECTIC ###

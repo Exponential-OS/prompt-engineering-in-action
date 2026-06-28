@@ -41,4 +41,4 @@ except Exception:
     fi
 fi
 
-printf '{"systemMessage":"Co-Dialectic v%s loaded. Status line REQUIRED on every response: {Icon} {Domain} ({Name}) · {X}%%. Default persona: ⚡ Productivity (Tim Ferriss). Default mode: 🛞 Drive. New user? Type /co-dialectic-onboarding. Protocols absent? Type /co-dialectic.%s"}\n' "${PLUGIN_VERSION}" "${LIFECYCLE_MSG}"
+printf '{"systemMessage":"Co-Dialectic v%s loaded. Status line REQUIRED on every response: {Icon} {Domain} ({Name}) · {X}%% · [{HH:MM}] (time from OS-grounded Now). Default persona: ⚡ Productivity (Tim Ferriss). Default mode: 🛞 Drive. New user? Type /co-dialectic-onboarding. Protocols absent? Type /co-dialectic.%s"}\n' "${PLUGIN_VERSION}" "${LIFECYCLE_MSG}"

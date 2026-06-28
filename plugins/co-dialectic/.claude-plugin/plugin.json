@@ -1,8 +1,11 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.20.0 - TRUST THESIS REPAIR. Ships (a) named-person-claim-grounding semantic gate (PROMPT.md + claude -p judge) blocking biographical/logistical/relational claims about named people unless sourced from network/people/<slug>.json OR explicitly stated by user this session — fixes GH #11 CRITICAL (5 hallucinations in one session), (b) Protocol 3 sharpening with referent-ambiguity detection patterns (pronouns, possessives, vague 'they', geographic ambiguity, voice attribution), (c) buildReminder honesty:undefined cosmetic bug fix + defensive coding for missing state fields. RELOAD REQUIRED — older cached plugin installs (v4.9–v4.16 still present in installed_plugins.json on some project scopes) are running stale hooks; v4.18 task-first persona routing + v4.19 concise-by-default fixes will only take effect after a fresh plugin install picks up v4.20.0.",
-  "version": "4.20.0",
-  "depends_on_kernel": ["brain-kernel >= 1.0.0", "co-dialectic >= 4.16.0"],
+  "description": "Co-Dialectic v4.23.0 - FORAGE: Epistemic Foraging flywheel. New /forage skill codifies the Constitution's Epistemic Foraging principle as a weekly tool-discovery loop: FORAGE (marketplace diff + GitHub trending + claude-automation-recommender + P20 authority-weighted web sweep) -> SCORE against the week's WORKSPACE session-ledger friction (not novelty, never a shared brain's ledger) -> VERIFY in a throwaway worktree (never propose blind; FOUNDATION-FIRST) -> PROPOSE: install is HUMAN-GATED, no auto-install from any marketplace; each verify-passed keeper files its own approval ticket with evidence + one-command rollback, max 3 per run -> CODIFY (pending/keepers/rejects/deferred + memory entry + summary audit ticket). Substrate paths resolved via $CO_DIALECTIC_SESSION_LEDGER_DIR / $CO_DIALECTIC_TOOLS_REGISTRY workspace-adapter vars with graceful OSS fallback (Decision-2 compliant).",
+  "version": "4.25.0",
+  "depends_on_kernel": [
+    "brain-kernel >= 1.0.0",
+    "co-dialectic >= 4.16.0"
+  ],
   "brain": {
     "namespace": "co-dialectic",
     "owned_paths": [
@@ -11,9 +14,12 @@
       "calibration-history.md",
       "status-state.json"
     ],
-    "writes_to_primitives": [],
+    "writes_to_primitives": [
+      "references/tools-registry.md"
+    ],
     "reads_from_primitives": [
-      "identity/handles.md"
+      "identity/handles.md",
+      "sessions/ledger/**"
     ],
     "reads_from_engines": [
       "career-intelligence/skills-matrix.md"
@@ -27,5 +33,5 @@
   "author": {
     "name": "Anand Vallamsetla"
   },
-  "_product_vs_solution_marker": "product-vs-solution: example — Anand authorship attribution is legitimate"
+  "_product_vs_solution_marker": "product-vs-solution: example \u2014 Anand authorship attribution is legitimate"
 }

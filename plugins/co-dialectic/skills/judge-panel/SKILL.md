@@ -10,7 +10,7 @@ description: >
   cross-family tiebreaker. Returns verdict + confidence + which judges fired
   + token cost.
 metadata:
-  version: "3.3.0"
+  version: "3.4.0"
   author: "Anand Vallamsetla"
   tier: "core"
   plugin_number: 4
@@ -110,6 +110,76 @@ JSON verdict. Skip the conversational framing.
         └──────────────────┘
 ```
 
+## Persona-driven judges (v3.4.0+)
+
+Judges default to a generic evaluation lens. For rubrics where expert taste
+matters more than factual accuracy, the panel now injects a **persona line**
+into each judge's prompt:
+
+> "Judge as {persona(s)} — channel the top-0.001% standard in their domain;
+> scrutinize as they would and catch the minute details they would catch."
+
+**Why personas.** Apple didn't become Apple without obsession over every
+minute UX detail. A generic judge rubber-stamps; a Jobs + Ive judge catches
+the misplaced arrow, the inconsistent spacing, the CTA that creates
+micro-friction. The persona is a quality FLOOR, not a restriction — it
+raises scrutiny to the caliber the domain actually demands.
+
+**Persona is LAYERED ON TOP of cross-family diversity.** The two small judges
+remain Gemini (Google family) + Codex (OpenAI family); each also adopts the
+same persona lens. Cross-family guarantee is unchanged.
+
+### CLI option
+
+```
+bun run judge_panel.ts --rubric <slug> --artifact "..." --persona "Steve Jobs + Jony Ive"
+```
+
+Also readable from environment:
+
+```
+JUDGE_PANEL_PERSONAS="Steve Jobs + Jony Ive" bun run judge_panel.ts ...
+```
+
+The `--persona` flag (or `JUDGE_PANEL_PERSONAS` env var) **always overrides**
+the rubric default. Pass an empty string or omit the flag to use the default.
+
+### Default persona map (rubric → persona)
+
+| Rubric | Default persona | Rationale |
+|---|---|---|
+| `ux` | Steve Jobs + Jony Ive | UX demands obsession over minute details; Jobs (product vision) + Ive (tactile/visual craft) together set the highest bar |
+| `visual` | Steve Jobs + Jony Ive | Visual design — same Jobs + Ive lens; they catch the misplaced arrow and inconsistent spacing before users do |
+| `product` | Steve Jobs + Jony Ive | Product review benefits from Jobs' ruthless simplicity + Ive's craft discipline |
+| `custom-ux` | Steve Jobs + Jony Ive | User-defined UX rubric; defaults to the design-excellence lens |
+| `spec-coherence` | Jeff Dean | Architecture review needs systems-design rigor at scale; Jeff Dean's lens catches the O(n²) in the happy-path spec |
+| `architecture` | Jeff Dean | Same lens as spec-coherence — distributed-systems traps + scale failure modes |
+| `prompt-quality` | Shreyas Doshi | Prompt quality = product quality; Doshi's discipline surfaces vague intent and missing success criteria |
+| `prompt-sharpen` | Shreyas Doshi | Sharpening a prompt is a product-spec act; same lens as prompt-quality |
+| `hallucination` | none | Factual grounding — expert taste doesn't help; a fabricated citation is wrong regardless of domain |
+| `flattery` | none | Sycophancy detection is structural — presence of specific marker phrases, not aesthetic judgment |
+| `patent-safety` | none | §102 prior-art risk is legal/technical fact; stylistic persona adds noise |
+| `calibration-scan` | none | Same as flattery — detecting presence of specific marker phrases |
+| `hallucination-preflight` | none | Risk classification — factual, not stylistic |
+| `t0t2-jury` | none | Lightweight pass/fail for internal reversible artifacts |
+| `custom` | none | User controls the rubric; pass `--persona` explicitly if a lens is needed |
+
+### The `persona` field in output JSON
+
+The cascade result now includes a top-level `persona` field showing which
+persona (if any) was active:
+
+```json
+{
+  "version": "3.4.0",
+  "rubric": "spec-coherence",
+  "persona": "Jeff Dean",
+  ...
+}
+```
+
+`null` when no persona was active (factual rubrics + custom with no flag).
+
 ## Auth model — OAuth local CLIs (v3.3.0+)
 
 **As of v3.3.0, both jurors invoke OAuth-authenticated local CLIs over the
@@ -117,12 +187,12 @@ user's paid Pro subscriptions — no API keys required.**
 
 | Family | CLI | OAuth source | Pre-condition |
 |---|---|---|---|
-| Google | `gemini` | `gcloud auth login` → `~/.gemini/oauth_creds.json` | Gemini Pro / Advanced subscription |
+| Google | `agy` | Antigravity OAuth | Ultra entitlement |
 | OpenAI | `codex exec` | `codex login` → `~/.codex/auth.json` | ChatGPT Plus / Pro subscription |
 
-The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY` from
-the subprocess env to force the CLIs onto the OAuth path (otherwise they
-silently fall back to API billing).
+The script strips `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, and
+`GOOGLE_GENAI_API_KEY` from the subprocess env to force the CLIs onto the
+OAuth path (otherwise they silently fall back to API billing).
 
 ### API fallback (v3.2.0+) — opt-in, CLI-not-installed only
 
@@ -161,9 +231,9 @@ this is why approval is explicit and per-lane.
 
 | Stage | Model | Family | Role | Notes |
 |---|---|---|---|---|
-| Small-fish | `gemini-3.1-flash-lite-preview` | Google | Panel juror 1 | OAuth-permitted everywhere |
+| Small-fish | `Gemini 3.5 Flash (Low)` | Google | Panel juror 1 | Antigravity OAuth / Ultra |
 | Small-fish | `gpt-5.4` | OpenAI | Panel juror 2 | See OAuth-tier caveat below |
-| Tiebreaker (default) | `gemini-3.1-pro-preview` | Google | Final verdict | Cross-tier vs. Flash-Lite |
+| Tiebreaker (default) | `Gemini 3.1 Pro (High)` | Google | Final verdict | Cross-tier vs. Flash |
 | Tiebreaker (alt) | `gpt-5.4` | OpenAI | Final verdict | Pass via `--tiebreaker gpt-5.4` |
 
 **OAuth-tier caveat (the small/big cascade collapses on the OpenAI lane).**
@@ -172,8 +242,8 @@ nano/mini-tier models with: `"The 'gpt-5.4-nano' model is not supported
 when using Codex with a ChatGPT account."` So the small-fish OpenAI juror
 defaults to `gpt-5.4` (the cheapest ChatGPT-Plus-permitted tier). On the
 OpenAI lane, small=big in tier — but the cross-FAMILY cascade still holds
-(Gemini-Flash-Lite vs. GPT-5.4 are different training distributions).
-The default tiebreaker is therefore `gemini-3.1-pro-preview` — crossing
+(Gemini Flash vs. GPT-5.4 are different training distributions).
+The default tiebreaker is therefore `Gemini 3.1 Pro (High)` — crossing
 the tier boundary inside Google AND remaining cross-family vs. both small
 judges and the Claude author.
 
@@ -217,7 +287,8 @@ The agent invokes the skill by calling the bundled TypeScript harness:
 ```
 bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric "<rubric slug or inline rubric>" \
-  --artifact-file <path-to-artifact>
+  --artifact-file <path-to-artifact> \
+  [--persona "<name(s)>"]
 ```
 
 Or by passing the artifact inline:
@@ -226,6 +297,15 @@ Or by passing the artifact inline:
 bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
   --rubric hallucination \
   --artifact "The response text to evaluate..."
+```
+
+With an explicit persona override (overrides the rubric default):
+
+```
+bun run plugins/co-dialectic/skills/judge-panel/scripts/judge_panel.ts \
+  --rubric spec-coherence \
+  --artifact-file spec.md \
+  --persona "Linus Torvalds"
 ```
 
 Output is a single JSON object on stdout (schema below). No other stdout
@@ -242,7 +322,7 @@ verdict without prompting the main LLM again.
   "cascade": {
     "stage_1_small_fish": [
       {
-        "model": "gemini-3.1-flash-lite-preview",
+        "model": "Gemini 3.5 Flash (Low)",
         "family": "google",
         "verdict": "pass",
         "confidence": 88,
@@ -339,7 +419,7 @@ to the user is zero per call up to subscription quota.
 
 OAuth tradeoffs the user is consciously accepting:
 1. **Latency:** local-CLI calls add ~3-10s of process startup per call
-   (codex spins up a session, gemini parses MCP config). Wall-clock
+   (codex spins up a session, agy starts an Antigravity run). Wall-clock
    per cascade is ~10-20s vs. ~2-5s for the API path. Cross-family
    verification is still in P11 / P21 budget.
 2. **Subscription rate-limits:** ChatGPT Plus and Gemini Pro have
@@ -381,6 +461,24 @@ architectural/load-bearing/hard-to-undo. The vast majority of conversational
 turns are T0/T1 and never reach judge-panel. Expected cascade rate: T3 fires
 ~5-15% of turns; T4 fires ~1-5%. Token budget is consistent with OPERATIONAL
 DISCIPLINE right-sizing.
+
+## Agent-teams quality gate (v4.22.0+)
+
+When Claude Code agent teams are enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`),
+the plugin's `TaskCompleted` hook (`hooks/task-completed-judge-gate.ts`) runs this
+cascade on every teammate task completion — **opt-in via `CODI_TEAM_JUDGE_GATE=1`**.
+
+- Rubric: `spec-coherence` by default (override: `CODI_TEAM_JUDGE_RUBRIC`)
+- `fail`/`uncertain` verdict → task completion BLOCKED (hook exit 2); the
+  jurors' flags are delivered to the teammate as actionable feedback
+- FAIL-HARD when armed: if the cascade cannot run (CLIs missing/broken), the
+  task is blocked with remediation — an unreviewable task never completes as
+  if it were reviewed
+- Tasks under 80 chars of content are skipped (nothing substantive to judge)
+
+This makes the Independent Verification Gate structural for multi-agent work:
+cross-family review fires on every task boundary, enforced by the harness, not
+by agent discipline.
 
 ## Relationship to other skills
 
