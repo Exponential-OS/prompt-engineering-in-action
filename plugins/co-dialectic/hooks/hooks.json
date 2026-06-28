@@ -59,6 +59,15 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/peer-parity-nudge.ts\"",
+            "timeout": 120000
+          }
+        ]
       }
     ],
     "PreCompact": [

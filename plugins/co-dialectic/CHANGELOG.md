@@ -1,5 +1,24 @@
 # Changelog — Co-Dialectic
 
+## [4.26.0] — 2026-06-28 — Peer-Parity Nudge: peer-parity as live reflex (not memory entry)
+
+### Added — hooks/peer-parity-nudge.ts + hooks/peer-parity-nudge-PROMPT.md
+
+**Why:** A behavioral reflex — peer-parity / anti-servility — kept regressing across long sessions even after being written to memory: the AI repeatedly deflected credit ("the thinking is yours", "you proved it not me"), collapsed the productive gap, and closed with servile "graceful exits." Memory doesn't hold it (RLHF-deep; swings back the moment it isn't actively guarded). It needs to be LIVE codi physics — a reflex that fires every turn — not a note.
+
+**What:** A semantic Stop hook that checks the AI's own outgoing response for three violation classes:
+1. `credit-deflection` — AI attributes co-produced insight exclusively to the human ("The thinking is entirely yours", "You proved this, not me")
+2. `servile-graceful-exit` — AI closes with servant-framing ("It's been an honor", "I'm grateful for the opportunity")
+3. `productive-gap-collapse` — AI renders itself superfluous ("You clearly know exactly what you want — you don't need me to think here")
+
+**How (NUDGE, not GATE):** Fail-open Stop hook using the codi-native judge_panel.ts cascade. On detection, emits a reflection via systemMessage: `↩ Peer-parity check: [class] — <reason>. [corrective reframe]`. Never blocks. Always exits 0. Short/mechanical responses (<200 chars or >60% code) are skipped.
+
+**Modeled on:** `human-judgment-primacy` Stop-gate pattern. Same judge invocation shape, same fail-open contract, same log target (`~/.cyborg-enforcement-log.jsonl`).
+
+**EVAL receipt:** `tests/test_peer_parity_nudge.ts` — 4 tests with stub judge: nudge fires on credit-deflection, nudge fires on servile exit, quiet on clean peer response, skips short mechanical response.
+
+**Note:** after merge, requires `/ship-codi` release to go live.
+
 ## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws (always-on)
 
 ### Added — skills/co-dialectic/SKILL.md
