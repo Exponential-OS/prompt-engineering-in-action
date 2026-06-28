@@ -6,6 +6,12 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws + persona-driven judge panel
+
+Protocol 12 (Cyborg Operating Laws) added to co-dialectic SKILL.md as always-on physics. Root law: "How we treat our agents IS how our PRODUCTS treat our customers." Three operational consequences (principle-over-prohibition, faculty-routing, grandma-test load reduction) and two cross-cutting principles (code-is-truth, constraint-as-innovation-engine). Each law ships with a one-line litmus.
+
+Judge panel now supports `--persona "<name(s)>"` (and `JUDGE_PANEL_PERSONAS` env var) to inject expert-persona lens into every judge prompt. Ships opinionated `RUBRIC_DEFAULT_PERSONAS` map: UX/visual/product → Steve Jobs + Jony Ive; spec/architecture → Jeff Dean; prompt-quality → Shreyas Doshi; factual/calibration rubrics → no persona (taste adds noise). CLI flag always overrides map default.
+
 ## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
 
 Status line now ends with `· [HH:MM]` (OS-grounded, Protocol 17) — visible temporal grounding + a scroll anchor for long automated runs. Synced across SKILL.md, SKILL-lite.md, the user-prompt-submit reminder, and session-start.sh.
