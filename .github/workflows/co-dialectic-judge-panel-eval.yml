@@ -2,7 +2,8 @@ name: co-dialectic-judge-panel-eval
 
 # Auto-triggers when judge panel logic or eval corpus changes.
 # Also manually triggerable: Actions tab → co-dialectic-judge-panel-eval → Run workflow.
-# Uses GOOGLE_API_KEY + OPENAI_API_KEY (API billing, not OAuth) — ~$0.01/run.
+# Local-dev gate: CI installs Bun for harness compatibility, then the eval
+# skips when OAuth judge CLIs are unavailable on GitHub runners.
 
 on:
   push:
@@ -28,16 +29,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install anthropic
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Judge panel eval (8-case seeded-flaw corpus)
         run: python3 plugins/co-dialectic/tests/judge_panel_eval.py
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          JUDGE_PANEL_API_FALLBACK_APPROVED: "1"
           # CI uses flash for tiebreaker (pro times out >120s in headless env)
           # and a shorter per-call timeout to fail fast rather than hang.
           GEMINI_CLI_PREMIUM_MODEL: "gemini-3.1-flash-lite-preview"
