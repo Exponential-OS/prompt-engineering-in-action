@@ -1,5 +1,24 @@
 # Changelog — Co-Dialectic
 
+## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws (always-on)
+
+### Added — skills/co-dialectic/SKILL.md
+
+**Protocol 12: Cyborg Operating Laws** — five generative roots that load every session as physics, not advice. Origin: a human-AI dialectic session that produced operating laws kept only in passive session memory (the "swing" problem: regresses to default next session). Converting them to a codi protocol makes them always-on for every codi user.
+
+**Root law (the framing):** "How we treat our agents IS how our PRODUCTS treat our customers." Establishes the causal pipe: agent-treatment → product-character → customer-experience. Collapses ethics into engineering. The product is the transmission belt.
+
+**Three operational consequences of the root:**
+1. **Act from love, not fear** (Trust + principle > enumeration + threat) — give the generative WHY, never a fear-list. A prohibition covers what you anticipated; a principle covers what you didn't.
+2. **Faculty-routing** — WHY + WHAT + constraints to engineers; never HOW. Prescribing implementation limits expertise and installs your incomplete mental model as cargo-cult. Improvements get PRODUCTIZED into the owning product, not buried in memos.
+3. **Lower their load; never raise it** (grandma-test, explicitly named) — every interaction must reduce cognitive tax. Raising load without value is the prime abandon trigger.
+
+**Two cross-cutting principles:**
+- Mockup = style reference; code = data truth. Verify on real data through real code — never pixels.
+- Constraint is the mother of innovation. Hard budgets are forcing functions for compression.
+
+Each law ships with a one-line litmus. Does not duplicate sycophancy detection or persona system — references and extends those protocols.
+
 ## [4.24.6] — 2026-06-26 — Protocol 1 status line: OS-grounded [HH:MM] timestamp (XOS-75)
 
 ### Added
