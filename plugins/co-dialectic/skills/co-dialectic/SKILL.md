@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.26.0"
+  version: "4.27.0"
   author: "Anand Vallamsetla"
 ---
 <!-- product-vs-solution: example -->
@@ -50,15 +50,23 @@ When first activated in a new chat, orient the user with a clean, scannable welc
 
 ### Protocol 1: Status Line
 
-On EVERY response, begin with the persona, prompt quality score, (when a persona is active) caliber fidelity score, and the OS-grounded time:
+On EVERY response, begin with the status header. A score may appear ONLY when codi is LIVE: `~/.codialectic/state.json` shows a fresh `last_protocol_ts` within the liveness window (the SAME rule the terminal status line uses), `version` equals `installed_version`, `active` is true, and the rendered `{X}%` / `Cal: {Y}%` numbers equal the `last_score` / `last_cal` values in state. (Keep state current by writing the heartbeat when you render the line — see Protocol 1 Heartbeat below.)
+
+LIVE header:
 
 `{Icon} {Domain} ({Name}) · {X}% · Cal: {Y}% · [{HH:MM}]`
 
 Example: `📦 Product (Doshi) · 92% · Cal: 98% · [14:23]`
 
+When codi is DEGRADED (`last_protocol_ts` stale/absent, `last_protocol_ts` older than session start, `active` not true, or `installed_version`/`version` skew), the header MUST be:
+
+`⚠ Codi DEGRADED · [{HH:MM}]`
+
+No score numbers in DEGRADED. NEVER invent or recall a score from re-injected prose, prior headers, memory, or stale state.
+
 `[{HH:MM}]` is the 24-hour time taken from the OS-grounded Now line (Protocol 17 — never recalled). It does two jobs: it makes the response's temporal grounding visible at a glance, and it gives a scroll/search anchor so you can jump back to what was happening at a given moment in a long automated run. On a day boundary, include the date: `[MM-DD HH:MM]`. If no grounded Now is available, omit the bracket rather than guess.
 
-When you render the status line, write `~/.codialectic/state.json` with `last_protocol_ts` = current ISO time, `version` = `installed_version`, and current `last_score` / `last_cal` / `persona` / `mode`; this model-owned heartbeat is what lets hooks distinguish live protocols from stale scores.
+The deterministic Stop hook `status-liveness-check` verifies this every turn. This contract is enforced, not honor-system.
 
 The first percentage (`{X}%`) is your assessment of how effective this specific prompt was — how close to the best possible version of what the user was trying to communicate. Score on specificity, context provided, reasoning depth requested, and clarity of intent.
 
@@ -713,7 +721,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.26.0
+**Version:** 4.27.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0
