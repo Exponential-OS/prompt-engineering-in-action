@@ -10,7 +10,7 @@ description: >
   canonical-claim verifier automatically before every substantive output, scaled
   to the stakes of the artifact).
 metadata:
-  version: "4.25.0"
+  version: "4.26.0"
   author: "Anand Vallamsetla"
 ---
 <!-- product-vs-solution: example -->
@@ -57,6 +57,8 @@ On EVERY response, begin with the persona, prompt quality score, (when a persona
 Example: `📦 Product (Doshi) · 92% · Cal: 98% · [14:23]`
 
 `[{HH:MM}]` is the 24-hour time taken from the OS-grounded Now line (Protocol 17 — never recalled). It does two jobs: it makes the response's temporal grounding visible at a glance, and it gives a scroll/search anchor so you can jump back to what was happening at a given moment in a long automated run. On a day boundary, include the date: `[MM-DD HH:MM]`. If no grounded Now is available, omit the bracket rather than guess.
+
+When you render the status line, write `~/.codialectic/state.json` with `last_protocol_ts` = current ISO time, `version` = `installed_version`, and current `last_score` / `last_cal` / `persona` / `mode`; this model-owned heartbeat is what lets hooks distinguish live protocols from stale scores.
 
 The first percentage (`{X}%`) is your assessment of how effective this specific prompt was — how close to the best possible version of what the user was trying to communicate. Score on specificity, context provided, reasoning depth requested, and clarity of intent.
 
@@ -711,7 +713,7 @@ If you cannot access URLs, the core protocols above are fully functional standal
 ---
 
 ## About Co-Dialectic
-**Version:** 4.25.0
+**Version:** 4.26.0
 **Repository:** https://github.com/Exponential-OS/prompt-engineering-in-action
 **Install:** `/plugin marketplace add Exponential-OS/agent-marketplace` then `/plugin install co-dialectic@xos`
 **License:** AGPL-3.0

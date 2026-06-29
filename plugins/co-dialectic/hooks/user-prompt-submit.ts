@@ -49,6 +49,9 @@ interface CodiState {
   persona_icon: string | null;
   last_score: number | null;
   last_cal: number | null;
+  last_protocol_ts?: string | null;
+  last_session_start_ts?: string | null;
+  installed_version?: string | null;
   wildcard: boolean;
   session_start_ts: string;
   version: string;
@@ -64,6 +67,9 @@ interface CodiState {
    */
   verbosity?: "concise" | "verbose";
 }
+
+type LoadedStateSource = "brain" | "legacy";
+type ReminderStateSource = LoadedStateSource | "missing";
 
 // ─── State loading ────────────────────────────────────────────────────────────
 
@@ -128,7 +134,7 @@ function loadLegacyState(): CodiState | null {
  *
  * Returns: [state, source] where source is "brain" | "legacy" | null.
  */
-function loadState(): [CodiState | null, "brain" | "legacy" | null] {
+function loadState(): [CodiState | null, LoadedStateSource | null] {
   const brainState = loadBrainState();
   if (brainState !== null) return [brainState, "brain"];
 
@@ -136,6 +142,116 @@ function loadState(): [CodiState | null, "brain" | "legacy" | null] {
   if (legacyState !== null) return [legacyState, "legacy"];
 
   return [null, null];
+}
+
+// ─── Structural liveness (XOS-141) ───────────────────────────────────────────
+
+export interface CodiLiveness {
+  degraded: boolean;
+  stale: boolean;
+  skew: boolean;
+  inactive: boolean;
+  installedVersion: string;
+  reasons: string[];
+}
+
+function parseIsoMillis(value: unknown): number | null {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+export function resolveInstalledVersion(state?: Partial<CodiState> | null): string {
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  if (pluginRoot) {
+    const pluginJson = join(pluginRoot, ".claude-plugin", "plugin.json");
+    if (existsSync(pluginJson)) {
+      try {
+        const parsed = JSON.parse(readFileSync(pluginJson, "utf8"));
+        if (typeof parsed.version === "string" && parsed.version.length > 0) {
+          return parsed.version;
+        }
+      } catch {
+        // Fall through to state-backed values.
+      }
+    }
+  }
+  return state?.installed_version ?? state?.version ?? "unknown";
+}
+
+export function evaluateCodiLiveness(
+  state: Partial<CodiState> | null,
+  installedVersion: string,
+  now: Date = new Date(),
+  staleSecs: number = Number(process.env.CODI_STALE_SECS ?? "900"),
+): CodiLiveness {
+  const reasons: string[] = [];
+  const safeStaleSecs = Number.isFinite(staleSecs) && staleSecs >= 0 ? staleSecs : 900;
+  const nowMs = now.getTime();
+  const protocolMs = parseIsoMillis(state?.last_protocol_ts);
+  const sessionMs = parseIsoMillis(state?.last_session_start_ts);
+
+  let stale = false;
+  if (protocolMs === null) {
+    stale = true;
+    reasons.push("missing-last_protocol_ts");
+  } else if (sessionMs !== null && protocolMs < sessionMs) {
+    stale = true;
+    reasons.push("protocol-before-session");
+  } else if (nowMs - protocolMs > safeStaleSecs * 1000) {
+    stale = true;
+    reasons.push("protocol-too-old");
+  }
+
+  const stateAcknowledgedVersion = state?.version ?? "";
+  const skew = stateAcknowledgedVersion !== installedVersion;
+  if (skew) reasons.push("version-skew");
+
+  const inactive = state?.active !== true;
+  if (inactive) reasons.push("inactive");
+
+  return {
+    degraded: stale || skew || inactive,
+    stale,
+    skew,
+    inactive,
+    installedVersion,
+    reasons,
+  };
+}
+
+export function buildDegradationNudge(liveness: CodiLiveness): string {
+  const inactiveInstruction = liveness.inactive
+    ? " If active is missing/null, restore active=true; if active=false, respect explicit user-off and tell the user to type 'codi on'."
+    : "";
+  return (
+    "⚠ CODI DEGRADED (stale/skew) — re-fire Protocol 0/1 NOW: " +
+    "render the status line + set ~/.codialectic/state.json last_protocol_ts " +
+    `to current ISO time + sync version to ${liveness.installedVersion}.` +
+    inactiveInstruction
+  );
+}
+
+function buildDefaultState(installedVersion: string): CodiState {
+  const now = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  return {
+    schema_version: "1.0.0",
+    active: true,
+    mode: "drive",
+    honesty: "grounded",
+    persona: null,
+    persona_icon: null,
+    last_score: null,
+    last_cal: null,
+    last_protocol_ts: null,
+    last_session_start_ts: now,
+    installed_version: installedVersion,
+    wildcard: false,
+    session_start_ts: now,
+    version: installedVersion,
+    growth_total_turns: 0,
+    last_updated_ts: now,
+  };
 }
 
 // ─── Hook output ──────────────────────────────────────────────────────────────
@@ -231,13 +347,26 @@ export function buildOnboardingHint(state: CodiState): string {
   ].join("\n");
 }
 
-export function buildReminder(state: CodiState, stateSource: "brain" | "legacy"): string {
+interface BuildReminderOptions {
+  liveness?: CodiLiveness;
+}
+
+export function buildReminder(
+  state: CodiState,
+  stateSource: ReminderStateSource,
+  options: BuildReminderOptions = {},
+): string {
+  const degraded = options.liveness?.degraded ?? state.active !== true;
+  const displayVersion =
+    options.liveness?.installedVersion ?? state.installed_version ?? state.version ?? "unknown";
+  const healthLabel = degraded ? "DEGRADED" : "ACTIVE";
   const personaLine = state.persona
     ? `${state.persona_icon ?? "🎯"} ${state.persona} (active persona)`
     : "Persona: auto-detect from current task";
 
-  const scoresLine =
-    state.last_score !== null && state.last_cal !== null
+  const scoresLine = degraded
+    ? "Last response score/cal hidden: codi liveness is degraded; refresh Protocol 1 before trusting model-owned metrics"
+    : state.last_score !== null && state.last_cal !== null
       ? `Last response: ${state.last_score}% · Cal: ${state.last_cal}%`
       : "Status line will populate on this response";
 
@@ -271,9 +400,12 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
   const brainStatePath = join(workspaceRoot, "co-dialectic/status-state.json");
   const writeBackInstruction = stateSource === "brain"
     ? `After your response, write back to the brain-kernel path: ${brainStatePath}`
-    : `After your response, write to the brain-kernel path: ${brainStatePath} ` +
-      `(NOTE: state was loaded from legacy ~/.codialectic/state.json — brain path not yet initialized; ` +
-      `writing to brain path will complete the migration)`;
+    : stateSource === "legacy"
+      ? `After your response, write to the brain-kernel path: ${brainStatePath} ` +
+        `(NOTE: state was loaded from legacy ~/.codialectic/state.json — brain path not yet initialized; ` +
+        `writing to brain path will complete the migration)`
+      : `No codi state file was loaded. After your response, initialize the brain-kernel path: ${brainStatePath} ` +
+        `and ~/.codialectic/state.json with active=true, last_protocol_ts=current ISO time, and version=${displayVersion}.`;
 
   const onboardingHint = buildOnboardingHint(state);
   const verbosity = state.verbosity ?? "concise";
@@ -294,10 +426,15 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
     "(named person, public-facing, irreversible) → eager DIALECTIC synthesis.";
 
   const protocol3Line = verbosity === "verbose" ? protocol3Verbose : protocol3Concise;
+  const stateSourceLabel = stateSource === "brain"
+    ? "brain-kernel workspace"
+    : stateSource === "legacy"
+      ? "legacy ~/.codialectic/state.json"
+      : "missing state (self-resurrection)";
 
   const lines = [
     "<codi-survival-reminder>",
-    `Co-Dialectic v${state.version} is ACTIVE (state source: ${stateSource === "brain" ? "brain-kernel workspace" : "legacy ~/.codialectic/state.json"}, survives compaction).`,
+    `Co-Dialectic v${displayVersion} is ${healthLabel} (state source: ${stateSourceLabel}, survives compaction).`,
     "",
     `${nowLine}`,
     `${personaLine}`,
@@ -306,12 +443,13 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
     `${scoresLine}`,
     "",
     "Protocol 1 (Status Line): begin EVERY response with the persona/score/Cal/[HH:MM] line — the [HH:MM] is the time from the OS-grounded Now line above (never recalled), so the user sees the response is temporally grounded and can scroll back to a moment. On a day boundary use [MM-DD HH:MM].",
+    "Protocol 1 Heartbeat: when you render the status line, write ~/.codialectic/state.json last_protocol_ts=current ISO time, version=installed_version, and current last_score/last_cal/persona/mode. This is model-owned proof of execution; hooks must not fake it.",
     protocol3Line,
     "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain. Task-first routing per skills/co-dialectic/task-persona-map.md — users describe tasks, not persona names.",
     "Protocol 17 (Temporal Grounding): every time-referential phrase ('tonight', 'tomorrow', 'recently', 'yesterday') in your response MUST anchor to the OS-grounded Now line above. Convert relative → absolute datetime before writing.",
     "",
     writeBackInstruction,
-    "Update last_score, last_cal, persona, growth_total_turns (increment by 1), and verbosity fields. The brain-kernel path is the source of truth across sessions and devices.",
+    "Update last_protocol_ts, version, last_score, last_cal, persona, growth_total_turns (increment by 1), and verbosity fields. The brain-kernel path is the source of truth across sessions and devices.",
     "</codi-survival-reminder>",
   ];
   if (onboardingHint) {
@@ -323,15 +461,29 @@ export function buildReminder(state: CodiState, stateSource: "brain" | "legacy")
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 function main(): void {
-  const [state, source] = loadState();
-  if (!state || source === null) {
-    emitSilent(); // no state file = codi never initialized = silent
+  const [loadedState, loadedSource] = loadState();
+  const legacyState = loadLegacyState();
+  if (loadedState?.active === false || legacyState?.active === false) {
+    // `active:false` is the only cheap durable signal for an explicit `codi off`.
+    // Missing state or missing `active` is treated as never-initialized/degraded
+    // and may self-resurrect via the Protocol 0/1 nudge below.
+    emitSilent();
   }
-  if (!state.active) {
-    emitSilent(); // explicitly disabled by user (codi off)
-  }
-  const additionalContext = buildReminder(state, source);
-  const systemMessage = `Co-Dialectic v${state.version} active · mode=${state.mode}${state.persona ? ` · persona=${state.persona}` : ""} — render status line + apply Protocol 3 tiered sharpening per spec.`;
+
+  const installedVersion = resolveInstalledVersion(legacyState ?? loadedState);
+  const state = loadedState ?? buildDefaultState(installedVersion);
+  const source: ReminderStateSource = loadedSource ?? "missing";
+  const livenessState = legacyState ?? loadedState;
+  const liveness = evaluateCodiLiveness(livenessState, installedVersion);
+  const baseContext = buildReminder(state, source, { liveness });
+  const degradationNudge = buildDegradationNudge(liveness);
+  const additionalContext = liveness.degraded
+    ? `${baseContext}\n\n${degradationNudge}`
+    : baseContext;
+  const displayVersion = state.installed_version ?? state.version ?? installedVersion;
+  const systemMessage = liveness.degraded
+    ? degradationNudge
+    : `Co-Dialectic v${displayVersion} active · mode=${state.mode}${state.persona ? ` · persona=${state.persona}` : ""} — render status line + apply Protocol 3 tiered sharpening per spec.`;
   emit(additionalContext, systemMessage);
 }
 

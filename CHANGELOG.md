@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.26.0] — 2026-06-29 — XOS-141: structural liveness (hook-rendered status + fail-LOUD + self-resurrect)
+
+codi liveness made structural so the status line can never silently show a frozen/false-alive snapshot. `~/.codialectic/state.json` split into hook-owned fields (`installed_version`, `last_session_start_ts`, refreshed every SessionStart) vs model-owned (`last_protocol_ts`, score, persona — shown only when fresh). statusline.sh renders `⚠ Codi DEGRADED` on stale/version-skew/inactive instead of a frozen score. install-survival-layer.sh: create-if-missing → idempotent read-merge-write sync + corrupt-state fail-safe (backup before recreate, never silent-wipe of model fields). user-prompt-submit.ts deterministically detects degradation + injects a re-activation nudge (does not write last_protocol_ts). Protocol 1 writes the model-side heartbeat.
+
 ## [4.25.0] — 2026-06-28 — Protocol 12: Cyborg Operating Laws + persona-driven judge panel
 
 Protocol 12 (Cyborg Operating Laws) added to co-dialectic SKILL.md as always-on physics. Root law: "How we treat our agents IS how our PRODUCTS treat our customers." Three operational consequences (principle-over-prohibition, faculty-routing, grandma-test load reduction) and two cross-cutting principles (code-is-truth, constraint-as-innovation-engine). Each law ships with a one-line litmus.
