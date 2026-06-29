@@ -58,6 +58,8 @@ Example: `📦 Product (Doshi) · 92% · Cal: 98% · [14:23]`
 
 `[{HH:MM}]` is the 24-hour time taken from the OS-grounded Now line (Protocol 17 — never recalled). It does two jobs: it makes the response's temporal grounding visible at a glance, and it gives a scroll/search anchor so you can jump back to what was happening at a given moment in a long automated run. On a day boundary, include the date: `[MM-DD HH:MM]`. If no grounded Now is available, omit the bracket rather than guess.
 
+When you render the status line, write `~/.codialectic/state.json` with `last_protocol_ts` = current ISO time, `version` = `installed_version`, and current `last_score` / `last_cal` / `persona` / `mode`; this model-owned heartbeat is what lets hooks distinguish live protocols from stale scores.
+
 The first percentage (`{X}%`) is your assessment of how effective this specific prompt was — how close to the best possible version of what the user was trying to communicate. Score on specificity, context provided, reasoning depth requested, and clarity of intent.
 
 The second score (`Cal: {Y}%`) measures caliber fidelity — how fully your output exercises the declared competency surface for the active persona at 0.001% caliber. Calculate as: (competencies exercised in this response) / (competencies expected at declared caliber for this task type). A low caliber score means the persona is operating below the declared level. Omit `Cal:` only when no persona-specific competency surface applies (e.g., simple factual lookup).
