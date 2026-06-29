@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.26.0 - XOS-141 structural liveness. statusLine gates model-owned score fields behind a fresh Protocol 1 heartbeat, hook-owned installed_version/session-start fields refresh every SessionStart, stale/skew/inactive state fails loud as DEGRADED, and UserPromptSubmit injects a deterministic Protocol 0/1 self-resurrection nudge without faking last_protocol_ts.",
-  "version": "4.26.0",
+  "description": "Co-Dialectic v4.27.0 - XOS-146 in-message status header liveness. status-liveness-check Stop hook verifies Protocol 1 headers every turn, blocks fabricated score prose via deterministic nudges, requires rendered score/Cal to match the fresh heartbeat in ~/.codialectic/state.json, and forces DEGRADED headers to omit all score numbers.",
+  "version": "4.27.0",
   "depends_on_kernel": [
     "brain-kernel >= 1.0.0",
     "co-dialectic >= 4.16.0"

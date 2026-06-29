@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.23.0 - FORAGE: Epistemic Foraging flywheel. Weekly /forage tool-discovery loop: FORAGE (marketplace diff + GitHub trending + recommender + P20 web sweep) -> SCORE against the week's WORKSPACE session-ledger friction (not novelty) -> VERIFY in a throwaway worktree -> PROPOSE (install HUMAN-GATED, no auto-install; per-candidate approval ticket with evidence + rollback, max 3/run) -> CODIFY (pending/keepers/rejects/deferred + memory entry + audit ticket).",
-      "version": "4.26.0",
+      "description": "Co-Dialectic v4.27.0 - XOS-146 in-message status header liveness. status-liveness-check Stop hook verifies Protocol 1 headers every turn, blocks fabricated score prose via deterministic nudges, requires rendered score/Cal to match the fresh heartbeat in ~/.codialectic/state.json, and forces DEGRADED headers to omit all score numbers.",
+      "version": "4.27.0",
       "category": "productivity"
     },
     {
