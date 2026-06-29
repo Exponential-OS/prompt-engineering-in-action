@@ -36,10 +36,10 @@ metadata:
 1. The system-reminder shows `waky-waky` in the "previously invoked skills" list
 2. No prior waky-waky confirmation output (e.g., "Context restored") is visible in the current context window
 
-If BOTH are true → context was compacted and waky-waky lost its state. **Auto-fire immediately** — silently run session-start hooks (Tier 1.5), load Tier 1 + Tier 2 (skip Tier 3 to keep it fast), then emit a single compact line before responding to the user's message:
+If BOTH are true → context was compacted and waky-waky lost its state. **Auto-fire immediately** — silently run session-start hooks (Tier 1.5), load Tier 1 + Tier 2 + Tier 2.6 (skip Tier 3 to keep it fast), then emit a single compact line before responding to the user's message:
 
 ```
-🔄 Context reloaded post-compaction. [Tier 1.5: <one-line summary of hook stdout, or "no hooks registered">]
+🔄 Context reloaded post-compaction. [Tier 1.5: <one-line summary of hook stdout, or "no hooks registered">; Tier 2.6: <memory status>]
 ```
 
 Then continue answering the user's message normally. Do NOT ask the user to say "waky waky." Do NOT tell them compaction happened. Just reload and continue.
@@ -48,9 +48,9 @@ Then continue answering the user's message normally. Do NOT ask the user to say 
 
 ## What to do
 
-On trigger (Mode A or B), read `~/.codialectic/context.json` to discover workspace-specific paths (see Context Registry Contract below). Then load the FULL context set below — silently, no need to dump file contents to the user. Confirm with a compact status line showing what loaded and what was skipped.
+On trigger (Mode A or B), read `~/.codialectic/context.json` to discover workspace-specific paths (see Context Registry Contract below). Then load the context set below — silently, no need to dump file contents to the user. Confirm with a compact status line showing what loaded and what was skipped.
 
-If no context registry exists (fresh install), skip all path-dependent tiers and report `Context registry: not found — Tier 1-4 paths skipped`.
+If no context registry exists (fresh install), skip all registry-dependent tiers and report `Context registry: not found — Tier 1-4 paths skipped`. Tier 2.6 may still resolve the home-level `~/cyborg/memory-index.md` fallback; otherwise report `Tier 2.6 (memory): none (no index path resolved)`.
 
 ### Tier 1 — Constitution + Core Identity (ALWAYS attempt)
 
@@ -73,6 +73,29 @@ If no hooks are registered → Tier 1.5 is empty. Report `Tier 1.5: none (no ses
 5. `{context.workspace_root}/NEXT_SESSION_HANDOFF.md` — root cross-agent relay (narrative history)
 5. `{context.workspace_root}/{context.strategy_rel_path}` — active career/work arc (if configured)
 6. `{context.workspace_root}/workspace.manifest.yaml` — workstream routing map
+
+### Tier 2.6 — Institutional Memory (load if present)
+
+Load the institutional-learning index after Tier 2 and before Tier 3. This is the RECALL layer only: one-line memory summaries that tell the agent what institutional knowledge exists. Full memory files are read on demand only when an index entry is relevant. Never load the full content of all memory files during reincarnation.
+
+Path discovery:
+
+1. If `context.memory_index_path` is present, expand `~`, resolve relative paths against `context.workspace_root`, and load that file if it exists. Relative `memory_index_path` values are valid only when `context.workspace_root` is present; never resolve them against the agent's current working directory. This configured field is authoritative: if it is set but missing, unreadable, a directory, or otherwise fails to resolve, skip the tier rather than falling through.
+2. If `context.memory_index_path` is absent, try `~/cyborg/memory-index.md`.
+3. If that is absent and `context.workspace_root` is configured, try `{context.workspace_root}/MEMORY.md`.
+4. If none resolve, skip silently and report `Tier 2.6 (memory): none (no index path resolved)`.
+
+Fail-open contract:
+
+- Tier 2.6 must be total. Missing files, directories, unreadable paths, permission errors, paths that disappear mid-load, malformed contexts, and empty indexes must never crash reincarnation.
+- Treat any filesystem failure on a candidate path as "candidate did not resolve"; continue to the next fallback only when the configured `memory_index_path` field is absent. If the configured field is present and its candidate fails, return the clean skip status.
+
+Size budget:
+
+- `context.memory_index_budget_bytes` sets the byte budget. Default: `12288` (12 KB).
+- If the index is within budget, load it in full.
+- If the index exceeds budget, load only the UTF-8-safe head up to the budget and append this pointer line: `…(N more bytes — full index at <path>; read on demand)`.
+- Never load the entire oversized index into context. The canonical testable contract for this path/budget behavior is `skills/waky-waky/resolve-memory-index.ts`.
 
 ### Tier 3 — Per-WIP handoffs (glob-load)
 
@@ -117,6 +140,7 @@ Co-Dialectic · Waky Waky — context restored.
   Identity: loaded
   Tier 1.5 (hooks): <PASSED N/N — <one-line summary of hook stdout>> | <none registered>
   Root handoff: loaded (last updated: <date from file>)
+  Tier 2.6 (memory): loaded ~M KB (budget K KB)<, truncated> | none (no index path resolved)
   Per-WIP handoffs: loaded (<N> files)
   Skipped (not found): <list, or "none">
 
@@ -144,6 +168,8 @@ waky-waky discovers workspace paths from `~/.codialectic/context.json`. The work
   "identity_path": "/absolute/path/to/identity.md",
   "brand_path": "/absolute/path/to/professional-brand.md",
   "workspace_root": "/absolute/path/to/workspace",
+  "memory_index_path": "~/cyborg/memory-index.md",
+  "memory_index_budget_bytes": 12288,
   "strategy_rel_path": ".memory/career-strategy.md",
   "people_dir": ".memory/people",
   "companies_dir": ".memory/companies",
@@ -151,7 +177,7 @@ waky-waky discovers workspace paths from `~/.codialectic/context.json`. The work
 }
 ```
 
-All fields are optional. waky-waky skips any tier whose configured path is missing or does not resolve to an existing file. The bootstrap installer is responsible for writing this file with correct absolute paths for the user's machine.
+All fields are optional. waky-waky skips any tier whose configured path is missing or does not resolve to an existing file. `memory_index_path` may be absolute, `~`-relative, or relative to `workspace_root`; a relative value without `workspace_root` is unresolved and must not fall back to cwd. If `memory_index_path` is present, it is authoritative and Tier 2.6 skips on failure rather than loading fallback memory. If `memory_index_path` is absent, Tier 2.6 falls back to `~/cyborg/memory-index.md` and then `{workspace_root}/MEMORY.md`. `memory_index_budget_bytes` defaults to `12288`. The bootstrap installer is responsible for writing this file with correct absolute paths for the user's machine.
 
 Env var override: if `CODI_CONSTITUTION_PATH` is set, it overrides `context.constitution_path`.
 
@@ -245,8 +271,8 @@ On `waky waky`, codi reads this file and executes both checks. The first BLOCKs 
 **Trigger command:** Type `waky waky` in a new session.
 
 **Expected output:**
-1. The agent silently reads the Constitution, identity files, root handoff, and all per-WIP handoffs that exist.
-2. Prints the confirmation status block above with accurate counts (e.g., "Per-WIP handoffs: loaded (4 files)").
+1. The agent silently reads the Constitution, identity files, root handoff, the budgeted institutional-memory index, and all per-WIP handoffs that exist.
+2. Prints the confirmation status block above with accurate counts and memory budget state (e.g., "Per-WIP handoffs: loaded (4 files)" and "Tier 2.6 (memory): loaded ~12 KB (budget 12 KB), truncated").
 3. Does NOT dump file contents or auto-summarize — waits for user direction.
 4. "Skipped (not found)" list is accurate — any file in tiers 1-3 that doesn't exist on disk is listed there.
 

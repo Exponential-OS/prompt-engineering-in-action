@@ -6,7 +6,7 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/Exponential-OS/prompt-engineering-in-action/main"
-VERSION="4.27.0"
+VERSION="4.28.0"
 CONFIG_DIR="$HOME/.co-dialectic"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 TARGET_ARG="auto"
@@ -383,6 +383,13 @@ fetch_skill_extras() {
                 echo "      └─ scripts/judge_panel.ts (cascade harness)"
             else
                 echo "      └─ ⚠️  failed to fetch scripts/judge_panel.ts — judge-panel will not be functional"
+            fi
+            ;;
+        waky-waky)
+            if fetch_repo_file "$REPO/plugins/co-dialectic/skills/waky-waky/resolve-memory-index.ts" "$skill_dir/resolve-memory-index.ts"; then
+                echo "      └─ resolve-memory-index.ts (institutional memory resolver)"
+            else
+                echo "      └─ ⚠️  failed to fetch resolve-memory-index.ts — Tier 2.6 docs still apply, but resolver tests cannot run from this install"
             fi
             ;;
     esac

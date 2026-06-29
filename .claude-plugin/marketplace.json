@@ -11,8 +11,8 @@
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
-      "description": "Co-Dialectic v4.27.0 - XOS-146 in-message status header liveness. status-liveness-check Stop hook verifies Protocol 1 headers every turn, blocks fabricated score prose via deterministic nudges, requires rendered score/Cal to match the fresh heartbeat in ~/.codialectic/state.json, and forces DEGRADED headers to omit all score numbers.",
-      "version": "4.27.0",
+      "description": "Co-Dialectic v4.28.0 - XOS-143 waky-waky institutional-memory tier. Reincarnation now loads a budgeted institutional-learning index after active state and before per-WIP handoffs, with context.json path overrides plus ~/cyborg/memory-index.md and workspace MEMORY.md fallbacks.",
+      "version": "4.28.0",
       "category": "productivity"
     },
     {
