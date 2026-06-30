@@ -6,6 +6,16 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.30.0] — 2026-06-30 — XOS-148: portable hook interpreter path
+
+hooks.json wired all 7 hooks with an absolute, machine-specific interpreter path
+(`/Users/anandvallam/.bun/bin/bun`), so on any other machine — every marketplace
+customer — Claude Code could not execute ANY co-dialectic hook (survival reminder,
+status liveness, version banner, unit-of-work, handoff, judge gate all silently dead).
+Fix: use bare `bun run` (PATH-resolved), matching the repo's own fish-gate hook
+convention (install.sh). Added a test-plugin.sh guard that FAILs if hooks.json
+reintroduces an absolute home-dir interpreter path.
+
 ## [4.29.0] — 2026-06-29 — XOS-149: codi liveness — version-skew gate removed (the real activation fix)
 
 Co-Dialectic DEGRADED was driven by a `version` (model-written) vs `installed_version` (hook-written) skew — two decoupled sources that disagree under cache-sprawl / 'unknown' detection, producing PERMANENT false DEGRADED regardless of heartbeat freshness (XOS-141 shipped the right liveness logic but this version-skew gate kept it from ever activating; reproduced + fixed live 2026-06-29). Fixes: (1) statusline.sh + user-prompt-submit.ts `evaluateCodiLiveness` no longer treat version mismatch as DEGRADED — DEGRADED now means real liveness loss only (stale `last_protocol_ts` / protocol-before-session / inactive); version mismatch is informational. (2) `install-survival-layer.sh` resolves the version from the script-relative plugin.json when `CLAUDE_PLUGIN_ROOT` is unset, so `installed_version` is the real version instead of 'unknown'. (3) The degraded nudge drops the misleading "sync version" instruction (the model owns `last_protocol_ts`/scores/persona/mode; version is hook-owned, not a liveness input). Genuine stale-install detection remains the publish/skew gate's job (XOS-150), not the per-turn statusline.

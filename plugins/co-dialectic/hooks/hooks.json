@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.ts\"",
             "timeout": 3000
           }
         ]
@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-version-banner.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/skill-version-banner.ts\"",
             "timeout": 2000
           }
         ]
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/codify-scan-on-md-edit.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/codify-scan-on-md-edit.ts\"",
             "timeout": 7000
           }
         ]
@@ -55,12 +55,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/status-liveness-check.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/status-liveness-check.ts\"",
             "timeout": 3000
           },
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/unit-of-work-check.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/unit-of-work-check.ts\"",
             "timeout": 5000
           }
         ]
@@ -71,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/precompact-handoff.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/precompact-handoff.ts\"",
             "timeout": 5000
           }
         ]
@@ -82,7 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/anandvallam/.bun/bin/bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-judge-gate.ts\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-judge-gate.ts\"",
             "timeout": 120
           }
         ]
