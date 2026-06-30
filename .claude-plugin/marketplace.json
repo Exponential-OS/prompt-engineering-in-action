@@ -5,14 +5,14 @@
     "email": "thewhyman@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Legacy mirror marketplace \u2014 canonical is Exponential-OS/agent-marketplace (@xos). This path still resolves for backwards compatibility."
+    "description": "Legacy mirror marketplace — canonical is Exponential-OS/agent-marketplace (@xos). This path still resolves for backwards compatibility."
   },
   "plugins": [
     {
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "Co-Dialectic v4.28.0 - XOS-143 waky-waky institutional-memory tier. Reincarnation now loads a budgeted institutional-learning index after active state and before per-WIP handoffs, with context.json path overrides plus ~/cyborg/memory-index.md and workspace MEMORY.md fallbacks.",
-      "version": "4.28.0",
+      "version": "4.29.0",
       "category": "productivity"
     },
     {
@@ -22,7 +22,7 @@
         "url": "https://github.com/Exponential-OS/career-os-plugin.git",
         "sha": "690db081d4a2fd831ef853d86df318c124fbb6d4"
       },
-      "description": "Career OS v0.27.0 \u2014 AI-powered career management system. Persistent memory, session capture, git-versioned data, full privacy. outreach-fact-check (T4 immunity) + interviewer-research (panel prep automation).",
+      "description": "Career OS v0.27.0 — AI-powered career management system. Persistent memory, session capture, git-versioned data, full privacy. outreach-fact-check (T4 immunity) + interviewer-research (panel prep automation).",
       "version": "0.27.0",
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"

@@ -142,14 +142,12 @@ elif [ $((NOW_EPOCH - PROTOCOL_EPOCH)) -gt "$STALE_SECS" ]; then
   STALE=true
 fi
 
-VERSION_SKEW=false
-if [ "$STATE_VERSION" != "$INSTALLED_VERSION" ]; then
-  VERSION_SKEW=true
-fi
-
+# XOS-149: version mismatch is NOT a DEGRADED trigger. `STATE_VERSION` (model-written)
+# vs `INSTALLED_VERSION` (hook-derived) are decoupled sources that falsely skew under
+# cache-sprawl / 'unknown' detection → permanent false DEGRADED. DEGRADED = real
+# liveness loss only: inactive OR stale protocol.
 if [ "$ACTIVE" != "true" ] && [ "$ACTIVE" != "True" ] || \
-   [ "$STALE" = "true" ] || \
-   [ "$VERSION_SKEW" = "true" ]; then
+   [ "$STALE" = "true" ]; then
   echo "⚠ Codi DEGRADED · v${INSTALLED_VERSION} · protocols stale — type 'codi on' to re-activate"
   exit 0
 fi

@@ -426,7 +426,10 @@ describe("freshness predicate parity with statusline.sh", () => {
 
     expect(evaluateStatusFreshness(justInside, NOW, 900).live).toBe(true);
     expect(evaluateStatusFreshness(justOutside, NOW, 900).degraded).toBe(true);
-    expect(evaluateStatusFreshness(baseState({ version: "4.26.0" }), NOW, 900).degraded).toBe(true);
+    // XOS-149: version mismatch is informational, NOT a degraded trigger (was the false-skew bug)
+    const skewOnly = evaluateStatusFreshness(baseState({ version: "4.26.0" }), NOW, 900);
+    expect(skewOnly.degraded).toBe(false);
+    expect(skewOnly.skew).toBe(true);
     expect(evaluateStatusFreshness(baseState({ active: false }), NOW, 900).degraded).toBe(true);
     expect(evaluateStatusFreshness(
       baseState({
