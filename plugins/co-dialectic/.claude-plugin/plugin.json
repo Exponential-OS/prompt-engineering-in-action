@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
   "description": "Co-Dialectic v4.28.0 - XOS-143 waky-waky institutional-memory tier. Reincarnation now loads a budgeted institutional-learning index after active state and before per-WIP handoffs, with context.json path overrides plus ~/cyborg/memory-index.md and workspace MEMORY.md fallbacks.",
-  "version": "4.30.0",
+  "version": "4.31.0",
   "depends_on_kernel": [
     "brain-kernel >= 1.0.0",
     "co-dialectic >= 4.16.0"

@@ -6,6 +6,10 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.31.0] — 2026-07-01 — XOS-167: unify co-dialectic statusline state source
+
+XOS-167: statusline now reads the SAME state source as the survival hook (brain-kernel `co-dialectic/status-state.json` first, legacy `~/.codialectic/state.json` fallback), fixing the split-brain where a single heartbeat left the terminal statusline stale → false DEGRADED. One heartbeat to the brain-kernel path now keeps both the terminal statusline and the survival hook green. Migrated statusline STATE_PATH from legacy-only to brain-kernel-first+fallback; removed the legacy-only read.
+
 ## [4.30.0] — 2026-06-30 — XOS-148: portable hook interpreter path
 
 hooks.json wired all 7 hooks with an absolute, machine-specific interpreter path
