@@ -25,6 +25,10 @@
 
 set -euo pipefail
 
+# Script's own location (hooks/scripts/) — used to resolve plugin.json when
+# CLAUDE_PLUGIN_ROOT is unset (XOS-149: a direct/cold run must still find the real version).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
+
 CODI_DIR="${HOME}/.codialectic"
 STATE_FILE="${CODI_DIR}/state.json"
 RESIDENT_STATUSLINE="${CODI_DIR}/statusline.sh"
@@ -38,8 +42,20 @@ PLUGIN_STATUSLINE="${CLAUDE_PLUGIN_ROOT:-}/hooks/statusline.sh"
 mkdir -p "${CODI_DIR}"
 
 read_plugin_version() {
-  PLUGIN_JSON="${CLAUDE_PLUGIN_ROOT:-}/.claude-plugin/plugin.json"
-  if [ ! -f "${PLUGIN_JSON}" ]; then
+  # Prefer CLAUDE_PLUGIN_ROOT (set by Claude Code when invoking hooks); fall back to the
+  # script's own location (hooks/scripts/ → plugin root is two levels up) so a direct/cold
+  # run resolves the REAL version instead of 'unknown' (XOS-149: 'unknown' caused a permanent
+  # false version-skew that kept codi DEGRADED forever).
+  PLUGIN_JSON=""
+  for candidate in \
+    "${CLAUDE_PLUGIN_ROOT:-}/.claude-plugin/plugin.json" \
+    "${SCRIPT_DIR}/../../.claude-plugin/plugin.json"; do
+    if [ -f "${candidate}" ]; then
+      PLUGIN_JSON="${candidate}"
+      break
+    fi
+  done
+  if [ -z "${PLUGIN_JSON}" ]; then
     echo "unknown"
     return
   fi

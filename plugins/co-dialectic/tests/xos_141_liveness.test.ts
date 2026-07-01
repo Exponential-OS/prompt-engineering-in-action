@@ -203,11 +203,16 @@ describe("statusline freshness gate (XOS-141)", () => {
     expect(runStatusline(home)).toContain("⚠ Codi DEGRADED");
   });
 
-  test("version skew renders DEGRADED", () => {
+  test("version skew is informational only — does NOT render DEGRADED (XOS-149)", () => {
     const home = makeTempDir("codi-xos-141-home-");
+    // version (model-written) != installed_version (hook-written), but otherwise live
+    // (fresh protocol, active). The decoupled-version mismatch must NOT degrade — it was
+    // the permanent-false-DEGRADED bug (reproduced 2026-06-29).
     writeState(home, baseState({ version: "4.25.0" }));
 
-    expect(runStatusline(home)).toContain("⚠ Codi DEGRADED");
+    const out = runStatusline(home);
+    expect(out).not.toContain("⚠ Codi DEGRADED");
+    expect(out).toContain("Product");
   });
 });
 
@@ -288,12 +293,36 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
       new Date("2026-06-29T10:01:00Z"),
     );
 
-    expect(liveness.degraded).toBe(true);
+    expect(liveness.degraded).toBe(true); // from STALE (protocol-before-session), not skew
     expect(liveness.stale).toBe(true);
-    expect(liveness.skew).toBe(true);
+    expect(liveness.skew).toBe(true); // still computed (informational), no longer gates degraded
     expect(buildDegradationNudge(liveness)).toBe(
-      "⚠ CODI DEGRADED (stale/skew) — re-fire Protocol 0/1 NOW: render the status line + set ~/.codialectic/state.json last_protocol_ts to current ISO time + sync version to 4.26.0.",
+      "⚠ CODI DEGRADED — re-fire Protocol 0/1 NOW: render the status line + set ~/.codialectic/state.json last_protocol_ts to current ISO time (and last_score/last_cal/persona/mode).",
     );
+  });
+
+  test("XOS-149 regression: fresh + active + version mismatch (incl 'unknown') is NOT degraded", () => {
+    const now = new Date("2026-06-29T10:01:00Z");
+    const fresh = "2026-06-29T10:00:30Z";
+    const session = "2026-06-29T10:00:00Z";
+    // version != installedVersion (the exact decoupled-field condition that caused
+    // permanent false DEGRADED) — must be LIVE because protocol is fresh + active.
+    for (const acknowledged of ["4.25.0", "unknown", ""]) {
+      const liveness = evaluateCodiLiveness(
+        {
+          active: true,
+          version: acknowledged,
+          installed_version: "4.29.0",
+          last_session_start_ts: session,
+          last_protocol_ts: fresh,
+        },
+        "4.29.0",
+        now,
+      );
+      expect(liveness.degraded).toBe(false);
+      expect(liveness.stale).toBe(false);
+      expect(liveness.inactive).toBe(false);
+    }
   });
 
   test("degraded injected context suppresses stale score/cal", () => {

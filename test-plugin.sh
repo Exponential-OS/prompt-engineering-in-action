@@ -113,6 +113,18 @@ else
 fi
 
 # -----------------------------------------------
+# 7.5 Hook command portability (XOS-148)
+# -----------------------------------------------
+echo ""
+echo "=== 7.5 Hook command portability ==="
+HOOKS_JSON="plugins/co-dialectic/hooks/hooks.json"
+if grep -qE '"command":[[:space:]]*"/(Users|home)/[^"]*/bun' "$HOOKS_JSON"; then
+    fail "hooks.json has an absolute home-dir bun path (breaks on other machines) — use bare 'bun run' (XOS-148)"
+else
+    pass "hooks.json bun invocations are portable (no absolute home-dir interpreter path)"
+fi
+
+# -----------------------------------------------
 # 8. Install script paths reference correct files
 # -----------------------------------------------
 echo ""

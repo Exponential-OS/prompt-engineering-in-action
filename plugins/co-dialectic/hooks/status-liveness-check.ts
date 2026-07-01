@@ -127,9 +127,12 @@ export function evaluateStatusFreshness(
     stale = true;
   }
 
-  const skew = stateVersion !== installedVersion;
+  // XOS-149: version mismatch is INFORMATIONAL only — not a DEGRADED/score-block trigger.
+  // `version` (model-written) vs `installed_version` (hook-written) are decoupled sources
+  // that disagree under cache-sprawl / 'unknown' detection → permanent false DEGRADED.
+  const skew = stateVersion !== "" && stateVersion !== installedVersion;
   const inactive = !isActive(state?.active);
-  const degraded = stale || skew || inactive;
+  const degraded = stale || inactive;
 
   return {
     live: !degraded,

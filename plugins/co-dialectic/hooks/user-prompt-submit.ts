@@ -203,15 +203,20 @@ export function evaluateCodiLiveness(
     reasons.push("protocol-too-old");
   }
 
+  // XOS-149: version mismatch is INFORMATIONAL ONLY — never a DEGRADED trigger.
+  // `version` (model-written, from the reminder's claimed value) and installedVersion
+  // (hook-derived) are decoupled sources that disagree under cache-sprawl / 'unknown'
+  // detection, producing PERMANENT false DEGRADED regardless of heartbeat freshness
+  // (reproduced 2026-06-29). DEGRADED must mean real liveness loss: stale protocol or
+  // inactive. Genuine stale-version detection belongs to the publish/skew gate, not here.
   const stateAcknowledgedVersion = state?.version ?? "";
-  const skew = stateAcknowledgedVersion !== installedVersion;
-  if (skew) reasons.push("version-skew");
+  const skew = stateAcknowledgedVersion !== "" && stateAcknowledgedVersion !== installedVersion;
 
   const inactive = state?.active !== true;
   if (inactive) reasons.push("inactive");
 
   return {
-    degraded: stale || skew || inactive,
+    degraded: stale || inactive,
     stale,
     skew,
     inactive,
@@ -225,9 +230,9 @@ export function buildDegradationNudge(liveness: CodiLiveness): string {
     ? " If active is missing/null, restore active=true; if active=false, respect explicit user-off and tell the user to type 'codi on'."
     : "";
   return (
-    "⚠ CODI DEGRADED (stale/skew) — re-fire Protocol 0/1 NOW: " +
+    "⚠ CODI DEGRADED — re-fire Protocol 0/1 NOW: " +
     "render the status line + set ~/.codialectic/state.json last_protocol_ts " +
-    `to current ISO time + sync version to ${liveness.installedVersion}.` +
+    "to current ISO time (and last_score/last_cal/persona/mode)." +
     inactiveInstruction
   );
 }
