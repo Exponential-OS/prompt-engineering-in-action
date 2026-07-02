@@ -26,6 +26,13 @@
       "version": "0.27.0",
       "category": "productivity",
       "homepage": "https://github.com/Exponential-OS/career-os-plugin"
+    },
+    {
+      "name": "jury",
+      "source": "./plugins/jury",
+      "description": "Jury v0.1.0 — standalone cross-family cascade-then-jury reviewer (the free 'jury beats judge' base). Optional dependency for codi/super-developer cross-family verification.",
+      "version": "0.1.0",
+      "category": "developer-tools"
     }
   ],
   "_product_vs_solution_marker": "product-vs-solution: example - marketplace owner/author attribution is legitimate"
