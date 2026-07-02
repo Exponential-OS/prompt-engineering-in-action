@@ -1,0 +1,6 @@
+{
+  "name": "jury",
+  "description": "Jury v0.1.0 — standalone cross-family cascade-then-jury reviewer (Gemini + GPT small-fish → cross-family tiebreaker). The free 'jury beats judge' base; codi and super-developer depend on it optionally for cross-family verification. No API keys (OAuth local CLIs).",
+  "version": "0.1.0",
+  "category": "developer-tools"
+}
