@@ -6,6 +6,11 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.44.1] - 2026-09-14
+
+- The `codify-scan-on-md-edit.ts` PreToolUse hook hardcoded `~/cyborg/rules/codify-or-mark-uncodified/handler.ts`. `~/cyborg` is being merged into `~/anand-career-os/cyborg/` and deleted; once gone, the hook's `emitSilent()` fallback made the gate go permanently dark with zero signal. It now resolves, in order, an explicit `CYBORG_ROOT` env override, the new `~/anand-career-os/cyborg/` location, then the legacy `~/cyborg/` location — falling through to the existing silent-approve behavior only when none exist (e.g. a fresh OSS install with no cyborg substrate). The in-context remediation string now cites the new canonical path.
+
+---
 ## [4.44.0] - 2026-09-08
 
 - Distribution moves to `Exponential-OS/agent-marketplace` (name `xos`); the source stays here. This repo's own `marketplace.json` is removed so there is exactly one install address — shipping from both produced a 4.43.0/4.41.1 split on one machine within the hour.

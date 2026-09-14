@@ -1,7 +1,7 @@
 {
   "name": "co-dialectic",
   "description": "Co-Dialectic v4.41.1 - Pre-compaction state capture, with the handoff reminder delivered on SessionStart(compact) where the model can act on it.",
-  "version": "4.44.0",
+  "version": "4.44.1",
   "license": "AGPL-3.0",
   "depends_on_kernel": [
     "brain-kernel >= 1.0.0",

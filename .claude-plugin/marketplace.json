@@ -13,7 +13,7 @@
       "name": "co-dialectic",
       "source": "./plugins/co-dialectic",
       "description": "Co-Dialectic v4.38.0 - Single-key sharpen select (I/S/D) + canonical codi command prefix; deterministic Protocol-1 heartbeat.",
-      "version": "4.44.0",
+      "version": "4.44.1",
       "category": "productivity",
       "license": "AGPL-3.0"
     }
