@@ -48,7 +48,23 @@ interface ScanOutput {
   prose_only?: Array<{ line: number; invariant_signal: string; paragraph_excerpt: string }>;
 }
 
-const META_HARNESS = join(homedir(), "cyborg/rules/codify-or-mark-uncodified/handler.ts");
+// Resolves across the ~/cyborg → ~/anand-career-os/cyborg migration (the old
+// path is being deleted). Checked in order: an explicit CYBORG_ROOT override,
+// the new canonical location, then the legacy location for machines that
+// haven't migrated yet. First path that exists on disk wins; if none exist
+// (e.g. a fresh OSS install with no cyborg substrate at all) META_HARNESS is
+// undefined and the caller falls through to emitSilent() — this hook must
+// never fail-hard for users who have no cyborg substrate.
+const META_HARNESS_REL = "rules/codify-or-mark-uncodified/handler.ts";
+function resolveMetaHarness(): string | undefined {
+  const candidates = [
+    process.env.CYBORG_ROOT ? join(process.env.CYBORG_ROOT, META_HARNESS_REL) : undefined,
+    join(homedir(), "anand-career-os/cyborg", META_HARNESS_REL),
+    join(homedir(), "cyborg", META_HARNESS_REL),
+  ].filter((p): p is string => Boolean(p));
+  return candidates.find((p) => existsSync(p));
+}
+const META_HARNESS = resolveMetaHarness();
 const BUN_BIN = "/Users/anandvallam/.bun/bin/bun";
 
 function emitSilent(): never {
@@ -79,6 +95,9 @@ function isInvariantCarrier(absPath: string): boolean {
 
   // Known invariant-carrier locations
   const patterns = [
+    // Substring match — still matches both the legacy ~/cyborg/ location and
+    // the new ~/anand-career-os/cyborg/ location post-migration (verified:
+    // both paths contain the literal "/cyborg/" segment).
     /\/cyborg\//,
     /\/aiprojects\/[^/]+\//,
     /\/anand-career-os\//,
@@ -113,8 +132,9 @@ async function main(): Promise<void> {
   // File doesn't exist on disk yet → nothing to scan
   if (!existsSync(filePath)) emitSilent();
 
-  // Meta-harness must exist (we shipped it earlier)
-  if (!existsSync(META_HARNESS)) emitSilent();
+  // Meta-harness must resolve on this machine (we shipped it earlier — see
+  // resolveMetaHarness() above for the path migration it covers)
+  if (!META_HARNESS) emitSilent();
 
   // Run the scan
   const result = spawnSync(
@@ -159,7 +179,7 @@ async function main(): Promise<void> {
     findings,
     ``,
     `If your edit adds a new behavioral expectation ("must", "always", "never", "INVARIANT", "MANDATORY"):`,
-    `  EITHER pair it with: → ENFORCE: bun run ~/cyborg/rules/<slug>/handler.ts '{...}'`,
+    `  EITHER pair it with: → ENFORCE: bun run ~/anand-career-os/cyborg/rules/<slug>/handler.ts '{...}'`,
     `  OR mark it: [NOT CODIFIED — owner: <name>, ETA: <YYYY-MM-DD>]`,
     `If your edit only touches existing prose-only invariants without creating new ones, proceed.`,
   ].join("\n");

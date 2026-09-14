@@ -1,5 +1,13 @@
 # Changelog — Co-Dialectic
 
+## [4.44.1] — 2026-09-14 — codify-scan-on-md-edit survives the ~/cyborg → ~/anand-career-os/cyborg migration
+
+- **The bug.** `codify-scan-on-md-edit.ts` (the PreToolUse hook that scans `.md` edits for prose-only invariants) hardcoded `META_HARNESS` to `~/cyborg/rules/codify-or-mark-uncodified/handler.ts`. `~/cyborg` is being merged into `~/anand-career-os/cyborg/` and the old tree is slated for deletion. Once it's gone, `existsSync(META_HARNESS)` fails and the hook's own `emitSilent()` fallback — correct behavior for a genuinely cyborg-less install — fires instead, so the gate goes dark with zero signal to either the agent or the user.
+- **The fix.** `resolveMetaHarness()` now checks, in order: `$CYBORG_ROOT/rules/codify-or-mark-uncodified/handler.ts` if the env var is set, then `~/anand-career-os/cyborg/...` (new canonical), then `~/cyborg/...` (legacy, for machines mid-migration). First path that exists on disk wins. `emitSilent()` is unchanged as the behavior when none resolve — this hook must never fail-hard for a fresh OSS install with no cyborg substrate at all.
+- The `isInvariantCarrier()` regex `/\/cyborg\//` was checked, not assumed: it is a substring match, so it still matches file paths under the new `~/anand-career-os/cyborg/` location without changes.
+- The in-context remediation string shown to the agent on a WARN verdict now cites `~/anand-career-os/cyborg/rules/<slug>/handler.ts` instead of the legacy path.
+- Verified with four manual scenarios (no cyborg present, legacy-only, new-location-only, `CYBORG_ROOT` override) — each resolves to the expected handler or falls through to silent-approve correctly.
+
 ## [4.44.0] — 2026-09-08 — distribution moves to the xOS gateway; the AGPL license is stated where it is read
 
 - **Distribution ≠ source.** Co-Dialectic's source stays here — AGPL, public, forkable. Its *distribution* moves to `Exponential-OS/agent-marketplace` (`"name": "xos"`), so every install is a doorway to the other engines rather than a dead end. 4.43.0 had routed installs at this repo's own marketplace in the name of independence, which the code being public already guaranteed; what it actually bought was a second distribution channel.
