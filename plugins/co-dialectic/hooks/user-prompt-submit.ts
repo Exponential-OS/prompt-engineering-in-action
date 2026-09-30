@@ -219,14 +219,24 @@ export function evaluateCodiLiveness(
   };
 }
 
+/**
+ * NAME the header this nudge demands.
+ *
+ * It used to say "render the required status header" while Protocol 1 — two lines above it
+ * in the same reminder — describes the LIVE header. The Stop hook meanwhile demanded the
+ * DEGRADED header and refused to stamp without it, so a compliant agent rendered the live
+ * header, got rejected, the heartbeat never advanced, and the session stayed DEGRADED for
+ * good. The only escape was a string the agent was never given: it appears solely inside
+ * the rejection, which arrives one turn too late. XOS-308.
+ */
 export function buildDegradationNudge(liveness: CodiLiveness): string {
   const inactiveInstruction = liveness.inactive
     ? " If codi was explicitly turned off, tell the user to type 'codi on'."
     : "";
   return (
     "⚠ CODI DEGRADED — re-fire Protocol 0/1 NOW: " +
-    "render the required status header; the Stop hook will stamp the heartbeat " +
-    "after verifying the transcript." +
+    "render `⚠ Codi DEGRADED · [HH:MM]` as the FIRST line, with no score numbers. " +
+    "The Stop hook stamps the heartbeat after verifying the transcript." +
     inactiveInstruction
   );
 }
