@@ -110,8 +110,8 @@
     ]
   },
   "statusLine": {
-    "_note": "Claude Code reads statusLine from user settings.json, not plugin hooks.json. This entry is documentation — the install.sh / SKILL.md installer wires statusline.sh into ~/.claude/settings.json at install time.",
+    "_note": "Claude Code reads statusLine from user settings.json, not from plugin hooks.json, so this entry is DOCUMENTATION of the in-package script and is never executed from here. At install time, hooks/scripts/install-survival-layer.sh copies statusline.sh to a fixed resident location under the user codi state directory and points the real settings.json statusLine at that copy. That is deliberately version-independent, so an upgrade needs no version-sort gymnastics and the status line survives it. Do NOT write a versioned plugin-cache path in this field: it previously pinned 4.14.0, which was 30 minor versions stale, documented the exact anti-pattern the installer exists to avoid, and tripped the vendor-completeness HOST_ABSOLUTE_REFERENCE gate by naming a path outside the package.",
     "type": "command",
-    "command": "bash \"${HOME}/.claude/plugins/cache/xos/co-dialectic/4.14.0/hooks/statusline.sh\""
+    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh\""
   }
 }
