@@ -15,8 +15,8 @@ import {
 } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { evaluateStatusFreshness } from "./status-liveness-check.ts";
-import { evaluateCodiLiveness } from "./user-prompt-submit.ts";
+import { checkStatusLiveness, evaluateStatusFreshness } from "./status-liveness-check.ts";
+import { buildDegradationNudge, evaluateCodiLiveness } from "./user-prompt-submit.ts";
 
 const PLUGIN_ROOT = join(import.meta.dir, "..");
 const STATUSLINE = join(import.meta.dir, "statusline.sh");
@@ -71,6 +71,10 @@ function writeRawState(home: string, raw: string): void {
 
 function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
   const proc = Bun.spawnSync(["bash", STATUSLINE], {
+    // XOS-309: same trap as runUserPromptSubmit below. statusline.sh does
+    // `IFS= read -r STATUS_INPUT`, which blocks until a newline or EOF. Without an
+    // explicit stdin the child inherits the test runner's, which never closes.
+    stdin: "ignore",
     cwd: home,
     env: {
       ...process.env,
@@ -101,6 +105,8 @@ function makePluginRoot(version = "4.34.0"): string {
 
 function runInstallSurvivalLayer(home: string, pluginRoot: string): void {
   const proc = Bun.spawnSync(["bash", INSTALL_SURVIVAL_LAYER], {
+    // XOS-309: explicit stdin for the same reason as the other two spawns in this file.
+    stdin: "ignore",
     cwd: PLUGIN_ROOT,
     env: {
       ...process.env,
@@ -130,6 +136,14 @@ function runUserPromptSubmit(home: string, workspaceRoot: string): {
       CLAUDE_PLUGIN_ROOT: "",
       CODI_STALE_SECS: "900",
     },
+    // XOS-309: stdin MUST be explicit. user-prompt-submit.ts awaits Bun.stdin.text(),
+    // which blocks until EOF. Omitting stdin here makes the child inherit the test
+    // runner's stdin, which never closes -> the child blocks forever -> spawnSync
+    // blocks this process forever -> the ENTIRE file hangs before any result prints,
+    // so bun reports it as zero tests registered and `test:all` dies on its timeout.
+    // "ignore" gives the child an immediate EOF, which is exactly what a real hook
+    // invocation with no payload looks like (readHookInput returns {} on empty stdin).
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -294,5 +308,51 @@ describe("XOS-197 grace-window liveness", () => {
     expect(result.stderr).toBe("");
     expect(result.stdout).not.toBe("");
     expect(JSON.parse(result.stdout).decision).toBe("approve");
+  });
+});
+
+describe("XOS-308: a DEGRADED session can return to LIVE", () => {
+  // The deadlock: while degraded the reminder says score/cal are hidden, so the agent
+  // renders `· score:— · Cal:—`, which fails the LIVE regex (it wants `93% · Cal: 97%`).
+  // The DEGRADED header would pass — but the nudge never named it, so the agent could not
+  // know the string. Both regexes miss, the heartbeat never advances, and the session is
+  // degraded for good. The reminder's own "hide the scores" instruction is what
+  // disqualifies the header it asks for.
+  const degradedState = {
+    last_protocol_ts: "2026-08-14T09:20:27.138918-07:00",
+    last_user_prompt_ts: new Date().toISOString(),
+    version: "4.36.0",
+    active: true,
+  } as unknown as Parameters<typeof checkStatusLiveness>[1];
+
+  test("the nudge NAMES the exact header the gate requires", () => {
+    // Pin the literal string, not a loose match: the whole bug was that the requirement
+    // existed in the gate and appeared nowhere in the instruction.
+    const nudge = buildDegradationNudge({ degraded: true, inactive: false } as never);
+    expect(nudge).toContain("⚠ Codi DEGRADED · [HH:MM]");
+  });
+
+  test("the header the nudge names is the header the gate accepts", () => {
+    // Couples instruction to gate. If either side is edited alone, this fails — which is
+    // exactly the drift that produced XOS-308.
+    const nudge = buildDegradationNudge({ degraded: true, inactive: false } as never);
+    const named = nudge.match(/`([^`]*DEGRADED[^`]*)`/)?.[1];
+    expect(named).toBeTruthy();
+    const rendered = named!.replace("[HH:MM]", "[12:56]");
+    const check = checkStatusLiveness(`${rendered}\n\nbody`, degradedState);
+    expect(check.reason ?? null).toBeNull();
+  });
+
+  test("a score-suppressed live header is still rejected while degraded", () => {
+    // Guard against over-fixing. Note precisely what this pins: the gate ALREADY accepts a
+    // well-formed LIVE header while degraded (there is a separate test for that resurrection
+    // path). What must stay rejected is the MALFORMED hybrid below — persona present, scores
+    // suppressed to em-dashes. Loosening the gate to swallow that would make a silent drop
+    // invisible, which is the whole reason the degraded header exists.
+    const check = checkStatusLiveness(
+      "🎯 career-hoffman · score:— · Cal:— · [12:56]\n\nbody",
+      degradedState,
+    );
+    expect(check.reason).toBe("missing-degraded-header");
   });
 });
