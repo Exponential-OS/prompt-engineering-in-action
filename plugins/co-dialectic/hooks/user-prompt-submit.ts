@@ -222,12 +222,26 @@ export function evaluateCodiLiveness(
 /**
  * NAME the header this nudge demands.
  *
- * It used to say "render the required status header" while Protocol 1 — two lines above it
- * in the same reminder — describes the LIVE header. The Stop hook meanwhile demanded the
- * DEGRADED header and refused to stamp without it, so a compliant agent rendered the live
- * header, got rejected, the heartbeat never advanced, and the session stayed DEGRADED for
- * good. The only escape was a string the agent was never given: it appears solely inside
- * the rejection, which arrives one turn too late. XOS-308.
+ * It used to say "render the required status header" without saying which one. XOS-308.
+ *
+ * ⚠️ The deadlock is NARROWER than "the gate refuses a live header while degraded" — that
+ * is false, and an earlier version of this comment said it. checkStatusLiveness ACCEPTS a
+ * well-formed LIVE header while degraded and stamps on it; there is an existing regression
+ * test requiring exactly that resurrection path. Do NOT "repair" the gate to allow
+ * something it already allows — you would be editing working behaviour to match a wrong
+ * explanation. (Caught by a cross-family review of this very diff, 2026-09-29.)
+ *
+ * The real trap is the MALFORMED HYBRID. Protocol 1, two lines above this nudge in the same
+ * reminder, asks for a persona/score/Cal line unconditionally. While degraded, the reminder
+ * also says the scores are hidden. A compliant agent obeys both and renders
+ * `<persona> · score:— · Cal:— · [HH:MM]` — which satisfies NEITHER regex: not LIVE
+ * (no `93% · Cal: 97%`) and not DEGRADED (wrong prefix). No match means no stamp, the
+ * heartbeat never advances, and the session is degraded for good.
+ *
+ * So the instruction pair is self-defeating: the "hide the scores" half disqualifies the
+ * header the other half asks for. The escape was a string the agent was never given — it
+ * appeared solely inside the Stop hook's rejection, which arrives one turn too late to act
+ * on. This nudge now names it, as the specific exception to Protocol 1's general rule.
  */
 export function buildDegradationNudge(liveness: CodiLiveness): string {
   const inactiveInstruction = liveness.inactive

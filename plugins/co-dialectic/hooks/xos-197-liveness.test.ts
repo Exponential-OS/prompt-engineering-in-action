@@ -344,8 +344,11 @@ describe("XOS-308: a DEGRADED session can return to LIVE", () => {
   });
 
   test("a score-suppressed live header is still rejected while degraded", () => {
-    // Guard against over-fixing: the degraded header exists so a silent drop stays
-    // VISIBLE. Loosening the gate to accept anything would kill that signal.
+    // Guard against over-fixing. Note precisely what this pins: the gate ALREADY accepts a
+    // well-formed LIVE header while degraded (there is a separate test for that resurrection
+    // path). What must stay rejected is the MALFORMED hybrid below — persona present, scores
+    // suppressed to em-dashes. Loosening the gate to swallow that would make a silent drop
+    // invisible, which is the whole reason the degraded header exists.
     const check = checkStatusLiveness(
       "🎯 career-hoffman · score:— · Cal:— · [12:56]\n\nbody",
       degradedState,
