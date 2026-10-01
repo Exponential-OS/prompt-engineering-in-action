@@ -5,10 +5,15 @@ on:
     paths:
       - 'plugins/co-dialectic/**'
       - '.github/workflows/co-dialectic-ci.yml'
+      # XOS-314: .githooks/ carries this repo's pre-commit gates, including the leak check
+      # that keeps private content out of a PUBLIC repo. It was outside every path filter,
+      # so when both gates silently stopped enforcing anything, no CI run noticed.
+      - '.githooks/**'
   pull_request:
     paths:
       - 'plugins/co-dialectic/**'
       - '.github/workflows/co-dialectic-ci.yml'
+      - '.githooks/**'
 
 jobs:
   validate:
@@ -32,3 +37,62 @@ jobs:
 
       - name: install.sh — bare copy sourced from the installed plugin
         run: bash tests/test-install-shadow-source.sh
+
+      # XOS-314: the pre-commit gates had no CI at all. These two checks are deliberately
+      # cheap and deliberately not a full behavioural suite: the hooks call into the cyborg
+      # substrate, which does not exist on a CI runner, so their enforcement paths cannot
+      # be exercised here. What CAN be checked is that they parse, that they are executable,
+      # and that they have not regressed to the warn-and-continue shape this ticket fixed.
+      - name: Git hooks parse and are executable
+        run: |
+          set -euo pipefail
+          count=$(find .githooks -maxdepth 1 -type f | wc -l | tr -d ' ')
+          if [ "$count" -eq 0 ]; then
+            echo "FAIL: .githooks/ holds no files. This workflow is filtered on that path,"
+            echo "so an empty directory means the filter is guarding nothing."
+            exit 1
+          fi
+          find .githooks -maxdepth 1 -type f | while read -r h; do
+            echo "checking $h"
+            bash -n "$h" || { echo "FAIL: $h is not valid bash"; exit 1; }
+            if [ ! -x "$h" ]; then
+              echo "FAIL: $h is not executable, so git will silently never run it."
+              echo "FIX: chmod +x $h"
+              exit 1
+            fi
+          done
+          echo "OK: $count hook(s) parse and are executable"
+
+      - name: Pre-commit hook must not warn-and-continue past a missing gate
+        run: |
+          set -euo pipefail
+          # XOS-314 regression guard. The old hook printed "not found — skipping" and
+          # proceeded, which is indistinguishable from a passing gate in commit output.
+          # A missing primitive under a PRESENT substrate must BLOCK.
+          # Strip comments before matching. The hook's own header QUOTES the old warning
+          # text to document what was broken, and an earlier version of this guard failed
+          # on that quote. A check that cannot tell description from behaviour is the same
+          # defect class it is guarding against.
+          if sed 's/#.*//' .githooks/pre-commit \
+               | grep -nE 'not found.*skipping|skipping (the )?(leak )?check'; then
+            echo ""
+            echo "FAIL: the pre-commit hook skips a gate instead of blocking."
+            echo "A skipped gate and a passing gate look identical in commit output, and this"
+            echo "repo is PUBLIC. A missing primitive under a present substrate must exit 1."
+            exit 1
+          fi
+          # The substrate probe must TEST that a rules/ directory exists, not merely
+          # mention the path. ~/cyborg still exists as a stub holding only brain-db/, so a
+          # bare -d on the root resolves to a real directory with no rules in it.
+          #
+          # Deliberately matching the -d TEST, not the string "/rules": the old broken
+          # hook also contained "/rules" (inside its wrong hardcoded path), so a substring
+          # match passed it. Verified by running both patterns against the old hook from
+          # git history before settling on this one.
+          if ! grep -qE '\-d "?\$\{?[A-Za-z_]+\}?/rules' .githooks/pre-commit; then
+            echo "FAIL: the hook never tests that a rules/ directory EXISTS while resolving"
+            echo "the cyborg substrate, so it can resolve the ~/cyborg stub and go dark."
+            exit 1
+          fi
+          echo "OK: no warn-and-continue, and the substrate probe tests for rules/"
+

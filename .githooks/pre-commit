@@ -6,66 +6,176 @@
 # Install:
 #   git config core.hooksPath .githooks
 #   chmod +x .githooks/pre-commit
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# XOS-314: BOTH GATES WERE DARK. Every commit in this repo printed
+#     ⚠ leak-and-virgin-install: HOW.py not found — skipping leak check
+#     ⚠ plugin-user-content-gate: HOW.sh not found — skipping check
+# and proceeded. This is a PUBLIC AGPL repo and the leak gate is the thing that
+# stops private content reaching it, so it was the one that mattered most.
+#
+# Two independent causes, both worth knowing:
+#
+#   1. WRONG ROOT. The paths were hardcoded to ${HOME}/cyborg/rules/..., but the
+#      substrate moved to ${HOME}/anand-career-os/cyborg/. The trap is that
+#      ~/cyborg STILL EXISTS as a leftover stub containing only brain-db/ — so a
+#      naive [[ -d "$root" ]] test passes while rules/ is absent. Probe for
+#      "$root/rules" specifically, never the root alone.
+#
+#   2. WRONG FILENAME. leak-and-virgin-install migrated HOW.py -> handler.ts
+#      (Constitution P4: handler.ts is canonical, HOW.py/HOW.sh are legacy).
+#      The hook kept looking for the retired name.
+#
+# A warn-and-continue on a missing primitive is a FAIL-HARD violation, and it is
+# the worst kind: a skipped gate and a passing gate are indistinguishable in the
+# commit output unless you read a warning that prints on EVERY commit, which
+# trains everyone to ignore it. So this hook now distinguishes two cases that the
+# old one collapsed into one:
+#
+#   NO SUBSTRATE AT ALL  -> a fresh OSS clone with no cyborg checkout. The gates
+#                           genuinely do not apply. Skip, and say so once, plainly.
+#   SUBSTRATE PRESENT BUT
+#   PRIMITIVE MISSING    -> something is broken or was renamed. BLOCK. This is the
+#                           case that was silently passing.
+# ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# ── Gate 1: Leak gate (always runs) ─────────────────────────────────────────
-LEAK_GATE="${HOME}/cyborg/rules/leak-and-virgin-install/HOW.py"
+# ── Resolve the cyborg substrate root ───────────────────────────────────────
+# Order: explicit override, canonical location, legacy location.
+# Each candidate must contain rules/ to count (see cause 1 above).
+CYBORG_ROOT_RESOLVED=""
+for candidate in "${CYBORG_ROOT:-}" "${HOME}/anand-career-os/cyborg" "${HOME}/cyborg"; do
+  if [[ -n "$candidate" && -d "${candidate}/rules" ]]; then
+    CYBORG_ROOT_RESOLVED="$candidate"
+    break
+  fi
+done
 
-if [[ -f "$LEAK_GATE" ]]; then
-  leak_result=$(python3 "$LEAK_GATE" --staged 2>&1) || leak_exit=$?
-  leak_exit=${leak_exit:-0}
-  if [[ $leak_exit -eq 1 ]]; then
+if [[ -z "$CYBORG_ROOT_RESOLVED" ]]; then
+  echo "ℹ pre-commit: no cyborg substrate found — leak and user-content gates not applicable." >&2
+  echo "  (Looked for rules/ under \$CYBORG_ROOT, ~/anand-career-os/cyborg, ~/cyborg.)" >&2
+  echo "  This is expected on a standalone clone. Set CYBORG_ROOT to enable the gates." >&2
+  exit 0
+fi
+
+# A missing primitive under a PRESENT substrate is a broken gate, not an absent one.
+require_primitive() {
+  local path="$1" name="$2" fix="$3"
+  if [[ ! -f "$path" ]]; then
     echo "" >&2
-    echo "❌ COMMIT BLOCKED — leak-and-virgin-install" >&2
+    echo "❌ COMMIT BLOCKED — ${name}: enforcement primitive missing" >&2
     echo "" >&2
-    echo "$leak_result" >&2
+    echo "  expected: ${path}" >&2
+    echo "  cyborg substrate IS present at: ${CYBORG_ROOT_RESOLVED}" >&2
     echo "" >&2
-    echo "Remediation: move private files to ~/anand-career-os/WIP/ and add patterns to .gitignore" >&2
+    echo "  A substrate that exists but cannot produce this gate means the gate is BROKEN," >&2
+    echo "  not absent. Skipping it would publish unverified content from a public repo," >&2
+    echo "  which is the XOS-314 defect this block exists to prevent." >&2
+    echo "" >&2
+    echo "  FIX: ${fix}" >&2
     echo "" >&2
     exit 1
   fi
-else
-  echo "⚠ leak-and-virgin-install: HOW.py not found — skipping leak check" >&2
+}
+
+require_tool() {
+  local tool="$1" name="$2"
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "" >&2
+    echo "❌ COMMIT BLOCKED — ${name}: '${tool}' is not on PATH, so the gate cannot run." >&2
+    echo "  FIX: install ${tool} and ensure it is on PATH for the process running git." >&2
+    echo "" >&2
+    exit 1
+  fi
+}
+
+# ── Gate 1: Leak gate (always runs) ─────────────────────────────────────────
+LEAK_GATE="${CYBORG_ROOT_RESOLVED}/rules/leak-and-virgin-install/handler.ts"
+require_primitive "$LEAK_GATE" "leak-and-virgin-install" \
+  "confirm the rule directory exists and carries handler.ts (it migrated from HOW.py), or point CYBORG_ROOT at the right substrate."
+require_tool bun "leak-and-virgin-install"
+
+leak_exit=0
+leak_result="$(bun run "$LEAK_GATE" --staged 2>&1)" || leak_exit=$?
+
+if [[ $leak_exit -eq 1 ]]; then
+  echo "" >&2
+  echo "❌ COMMIT BLOCKED — leak-and-virgin-install" >&2
+  echo "" >&2
+  echo "$leak_result" >&2
+  echo "" >&2
+  echo "Remediation: move private files to ~/anand-career-os/WIP/ and add patterns to .gitignore" >&2
+  echo "" >&2
+  exit 1
+elif [[ $leak_exit -eq 2 ]]; then
+  # The handler's documented WARN. Surfaced, not swallowed.
+  echo "⚠ leak-and-virgin-install WARN: ${leak_result}" >&2
+elif [[ $leak_exit -ne 0 ]]; then
+  echo "" >&2
+  echo "❌ COMMIT BLOCKED — leak-and-virgin-install exited ${leak_exit}, which is not a verdict." >&2
+  echo "  The gate ran but produced no usable answer, so nothing verified this commit." >&2
+  echo "" >&2
+  echo "$leak_result" >&2
+  echo "" >&2
+  echo "  FIX: run it directly to see the failure: bun run ${LEAK_GATE} --staged" >&2
+  echo "" >&2
+  exit 1
 fi
 
 # ── Gate 2: Plugin user-content gate (SKILL.md files only) ──────────────────
-CONTENT_GATE="${HOME}/cyborg/rules/plugin-user-content-gate/HOW.sh"
-
 staged_skills=$(git diff --cached --name-only | grep -E "plugins/.*/SKILL\.md" || true)
 if [[ -n "$staged_skills" ]]; then
-  if [[ ! -f "$CONTENT_GATE" ]]; then
-    echo "⚠ plugin-user-content-gate: HOW.sh not found — skipping check" >&2
-  else
-    result=$(bash "$CONTENT_GATE" "${REPO_ROOT}" 2>/dev/null)
-    verdict=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('verdict','WARN'))" 2>/dev/null || echo "WARN")
+  CONTENT_GATE="${CYBORG_ROOT_RESOLVED}/rules/plugin-user-content-gate/HOW.sh"
+  require_primitive "$CONTENT_GATE" "plugin-user-content-gate" \
+    "confirm the rule directory exists and carries HOW.sh, or point CYBORG_ROOT at the right substrate."
 
-    if [[ "$verdict" == "BLOCK" ]]; then
-      echo "" >&2
-      echo "❌ COMMIT BLOCKED — plugin-user-content-gate" >&2
-      echo "" >&2
-      echo "Plugin SKILL.md files contain user-specific content." >&2
-      echo "Product definitions must be generic (distributed to all users)." >&2
-      echo "" >&2
-      echo "Violations:" >&2
-      echo "$result" | python3 -c "
+  content_exit=0
+  result="$(bash "$CONTENT_GATE" "${REPO_ROOT}" 2>/dev/null)" || content_exit=$?
+
+  # Read the verdict from the JSON, but do NOT let a parse failure become a pass:
+  # an unreadable verdict means the gate did not answer, which is a block.
+  verdict="$(printf '%s' "$result" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('verdict','UNREADABLE'))" 2>/dev/null \
+    || printf 'UNREADABLE')"
+
+  if [[ "$verdict" == "UNREADABLE" ]]; then
+    echo "" >&2
+    echo "❌ COMMIT BLOCKED — plugin-user-content-gate produced no readable verdict (exit ${content_exit})." >&2
+    echo "  The gate ran but its output could not be parsed, so nothing verified these SKILL.md files." >&2
+    echo "" >&2
+    printf '%s\n' "$result" >&2
+    echo "" >&2
+    echo "  FIX: run it directly: bash ${CONTENT_GATE} ${REPO_ROOT}" >&2
+    echo "" >&2
+    exit 1
+  fi
+
+  if [[ "$verdict" == "BLOCK" ]]; then
+    echo "" >&2
+    echo "❌ COMMIT BLOCKED — plugin-user-content-gate" >&2
+    echo "" >&2
+    echo "Plugin SKILL.md files contain user-specific content." >&2
+    echo "Product definitions must be generic (distributed to all users)." >&2
+    echo "" >&2
+    echo "Violations:" >&2
+    printf '%s' "$result" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 for v in d.get('violations', []):
     print(f\"  {v['file']}:{v['line']} — {v['description']}\")
     print(f\"    content: {v['content'][:100]}\")
-" 2>/dev/null || echo "$result" >&2
-      echo "" >&2
-      echo "Remediation:" >&2
-      echo "  • Replace hardcoded paths with /path/to/... placeholders or {workspace_root}" >&2
-      echo "  • Replace personal domains/repos with generic examples (your-org/your-repo)" >&2
-      echo "  • User-specific bootstrap config → ~/.codialectic/context.json" >&2
-      echo "  • See: ~/cyborg/rules/plugin-user-content-gate/README.md" >&2
-      echo "" >&2
-      exit 1
-    fi
+" 2>/dev/null || printf '%s\n' "$result" >&2
+    echo "" >&2
+    echo "Remediation:" >&2
+    echo "  • Replace hardcoded paths with /path/to/... placeholders or {workspace_root}" >&2
+    echo "  • Replace personal domains/repos with generic examples (your-org/your-repo)" >&2
+    echo "  • User-specific bootstrap config → ~/.codialectic/context.json" >&2
+    echo "  • See: ${CONTENT_GATE%/HOW.sh}/README.md" >&2
+    echo "" >&2
+    exit 1
   fi
 fi
 
