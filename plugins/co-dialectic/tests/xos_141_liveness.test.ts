@@ -311,7 +311,28 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
     expect(liveness.degraded).toBe(true); // from STALE (protocol-before-session), not skew
     expect(liveness.stale).toBe(true);
     expect(liveness.skew).toBe(true); // still computed (informational), no longer gates degraded
-    expect(buildDegradationNudge(liveness)).toBe(
+
+    // XOS-308 changed this nudge and this assertion was not updated with it, so the suite
+    // carried a real failure. It went unnoticed because `test:all` appeared to hang at the
+    // time, so the full suite was never seen green and the change shipped on a single
+    // file's results. That is the cost of working around a broken suite instead of fixing
+    // it, and it is why XOS-309 mattered beyond the inconvenience.
+    //
+    // Asserting the PROPERTY, not the sentence. The old version pinned the exact string,
+    // which is why a legitimate wording improvement read as a regression. What actually
+    // matters -- and what XOS-308 fixed -- is that the nudge NAMES THE HEADER THE GATE
+    // ACCEPTS. A nudge that says "render the required status header" without saying which
+    // one is the original deadlock: the agent renders the live header, the gate rejects it,
+    // and the heartbeat never advances.
+    const nudge = buildDegradationNudge(liveness);
+    expect(nudge).toContain("CODI DEGRADED");
+    expect(nudge).toContain("⚠ Codi DEGRADED · [HH:MM]"); // the literal the Stop hook accepts
+    expect(nudge).toContain("no score numbers"); // the half that disqualified the live header
+    expect(nudge).toMatch(/Stop hook stamps the heartbeat/i);
+
+    // Pins the regression itself: the pre-XOS-308 wording named no header at all. If the
+    // nudge ever reverts to describing the header instead of quoting it, this fails.
+    expect(nudge).not.toBe(
       "⚠ CODI DEGRADED — re-fire Protocol 0/1 NOW: render the required status header; the Stop hook will stamp the heartbeat after verifying the transcript.",
     );
   });
