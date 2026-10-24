@@ -38,6 +38,63 @@ jobs:
       - name: install.sh — bare copy sourced from the installed plugin
         run: bash tests/test-install-shadow-source.sh
 
+      # ── XOS-309: the test suite was never in CI at all ──────────────────────
+      #
+      # This workflow checked plugin structure, version consistency and install smoke
+      # tests, and never once ran `bun test`. 250 tests across 14 files, zero of them
+      # executed by CI, with no reference to `test:all` anywhere in .github/ or
+      # test-plugin.sh.
+      #
+      # That is not a theoretical gap. XOS-308 changed buildDegradationNudge's text and
+      # broke an assertion in tests/xos_141_liveness.test.ts; the PR went green and merged,
+      # because CI was not running the thing that would have caught it. A suite nobody runs
+      # is the XOS-315 defect with the detection latency set to infinity.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Test suite
+        working-directory: plugins/co-dialectic
+        run: bun run test:all
+
+      - name: The suite must actually have run
+        # XOS-309's third acceptance criterion. A file that registers nothing, or a runner
+        # that exits before registering, produces no failures -- which is indistinguishable
+        # from passing in any log or CI summary. This is the shape that let
+        # hooks/xos-197-liveness.test.ts report zero tests while containing 13.
+        #
+        # The floor is deliberately a real number rather than >0: "at least one test ran"
+        # would still pass if 13 of 14 files silently stopped registering. 200 is comfortably
+        # below the current 250 and comfortably above any plausible partial-discovery
+        # failure, so a collapse trips it while ordinary growth and pruning do not.
+        working-directory: plugins/co-dialectic
+        run: |
+          set -euo pipefail
+          out=$(bun run test:all 2>&1 || true)
+          echo "$out" | tail -5
+          pass=$(printf '%s\n' "$out" | grep -oE '^ *[0-9]+ pass' | grep -oE '[0-9]+' | head -1)
+          files=$(printf '%s\n' "$out" | grep -oE 'across [0-9]+ files?' | grep -oE '[0-9]+' | head -1)
+          if [ -z "${pass:-}" ] || [ -z "${files:-}" ]; then
+            echo ""
+            # `files?` matters: bun prints "across 1 file." (singular) when discovery
+            # collapses to one file. Without it the guard still rejected, but reported "no
+            # countable result" instead of "only 11 tests ran" -- a guard that is confidently
+            # wrong about WHY it fired sends the reader hunting the wrong thing.
+            echo "FAIL: could not read a test count out of the runner's output."
+            echo "  A run that produces no countable result is not a green run."
+            echo "  FIX: run 'bun run test:all' locally and look at what it actually printed."
+            exit 1
+          fi
+          if [ "$pass" -lt 200 ] || [ "$files" -lt 10 ]; then
+            echo ""
+            echo "FAIL: only $pass test(s) across $files file(s) ran; expected ~250 across 14."
+            echo "  Tests did not fail -- they did not REGISTER. That reads as green"
+            echo "  everywhere, which is exactly how this suite went dark before."
+            echo "  FIX: run each file individually to find which one stopped registering."
+            exit 1
+          fi
+          echo "OK: $pass tests across $files files actually ran"
+
       # XOS-314: the pre-commit gates had no CI at all. These two checks are deliberately
       # cheap and deliberately not a full behavioural suite: the hooks call into the cyborg
       # substrate, which does not exist on a CI runner, so their enforcement paths cannot
