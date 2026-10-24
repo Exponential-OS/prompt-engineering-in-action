@@ -306,6 +306,16 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
       },
       "4.26.0",
       new Date("2026-06-29T10:01:00Z"),
+      // staleSecs passed EXPLICITLY. Without it this reads process.env.CODI_STALE_SECS and
+      // falls back to DEFAULT_STALE_SECS = 21600 (6h). The fixture's protocol timestamp is
+      // only 1h before `now`, so under the default it is NOT stale and the whole scenario
+      // inverts: degraded false, and the test fails.
+      //
+      // It passed for anyone whose shell exported CODI_STALE_SECS below 3600 (mine is 2700)
+      // and failed for everyone else -- including CI, the moment the suite was actually run
+      // there. A test whose verdict depends on the author's shell is not a test of the code;
+      // it is a test of the machine. 900 matches what the other suites in this repo pin.
+      900,
     );
 
     expect(liveness.degraded).toBe(true); // from STALE (protocol-before-session), not skew
