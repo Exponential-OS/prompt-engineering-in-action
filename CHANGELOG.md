@@ -6,6 +6,13 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.45.0] — 2026-10-26 — API-key judge lanes removed; OAuth only
+
+- **`judge_panel.ts`: both pay-per-token fallback lanes deleted** — `runGeminiApi` (121 lines) and `runOpenaiApi` (122 lines), plus three CLI flags (`--api-fallback-approved[-gemini|-openai]`), three env vars (`JUDGE_PANEL_API_FALLBACK_APPROVED*`), the module-level approval state, the env-init call, interface fields and usage text. 1457 -> 1151 lines.
+- **Behaviour when a CLI is absent is unchanged from the un-approved path**: `ensureCli()` returns the install instruction. There is no longer any path by which a judge bills a metered API — the rule was previously enforced by a flag nobody set rather than by the absence of the code.
+- **Why now:** the standing rule is OAuth only, never API keys. A sibling fix was stripping credentials out of the judge subprocess environment while this script still advertised flags for spending them. A rule with a documented override is not a rule.
+- Verified: `--help` no longer lists the flags, 12/12 judge-panel tests pass, and the judge-panel **eval** workflow passes without the lanes — which is the check that would have exercised them on a runner lacking the CLIs, so they were not load-bearing.
+
 ## [4.44.2] - 2026-09-29
 
 - **Packaging: the `statusLine` entry in `hooks/hooks.json` pinned a stale `4.14.0` plugin-cache path outside the package.** Shipping version is 4.44.2, so the documented path was 30 minor versions stale, and because it named a path on the publisher's machine the `vendor-completeness` gate reported `HOST_ABSOLUTE_REFERENCE` and refused the publish. That is why co-dialectic could not be declared in that rule's registry at all, which meant nothing had ever compared the published package against its source. Worse, it documented the exact anti-pattern the installer exists to avoid: `hooks/scripts/install-survival-layer.sh` copies `statusline.sh` to a fixed resident location and points `settings.json` there so that, in its own words, there are "no version-sort gymnastics" across upgrades. The entry is never executed (Claude Code reads `statusLine` from user settings, not plugin hooks.json), so this is a documentation and packaging fix with no runtime behaviour change. It now uses `${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh`.
