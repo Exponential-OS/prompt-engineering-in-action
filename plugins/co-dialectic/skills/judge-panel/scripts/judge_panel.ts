@@ -22,10 +22,6 @@
  * If either CLI is MISSING (binary not on PATH), the juror returns verdict="error"
  * with flag CLI_NOT_INSTALLED — UNLESS the user has explicitly approved API-billing
  * fallback for that lane via:
- *   --api-fallback-approved              (master gate — both lanes)
- *   --api-fallback-approved-gemini       (Gemini lane only)
- *   --api-fallback-approved-openai       (OpenAI lane only)
- * or the equivalent JUDGE_PANEL_API_FALLBACK_APPROVED[_{GEMINI,OPENAI}]=1 env vars.
  *
  * If a CLI is INSTALLED but fails (auth, runtime, timeout, non-zero exit), the
  * juror returns the CLI error — NO fallback fires.
@@ -107,35 +103,13 @@ interface ParsedArgs {
   tiebreaker: string | null;
   persona: string | null;
   silent: boolean;
-  apiFallbackApproved: boolean;
-  apiFallbackApprovedGemini: boolean;
-  apiFallbackApprovedOpenai: boolean;
 }
-
-// ─── API-fallback approval state (module-level) ─────────────────────────────
-
-let API_FALLBACK_APPROVED_GEMINI = false;
-let API_FALLBACK_APPROVED_OPENAI = false;
 
 function boolEnv(name: string, defaultVal = false): boolean {
   const v = process.env[name];
   if (v === undefined) return defaultVal;
   return ["1", "true", "yes", "on"].includes(v.trim().toLowerCase());
 }
-
-function initApprovalFromEnv(): void {
-  const master = boolEnv("JUDGE_PANEL_API_FALLBACK_APPROVED", false);
-  API_FALLBACK_APPROVED_GEMINI = boolEnv(
-    "JUDGE_PANEL_API_FALLBACK_APPROVED_GEMINI",
-    master,
-  );
-  API_FALLBACK_APPROVED_OPENAI = boolEnv(
-    "JUDGE_PANEL_API_FALLBACK_APPROVED_OPENAI",
-    master,
-  );
-}
-
-initApprovalFromEnv();
 
 // ─── Config — model pins loaded from CO_DIALECTIC_ENV ───────────────────────
 
@@ -484,257 +458,10 @@ function ensureCli(
     family,
     ["CLI_NOT_INSTALLED"],
     `\`${binName}\` not on PATH — install + authenticate the OAuth CLI, ` +
-      "or pass --api-fallback-approved to allow API-billing fallback. " +
       "See judge_panel.ts docstring for setup.",
   );
 }
 
-// ─── API-fallback runners ───────────────────────────────────────────────────
-
-async function runGeminiApi(
-  model: string,
-  prompt: string,
-): Promise<JurorResult> {
-  const start = Date.now();
-  const apiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    ENV_FILE["GEMINI_API_KEY"] ||
-    ENV_FILE["GOOGLE_API_KEY"] ||
-    "";
-  if (!apiKey) {
-    return newJurorError(
-      model,
-      "google",
-      ["API_FALLBACK_NO_KEY"],
-      "API fallback approved but GEMINI_API_KEY / GOOGLE_API_KEY not set",
-    );
-  }
-  const body = JSON.stringify({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0, maxOutputTokens: 400 },
-  });
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), CALL_TIMEOUT_MS);
-
-  let resp: Response;
-  try {
-    resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body,
-      signal: controller.signal,
-    });
-  } catch (e: unknown) {
-    clearTimeout(timeoutId);
-    const latencyMs = Date.now() - start;
-    const msg = e instanceof Error ? e.message : String(e);
-    if (e instanceof Error && e.name === "AbortError") {
-      return newJurorError(
-        model,
-        "google",
-        ["API_FALLBACK_TIMEOUT"],
-        `timeout after ${CALL_TIMEOUT_S}s`,
-        latencyMs,
-        "",
-        0,
-        0,
-        "timeout",
-      );
-    }
-    return newJurorError(
-      model,
-      "google",
-      ["API_FALLBACK_URL_ERROR"],
-      `gemini api url: ${msg}`,
-      latencyMs,
-    );
-  }
-  clearTimeout(timeoutId);
-
-  if (!resp.ok) {
-    const errBody = (await resp.text()).slice(0, 500);
-    return newJurorError(
-      model,
-      "google",
-      ["API_FALLBACK_HTTP_ERROR"],
-      `gemini api http ${resp.status}: ${errBody}`,
-      Date.now() - start,
-    );
-  }
-
-  let payload: Record<string, unknown>;
-  try {
-    payload = (await resp.json()) as Record<string, unknown>;
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return newJurorError(
-      model,
-      "google",
-      ["API_FALLBACK_PAYLOAD_SHAPE"],
-      `gemini api payload parse: ${msg}`,
-      Date.now() - start,
-    );
-  }
-
-  const latencyMs = Date.now() - start;
-  let raw = "";
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const candidates = (payload as any).candidates;
-    raw = candidates[0].content.parts[0].text ?? "";
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return newJurorError(
-      model,
-      "google",
-      ["API_FALLBACK_PAYLOAD_SHAPE"],
-      `gemini api payload shape: ${msg} — keys=${JSON.stringify(Object.keys(payload))}`,
-      latencyMs,
-    );
-  }
-
-  const result = parseVerdict(
-    raw,
-    model,
-    "google",
-    estimateTokens(prompt),
-    estimateTokens(raw),
-    latencyMs,
-  );
-  if (!result.flags.includes("API_FALLBACK_USED")) {
-    result.flags.unshift("API_FALLBACK_USED");
-  }
-  return result;
-}
-
-async function runOpenaiApi(
-  model: string,
-  prompt: string,
-): Promise<JurorResult> {
-  const start = Date.now();
-  const apiKey = process.env.OPENAI_API_KEY || ENV_FILE["OPENAI_API_KEY"] || "";
-  if (!apiKey) {
-    return newJurorError(
-      model,
-      "openai",
-      ["API_FALLBACK_NO_KEY"],
-      "API fallback approved but OPENAI_API_KEY not set",
-    );
-  }
-  const body = JSON.stringify({
-    model,
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0,
-    max_completion_tokens: 400,
-  });
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), CALL_TIMEOUT_MS);
-
-  let resp: Response;
-  try {
-    resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body,
-      signal: controller.signal,
-    });
-  } catch (e: unknown) {
-    clearTimeout(timeoutId);
-    const latencyMs = Date.now() - start;
-    const msg = e instanceof Error ? e.message : String(e);
-    if (e instanceof Error && e.name === "AbortError") {
-      return newJurorError(
-        model,
-        "openai",
-        ["API_FALLBACK_TIMEOUT"],
-        `timeout after ${CALL_TIMEOUT_S}s`,
-        latencyMs,
-        "",
-        0,
-        0,
-        "timeout",
-      );
-    }
-    return newJurorError(
-      model,
-      "openai",
-      ["API_FALLBACK_URL_ERROR"],
-      `openai api url: ${msg}`,
-      latencyMs,
-    );
-  }
-  clearTimeout(timeoutId);
-
-  if (!resp.ok) {
-    const errBody = (await resp.text()).slice(0, 500);
-    return newJurorError(
-      model,
-      "openai",
-      ["API_FALLBACK_HTTP_ERROR"],
-      `openai api http ${resp.status}: ${errBody}`,
-      Date.now() - start,
-    );
-  }
-
-  let payload: Record<string, unknown>;
-  try {
-    payload = (await resp.json()) as Record<string, unknown>;
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return newJurorError(
-      model,
-      "openai",
-      ["API_FALLBACK_PAYLOAD_SHAPE"],
-      `openai api payload parse: ${msg}`,
-      Date.now() - start,
-    );
-  }
-
-  const latencyMs = Date.now() - start;
-  let raw = "";
-  let tokensIn = estimateTokens(prompt);
-  let tokensOut = 0;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const p = payload as any;
-    raw = p.choices[0].message.content ?? "";
-    const usage = p.usage ?? {};
-    tokensIn = usage.prompt_tokens ?? tokensIn;
-    tokensOut = usage.completion_tokens ?? estimateTokens(raw);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return newJurorError(
-      model,
-      "openai",
-      ["API_FALLBACK_PAYLOAD_SHAPE"],
-      `openai api payload shape: ${msg} — keys=${JSON.stringify(Object.keys(payload))}`,
-      latencyMs,
-    );
-  }
-
-  const result = parseVerdict(
-    raw,
-    model,
-    "openai",
-    tokensIn,
-    tokensOut,
-    latencyMs,
-  );
-  if (!result.flags.includes("API_FALLBACK_USED")) {
-    result.flags.unshift("API_FALLBACK_USED");
-  }
-  return result;
-}
 
 // ─── CLI runners (OAuth) ────────────────────────────────────────────────────
 
@@ -791,9 +518,6 @@ function envWithoutKeys(removeKeys: string[]): Record<string, string | undefined
 
 async function runGemini(model: string, prompt: string): Promise<JurorResult> {
   if (!cliInstalled(AGY_BIN)) {
-    if (API_FALLBACK_APPROVED_GEMINI) {
-      return runGeminiApi(model, prompt);
-    }
     return ensureCli(AGY_BIN, "google", model) as JurorResult;
   }
   const start = Date.now();
@@ -869,9 +593,6 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
 
 async function runCodex(model: string, prompt: string): Promise<JurorResult> {
   if (!cliInstalled(CODEX_BIN)) {
-    if (API_FALLBACK_APPROVED_OPENAI) {
-      return runOpenaiApi(model, prompt);
-    }
     return ensureCli(CODEX_BIN, "openai", model) as JurorResult;
   }
   const start = Date.now();
@@ -1275,9 +996,6 @@ function printUsageError(msg: string): never {
       "                                  [--rubric-text <text>] [--tiebreaker <model>]\n" +
       "                                  [--persona <name(s)>]\n" +
       "                                  [--silent]\n" +
-      "                                  [--api-fallback-approved]\n" +
-      "                                  [--api-fallback-approved-gemini]\n" +
-      "                                  [--api-fallback-approved-openai]\n" +
       "\n" +
       "  --persona        Inject a persona lens into every judge prompt.\n" +
       "                   E.g.: --persona \"Steve Jobs + Jony Ive\"\n" +
@@ -1302,9 +1020,6 @@ function parseArgs(argv: string[]): ParsedArgs {
     // Seed from env first; CLI flag (parsed below) wins over it.
     persona: process.env["JUDGE_PANEL_PERSONAS"] ?? null,
     silent: false,
-    apiFallbackApproved: false,
-    apiFallbackApprovedGemini: false,
-    apiFallbackApprovedOpenai: false,
   };
 
   let i = 0;
@@ -1333,15 +1048,6 @@ function parseArgs(argv: string[]): ParsedArgs {
       args.tiebreaker = needsValue("--tiebreaker");
     } else if (a === "--silent") {
       args.silent = true;
-      i += 1;
-    } else if (a === "--api-fallback-approved") {
-      args.apiFallbackApproved = true;
-      i += 1;
-    } else if (a === "--api-fallback-approved-gemini") {
-      args.apiFallbackApprovedGemini = true;
-      i += 1;
-    } else if (a === "--api-fallback-approved-openai") {
-      args.apiFallbackApprovedOpenai = true;
       i += 1;
     } else if (a === "-h" || a === "--help") {
       printUsageError("help");
@@ -1373,18 +1079,6 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
-
-  // Wire approval flags (CLI flag wins over env-init).
-  if (args.apiFallbackApproved) {
-    API_FALLBACK_APPROVED_GEMINI = true;
-    API_FALLBACK_APPROVED_OPENAI = true;
-  }
-  if (args.apiFallbackApprovedGemini) {
-    API_FALLBACK_APPROVED_GEMINI = true;
-  }
-  if (args.apiFallbackApprovedOpenai) {
-    API_FALLBACK_APPROVED_OPENAI = true;
-  }
 
   let artifact = args.artifact;
   if (args.artifactFile) {
