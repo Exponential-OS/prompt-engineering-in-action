@@ -144,19 +144,41 @@ function loadEnv(path: string): Record<string, string> {
 
 const ENV_FILE = loadEnv(CYBORG_ENV);
 
+// XOS-335: `Gemini 3.5 Flash (Low)` no longer exists in agy's lineup. agy
+// enumerates its models on a bad --model, so a stale pin here is recoverable in
+// one command -- see geminiModelRemediation() below, which turns that dump into
+// the line to run. Verified against agy's live list 2026-10-26.
 const SMALL_GEMINI =
-  ENV_FILE["GEMINI_CLI_DEFAULT_MODEL"] ?? "Gemini 3.5 Flash (Low)";
+  ENV_FILE["GEMINI_CLI_DEFAULT_MODEL"] ?? "Gemini 3.8 Flash (Low)";
 
-// OAuth caveat: ChatGPT-account-auth Codex CLI rejects nano/mini-tier API models.
-// JUDGE_PANEL_OPENAI_OAUTH_MODEL takes precedence; default gpt-5.4.
+/**
+ * ⛔ XOS-335: this pinned `gpt-5.4`, and a ChatGPT-account Codex now answers
+ *   "The 'gpt-5.4' model is not supported when using Codex with a ChatGPT account."
+ * That lane had been dead since the migration. The same thing happened to
+ * `gpt-5.3-codex` before it -- codex's own config.toml carries a
+ * `[notice.model_migrations]` table precisely because this keeps happening.
+ *
+ * ⭐ SO DO NOT PIN ONE. An empty string means "no -m flag", and codex uses the
+ * model the account is actually configured for. A pin here is a dated snapshot
+ * of someone else's lineup; the CLI's own config is the live value, and it is
+ * maintained by the thing that would otherwise break. The model that really
+ * judged is read back from codex's preamble, so the record stays honest.
+ *
+ * An explicit JUDGE_PANEL_OPENAI_OAUTH_MODEL still wins, for pinning on purpose.
+ */
 const OPENAI_OAUTH_DEFAULT =
   ENV_FILE["JUDGE_PANEL_OPENAI_OAUTH_MODEL"] ??
   process.env.JUDGE_PANEL_OPENAI_OAUTH_MODEL ??
-  "gpt-5.4";
+  "";
 const SMALL_OPENAI = OPENAI_OAUTH_DEFAULT;
-const BIG_OPENAI = ENV_FILE["OPENAI_BIG_JUDGE_MODEL"] ?? "gpt-5.4";
+const BIG_OPENAI = ENV_FILE["OPENAI_BIG_JUDGE_MODEL"] ?? OPENAI_OAUTH_DEFAULT;
+
+/** Label for an unpinned lane, until codex reports what it actually used. */
+export const CODEX_ACCOUNT_DEFAULT = "codex-account-default";
+// XOS-335: was `Gemini 3.1 Pro (High)`, which agy rejects outright -- so the
+// TIEBREAKER lane, the one that decides a split panel, was dead too.
 const BIG_GEMINI =
-  ENV_FILE["GEMINI_CLI_PREMIUM_MODEL"] ?? "Gemini 3.1 Pro (High)";
+  ENV_FILE["GEMINI_CLI_PREMIUM_MODEL"] ?? "Gemini 4 Argon (High)";
 
 // Default tiebreaker: Gemini Pro — cross-family + cross-tier vs. the small-fish panel.
 const DEFAULT_TIEBREAKER =
@@ -571,11 +593,12 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
     );
   }
   if (result.exitCode !== 0) {
+    const remediation = geminiModelRemediation(model, result.stderr);
     return newJurorError(
       model,
       "google",
       [],
-      `agy exit ${result.exitCode}: ${result.stderr.slice(0, 500)}`,
+      remediation ?? `agy exit ${result.exitCode}: ${result.stderr.slice(0, 500)}`,
       latencyMs,
     );
   }
@@ -588,6 +611,41 @@ async function runGemini(model: string, prompt: string): Promise<JurorResult> {
     estimateTokens(prompt),
     estimateTokens(raw),
     latencyMs,
+  );
+}
+
+/**
+ * codex prints `model: <id>` in its startup preamble. When the lane is unpinned
+ * that line is the only record of who actually reviewed.
+ */
+export function reportedCodexModel(stdout: string): string {
+  const m = stdout.match(/^model:\s*(\S+)\s*$/m);
+  return m ? m[1] : CODEX_ACCOUNT_DEFAULT;
+}
+
+/**
+ * agy answers an unknown --model with its full available list. That is a
+ * complete, actionable answer buried in a 500-char truncated stderr dump, where
+ * it reads as noise. Lift it into the fix (XOS-335).
+ */
+export function geminiModelRemediation(
+  model: string,
+  stderr: string,
+): string | null {
+  if (!/not recognized as a known model|invalid model selection/i.test(stderr))
+    return null;
+  const available = stderr
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => /^[A-Za-z][\w.\- ]*\((Low|Medium|High)\)$/.test(l));
+  const list = available.length
+    ? ` Available right now: ${available.join(", ")}.`
+    : "";
+  return (
+    `agy does not know the model "${model}", so this lane never ran.${list} ` +
+    `Fix: set GEMINI_CLI_PREMIUM_MODEL / GEMINI_CLI_DEFAULT_MODEL in ` +
+    `~/.co-dialectic/.env to one of those names, or run \`agy --model x -p y\` ` +
+    `to see the current list. Model lineups change; a pin here is a dated snapshot.`
   );
 }
 
@@ -621,8 +679,10 @@ async function runCodex(model: string, prompt: string): Promise<JurorResult> {
           "read-only",
           "--output-last-message",
           lastMsgPath,
-          "-m",
-          model,
+          // An empty model is not a bug: it means "let codex use the account's
+          // configured model" (XOS-335). Passing `-m ""` would be a bug, so the
+          // flag is omitted entirely rather than passed empty.
+          ...(model ? ["-m", model] : []),
           prompt,
         ],
         childEnv,
@@ -683,9 +743,12 @@ async function runCodex(model: string, prompt: string): Promise<JurorResult> {
       raw = result.stdout.trim();
     }
 
+    // Record WHICH model judged. Unpinned, only codex knows, and it prints the
+    // answer in its preamble -- "a named reviewer model in every review artifact"
+    // does not survive a lane that reports an empty string.
     return parseVerdict(
       raw,
-      model,
+      model || reportedCodexModel(result.stdout),
       "openai",
       estimateTokens(prompt),
       estimateTokens(raw),
@@ -721,6 +784,36 @@ interface FinalVerdictResult {
 }
 
 const REAL_VERDICTS: Verdict[] = ["pass", "fail", "uncertain"];
+
+/**
+ * ⛔ XOS-335: main() returned 0 unconditionally. A panel where EVERY lane failed
+ * -- a stale model pin, a CLI rejecting the model, a truncated response --
+ * printed `"final_verdict": "error"`, `"distinct_families_returned": 0`, a LOUD
+ * degradation flag ... and then told its caller SUCCESS.
+ *
+ * XOS-207 built that flag. It put the signal in the JSON and left the exit code
+ * alone, so the only callers protected by it were the ones that parse the JSON.
+ * Any `judge_panel.ts … && merge` saw a clean exit and merged unreviewed code.
+ * "I checked nothing" and "I checked and approved" were the same signal.
+ *
+ * A verdict of `fail` is deliberately still 0: that is the gate WORKING, the
+ * caller reads the verdict, and making a real finding look like a crash would
+ * push people toward `|| true`. Only "the panel did not run" is non-zero.
+ */
+export const EXIT_OK = 0;
+export const EXIT_USAGE = 2;
+export const EXIT_NOT_REVIEWED = 3;
+
+export function exitCodeFor(result: {
+  final_verdict: Verdict;
+  cross_family: { distinct_families_returned: number };
+}): number {
+  if (result.cross_family.distinct_families_returned === 0)
+    return EXIT_NOT_REVIEWED;
+  if (result.final_verdict === "error" || result.final_verdict === "timeout")
+    return EXIT_NOT_REVIEWED;
+  return EXIT_OK;
+}
 
 function returnedRealVerdict(juror: JurorResult): boolean {
   return REAL_VERDICTS.includes(juror.verdict);
@@ -1135,7 +1228,19 @@ async function main(): Promise<number> {
     ? JSON.stringify(result)
     : JSON.stringify(result, null, 2);
   process.stdout.write(json + "\n");
-  return 0;
+
+  const code = exitCodeFor(result);
+  if (code === EXIT_NOT_REVIEWED) {
+    // The JSON already carries the detail. stderr carries the one sentence a
+    // human reading a failed CI step needs, because stdout is usually piped.
+    process.stderr.write(
+      `judge-panel: NOT REVIEWED — ${result.cross_family.distinct_families_returned} ` +
+        `of the cross-family lanes returned a verdict. This is a broken gate, not a ` +
+        `verdict. Fix: check the down_lanes in the JSON above; a model pin that the ` +
+        `CLI no longer recognizes is the usual cause.\n`,
+    );
+  }
+  return code;
 }
 
 if (import.meta.main) {

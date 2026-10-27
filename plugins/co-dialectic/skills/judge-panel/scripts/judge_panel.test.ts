@@ -3,6 +3,12 @@ import {
   appendCrossFamilyDegradationFlag,
   computeCrossFamily,
   computeFinalVerdict,
+  exitCodeFor,
+  geminiModelRemediation,
+  reportedCodexModel,
+  CODEX_ACCOUNT_DEFAULT,
+  EXIT_OK,
+  EXIT_NOT_REVIEWED,
   type JurorResult,
   type Verdict,
 } from "./judge_panel.ts";
@@ -241,5 +247,98 @@ describe("computeFinalVerdict", () => {
 
     expect(result.final_verdict).toBe("pass");
     expect(result.final_confidence).toBe(86);
+  });
+});
+
+// ── XOS-335 ───────────────────────────────────────────────────────────────
+// This panel is the unskippable cross-family gate in /ship-feature. Every test
+// below exists because on 2026-10-26 all three lanes failed -- two stale model
+// pins and a CLI that had migrated out from under one of them -- and the
+// process still exited 0.
+describe("a panel that did not review must not read as success", () => {
+  const ok = { final_verdict: "pass" as Verdict, cross_family: { distinct_families_returned: 2 } };
+
+  test("no family returned a verdict is NOT REVIEWED, not approval", () => {
+    expect(
+      exitCodeFor({ final_verdict: "error", cross_family: { distinct_families_returned: 0 } }),
+    ).toBe(EXIT_NOT_REVIEWED);
+  });
+  test("zero families is NOT REVIEWED whatever the verdict says", () => {
+    // ⭐ This case is why the family count is checked SEPARATELY from the
+    // verdict. The test above passes through the verdict branch alone, so
+    // deleting the count check left the suite green -- caught by mutating it.
+    // An aggregate that reports `pass` while nothing answered is the exact
+    // shape of the bug this whole ticket is about.
+    for (const v of ["pass", "fail", "uncertain"] as Verdict[])
+      expect(
+        exitCodeFor({ final_verdict: v, cross_family: { distinct_families_returned: 0 } }),
+      ).toBe(EXIT_NOT_REVIEWED);
+  });
+  test("verdict error or timeout is NOT REVIEWED even if a lane answered", () => {
+    for (const v of ["error", "timeout"] as Verdict[])
+      expect(
+        exitCodeFor({ final_verdict: v, cross_family: { distinct_families_returned: 1 } }),
+      ).toBe(EXIT_NOT_REVIEWED);
+  });
+  test("a real FAIL verdict stays 0 — that is the gate working", () => {
+    // Deliberate. A finding that looks like a crash gets `|| true`'d, and then
+    // the gate is gone entirely. Callers read the verdict; the exit code only
+    // answers "did this run".
+    for (const v of ["pass", "fail", "uncertain"] as Verdict[])
+      expect(
+        exitCodeFor({ final_verdict: v, cross_family: { distinct_families_returned: 2 } }),
+      ).toBe(EXIT_OK);
+  });
+  test("the healthy path is still 0", () => {
+    expect(exitCodeFor(ok)).toBe(EXIT_OK);
+  });
+});
+
+describe("an unpinned codex lane still names its reviewer", () => {
+  test("reads the model out of codex's preamble", () => {
+    const preamble = [
+      "--------",
+      "workdir: /tmp/x",
+      "model: gpt-6-astra",
+      "provider: openai",
+      "--------",
+    ].join("\n");
+    expect(reportedCodexModel(preamble)).toBe("gpt-6-astra");
+  });
+  test("falls back to a named placeholder, never an empty string", () => {
+    expect(reportedCodexModel("no preamble here")).toBe(CODEX_ACCOUNT_DEFAULT);
+    expect(reportedCodexModel("")).toBe(CODEX_ACCOUNT_DEFAULT);
+  });
+  test("does not match a model mentioned mid-line", () => {
+    expect(reportedCodexModel("the model: gpt-9 was used")).toBe(
+      CODEX_ACCOUNT_DEFAULT,
+    );
+  });
+});
+
+describe("a rejected model pin explains itself", () => {
+  const agyStderr = [
+    'error: invalid model selection (--model "Gemini 3.1 Pro (High)" --effort ""): model Gemini 3.1 Pro (High) is not recognized as a known model or custom model in settings',
+    "Available models:",
+    "  Gemini 4 Argon (High)",
+    "  Gemini 3.8 Flash (Low)",
+    "  Claude Opus 5.5 (Medium)",
+  ].join("\n");
+
+  test("turns agy's dump into the names and the file to edit", () => {
+    const r = geminiModelRemediation("Gemini 3.1 Pro (High)", agyStderr);
+    expect(r).toContain("Gemini 4 Argon (High)");
+    expect(r).toContain("Gemini 3.8 Flash (Low)");
+    expect(r).toContain("GEMINI_CLI_PREMIUM_MODEL");
+    expect(r).toContain("never ran");
+  });
+  test("stays null for unrelated failures, so real errors are not masked", () => {
+    expect(geminiModelRemediation("m", "network unreachable")).toBeNull();
+    expect(geminiModelRemediation("m", "")).toBeNull();
+  });
+  test("still helps when the list is missing from stderr", () => {
+    const r = geminiModelRemediation("m", "model m is not recognized as a known model");
+    expect(r).toContain("agy --model");
+    expect(r).not.toContain("Available right now");
   });
 });

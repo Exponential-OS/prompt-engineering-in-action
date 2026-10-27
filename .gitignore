@@ -50,3 +50,8 @@ plugins/co-dialectic/demo/codi-product-educational*.mp4
 # has a workspace-identity gate that prevents this from happening again,
 # but this .gitignore is defense-in-depth in case the gate is bypassed.
 brain/sessions/
+
+# XOS-335: neither of these was ignored, and nothing tracked them either -- so the
+# only thing standing between a routine `bun install` + `git add -A` and a 20MB
+# accidental commit was that nobody had done both in the same checkout yet. I did.
+node_modules/

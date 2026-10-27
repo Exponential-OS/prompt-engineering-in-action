@@ -6,6 +6,65 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.46.0] — 2026-10-26 — XOS-335: the judge panel told its caller SUCCESS after reviewing nothing
+
+Found by running the panel as the unskippable cross-family gate on a real PR. All
+three lanes went down, and the process **exited 0**.
+
+### The defect that matters
+
+`main()` ended in `return 0`, unconditionally. So a panel where every lane failed
+printed `"final_verdict": "error"`, `"distinct_families_returned": 0` and a loud
+degradation flag, then reported success.
+
+XOS-207 built that flag. It put the signal in the JSON and left the exit code
+alone, so the only callers it protects are the ones that parse JSON —
+`task-completed-judge-gate.ts` does, and blocks correctly. Anything shaped like
+`judge_panel.ts … && merge` did not. **"I reviewed nothing" and "I reviewed and
+approved" were the same signal to the shell.**
+
+`exitCodeFor()` now returns **3 = NOT REVIEWED** when no family answered or the
+verdict is `error`/`timeout`, with one sentence on stderr because stdout is
+usually piped. A `fail` verdict deliberately stays **0**: that is the gate
+working, the caller reads the verdict, and making a real finding look like a
+crash is how a gate earns a `|| true`.
+
+### Three dead model pins
+
+| lane | pin | what the CLI said |
+| -- | -- | -- |
+| google tiebreaker | `Gemini 3.1 Pro (High)` | `not recognized as a known model` — the lane that decides a split panel |
+| google small | `Gemini 3.5 Flash (Low)` | also gone |
+| openai | `gpt-5.4` | `not supported when using Codex with a ChatGPT account` |
+
+**The openai lane now pins nothing.** codex's own `config.toml` carries a
+`[notice.model_migrations]` table (`gpt-5.3-codex → gpt-5.4 → gpt-5.5`), so
+replacing one literal with another just resets the clock. The lane omits `-m` and
+uses the account's configured model — the CLI's config is the live value,
+maintained by the party that would otherwise break it. `JUDGE_PANEL_OPENAI_OAUTH_MODEL`
+still wins for pinning on purpose, and the model that actually judged is read back
+from codex's preamble so "name the reviewer model" survives an unpinned lane.
+
+agy needs `--model`, so its defaults move to current ones and a rejected pin now
+reads as a fix: agy answers an unknown model with its full available list, which
+was being truncated inside a 500-char stderr dump. `geminiModelRemediation()`
+lifts the names and the file to edit into the error message.
+
+### One mutant survived, and that is the useful part
+
+Four guards, four mutants. Deleting the `distinct_families_returned === 0` check
+left all 22 tests green — the test written for it was passing through the *verdict*
+branch instead, so the check was decorative. A test aimed at one branch that passes
+via another is how a vacuous guard ships. Added the case that fails without it; 23
+tests pass and all four mutants now die.
+
+### Verified live, not recalled
+
+`Gemini 4 Argon (High)` and the unpinned codex lane both return clean JSON. Re-run
+against a real 25KB diff, the repaired panel returned **two cross-family verdicts
+with three real findings** on the artifact under review — two of them found by both
+families independently.
+
 ## [4.45.0] — 2026-10-26 — API-key judge lanes removed; OAuth only
 
 - **`judge_panel.ts`: both pay-per-token fallback lanes deleted** — `runGeminiApi` (121 lines) and `runOpenaiApi` (122 lines), plus three CLI flags (`--api-fallback-approved[-gemini|-openai]`), three env vars (`JUDGE_PANEL_API_FALLBACK_APPROVED*`), the module-level approval state, the env-init call, interface fields and usage text. 1457 -> 1151 lines.
