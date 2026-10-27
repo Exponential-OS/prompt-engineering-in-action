@@ -378,7 +378,71 @@ function newJurorError(
   };
 }
 
-function parseVerdict(
+/**
+ * ⛔ THE PANEL WAS THROWING AWAY ITS BEST REVIEWS.
+ *
+ * parseVerdict() extracted the verdict with `/\{[\s\S]*?\}/` -- NON-GREEDY, so
+ * it stopped at the first `}` ANYWHERE in the response, including one inside a
+ * string. A juror that wrote
+ *
+ *     {"verdict":"fail","flags":["`{ domain: \"\" }` falls back silently"]}
+ *
+ * got truncated mid-string and came back as `json decode: Unterminated string`,
+ * i.e. a DOWN LANE. The verdict, the confidence and every finding were discarded.
+ *
+ * ⭐ THE SELECTION BIAS IS THE REAL DAMAGE. A juror that says "looks fine" has no
+ * reason to quote code. A juror that found something quotes the line -- and code
+ * is where the braces are. So the panel dropped verdicts in proportion to how
+ * specific they were, and the degradation looked like a flaky CLI rather than
+ * censorship of the findings. Three separate lanes hit it on one review tonight,
+ * every one of them carrying real defects.
+ *
+ * Balanced scan instead, string- and escape-aware. Each `{` is tried in turn, so
+ * a brace in the prose before the JSON costs a retry rather than the verdict.
+ *
+ * "Parses as JSON" is NOT a sufficient acceptance test, which a test caught: a
+ * juror writing "note: {} is empty" before its verdict hands you a perfectly
+ * valid `{}`, and taking it turns a real verdict into `error` just as surely as
+ * the truncation did. So a candidate carrying the key we came for wins, and a
+ * bare valid object is only the fallback.
+ */
+export function extractJsonObject(
+  raw: string,
+  requiredKey = "verdict",
+): string | null {
+  let fallback: string | null = null;
+  for (let start = raw.indexOf("{"); start >= 0; start = raw.indexOf("{", start + 1)) {
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let i = start; i < raw.length; i++) {
+      const c = raw[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (c === "\\") esc = true;
+        else if (c === '"') inStr = false;
+        continue;
+      }
+      if (c === '"') inStr = true;
+      else if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) {
+        const candidate = raw.slice(start, i + 1);
+        try {
+          const parsed = JSON.parse(candidate);
+          if (parsed && typeof parsed === "object" && requiredKey in parsed)
+            return candidate;
+          fallback ??= candidate;
+        } catch {
+          // balanced but not valid JSON -- fall through to the next `{`
+        }
+        break;
+      }
+    }
+  }
+  return fallback;
+}
+
+export function parseVerdict(
   raw: string,
   model: string,
   family: string,
@@ -386,8 +450,7 @@ function parseVerdict(
   tokensOut: number,
   latencyMs: number,
 ): JurorResult {
-  // Non-greedy JSON-object regex with DOTALL semantics.
-  const match = raw.match(/\{[\s\S]*?\}/);
+  const match = extractJsonObject(raw);
   if (!match) {
     return newJurorError(
       model,
@@ -402,7 +465,7 @@ function parseVerdict(
   }
   let obj: Record<string, unknown>;
   try {
-    obj = JSON.parse(match[0]) as Record<string, unknown>;
+    obj = JSON.parse(match) as Record<string, unknown>;
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return newJurorError(

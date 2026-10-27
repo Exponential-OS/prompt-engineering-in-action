@@ -44,6 +44,47 @@ reads as a fix: agy answers an unknown model with its full available list, which
 was being truncated inside a 500-char stderr dump. `geminiModelRemediation()`
 lifts the names and the file to edit into the error message.
 
+### The panel was discarding its own best reviews
+
+Found while using the repaired panel: three separate lanes in one review came back
+as `json decode: JSON Parse error: Unterminated string`, which reads like a flaky
+CLI. It was not.
+
+`parseVerdict()` extracted the verdict with `/\{[\s\S]*?\}/` — **non-greedy**, so
+it stopped at the first `}` anywhere in the response, including one inside a
+string. A juror that wrote
+
+```
+{"verdict":"fail","flags":["`{ domain: \"\" }` falls back silently"]}
+```
+
+got truncated mid-string and was recorded as a DOWN LANE. Verdict, confidence and
+every finding: discarded.
+
+⭐ **The selection bias is the real damage.** A juror that says "looks fine" has no
+reason to quote code. A juror that found something quotes the line, and code is
+where the braces are. So the panel dropped verdicts *in proportion to how specific
+they were*, and it looked like infrastructure flakiness rather than a filter on
+findings. Every one of the three lost lanes that night was carrying a real defect.
+
+Replaced with a balanced, string- and escape-aware scan. A brace in prose before
+the JSON costs a retry rather than the verdict. "Parses as JSON" turned out not to
+be a sufficient acceptance test — a juror writing "note: `{}` is empty" hands you a
+perfectly valid `{}`, and taking it turns a real verdict into `error` just as
+surely as the truncation did — so a candidate carrying the `verdict` key wins and a
+bare valid object is only the fallback.
+
+**Two more mutants survived the first attempt at these tests:**
+
+- Restoring the non-greedy regex *at the call site* left all tests green, because
+  they called the helper directly. Testing a helper is not testing the thing that
+  ships. `parseVerdict` is exported now and tested through.
+- Deleting escape tracking left them green, because the escape case used `C:\\x`,
+  which parses identically either way. The discriminating input is an escaped
+  quote followed by a brace, still inside the string.
+
+29 tests pass; every mutant now dies.
+
 ### One mutant survived, and that is the useful part
 
 Four guards, four mutants. Deleting the `distinct_families_returned === 0` check

@@ -4,6 +4,8 @@ import {
   computeCrossFamily,
   computeFinalVerdict,
   exitCodeFor,
+  extractJsonObject,
+  parseVerdict,
   geminiModelRemediation,
   reportedCodexModel,
   CODEX_ACCOUNT_DEFAULT,
@@ -340,5 +342,59 @@ describe("a rejected model pin explains itself", () => {
     const r = geminiModelRemediation("m", "model m is not recognized as a known model");
     expect(r).toContain("agy --model");
     expect(r).not.toContain("Available right now");
+  });
+});
+
+describe("a finding that quotes code must not cost the juror its verdict", () => {
+  test("a brace INSIDE a string no longer truncates the object", () => {
+    // The exact payload that came back as a down lane three times in one review.
+    // The old extractor was non-greedy and stopped at the first `}` anywhere.
+    const raw =
+      '{"verdict":"fail","confidence":92,"flags":["`{ domain: \\"\\" }` falls back silently"]}';
+    const got = extractJsonObject(raw);
+    expect(got).not.toBeNull();
+    expect(JSON.parse(got!).verdict).toBe("fail");
+    expect(JSON.parse(got!).flags[0]).toContain("falls back silently");
+  });
+  test("nested objects survive", () => {
+    const raw = '{"verdict":"pass","meta":{"a":{"b":1}},"flags":[]}';
+    expect(JSON.parse(extractJsonObject(raw)!).meta.a.b).toBe(1);
+  });
+  test("prose and fences before the JSON cost a retry, not the verdict", () => {
+    for (const raw of [
+      'Here is my verdict (note: {} is empty):\n{"verdict":"pass","flags":[]}',
+      '```json\n{"verdict":"pass","flags":[]}\n```',
+      'see function foo() { return 1 } then: {"verdict":"pass","flags":[]}',
+    ])
+      expect(JSON.parse(extractJsonObject(raw)!).verdict).toBe("pass");
+  });
+  test("an ESCAPED QUOTE inside a string does not end the string early", () => {
+    // The previous version of this test used `C:\\x`, which passes with escape
+    // tracking DELETED -- mutating the tracker away left the suite green. The
+    // discriminating case needs an escaped quote followed by a brace, still
+    // inside the string: without tracking, the \" closes it and the } ends the
+    // object two keys early.
+    const raw =
+      '{"verdict":"pass","flags":["he said \\" } and left"],"n":1}';
+    const got = extractJsonObject(raw);
+    expect(got).not.toBeNull();
+    expect(JSON.parse(got!).n).toBe(1);
+    expect(JSON.parse(got!).flags[0]).toContain("and left");
+  });
+  test("parseVerdict ITSELF uses the balanced scan, not just the helper", () => {
+    // The first version of these tests called extractJsonObject directly, so
+    // restoring the non-greedy regex at the CALL SITE left all of them green.
+    // Testing a helper is not testing the thing that ships.
+    const raw =
+      '{"verdict":"fail","confidence":88,"flags":["`{ a: 1 }` is wrong"]}';
+    const r = parseVerdict(raw, "m", "google", 0, 0, 0);
+    expect(r.verdict).toBe("fail");
+    expect(r.confidence).toBe(88);
+    expect(r.error ?? "").not.toContain("json decode");
+  });
+  test("no object, or no VALID object, returns null rather than guessing", () => {
+    expect(extractJsonObject("no json here")).toBeNull();
+    expect(extractJsonObject("{ not json at all ")).toBeNull();
+    expect(extractJsonObject("")).toBeNull();
   });
 });
