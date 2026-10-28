@@ -22,7 +22,7 @@
  *
  * Design notes:
  *   - Calls judge_panel.ts UNCHANGED (P2/P3 — the harness is the platform).
- *     Spec: anand-career-os WIP/prompt-engineering-in-action-product/
+ *     Spec: the co-dialectic product folder in the maintainer's workspace
  *     co-dialectic/spec-judge-panel-on-workflow-2026-06-04.md (amended:
  *     Workflow re-platform cancelled; this gate promoted to deliverable).
  *   - Rubric: spec-coherence (task summaries are claims about work done —

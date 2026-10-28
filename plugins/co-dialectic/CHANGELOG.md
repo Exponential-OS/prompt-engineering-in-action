@@ -1,5 +1,140 @@
 # Changelog — Co-Dialectic
 
+## [4.47.0] — 2026-10-27 — the hardcoded-home-path fix, actually shipped
+
+PR #44 fixed a hook that hardcoded one developer's bun path in a PUBLIC plugin.
+The hook approves on error, so on every other machine `spawnSync` failed and the
+gate approved everything, silently, forever. XOS-360 recorded it as *"fixed and
+merged"*.
+
+**It was never merged.** The branch sat open, one commit behind main, CI green.
+The leak was still present in source, in the vendored marketplace copy, and in
+the installed plugin. A belief that something is fixed is more dangerous than
+knowing it is broken, and that belief is what this release corrects.
+
+Rebased onto main (which had moved to 4.46.0), bumped to 4.47.0 — the branch
+carried 4.45.0, so merging as-is would have regressed the version and shipped
+the fix to nobody, exactly as happened to career-intelligence 1.0.0 the same day.
+
+Also removed a provenance comment in `hooks/task-completed-judge-gate.ts` naming
+a private workspace path, in a public repo.
+
+### Verified with both controls, because this hook has twice looked fixed and wasn't
+
+- `BUN_BIN` resolves to a real executable rather than one machine's home.
+- The meta-harness resolver finds the live handler through generic
+  `<home>/<workspace>/cyborg` discovery.
+- **Negative control:** a plain prose `.md` → silent approve, which is correct.
+- **Positive control:** a file the harness genuinely BLOCKs (`prose_only: 7` in
+  `references/invariants/`) → the hook emits `⚠ 1 prose-only invariant` with full
+  context.
+
+The positive control is the one that matters. XOS-360 records a prior pass
+writing "still fires its warning" into a commit message after watching a single
+`approve` — which proves nothing, because `approve` is also what a dead gate
+returns. Three constructed test inputs failed to trip the harness before a real
+violation was found by scanning for one.
+
+## [4.46.0] — 2026-10-26 — XOS-335: the judge panel told its caller SUCCESS after reviewing nothing
+
+Found by running the panel as the unskippable cross-family gate on a real PR. All
+three lanes went down, and the process **exited 0**.
+
+### The defect that matters
+
+`main()` ended in `return 0`, unconditionally. So a panel where every lane failed
+printed `"final_verdict": "error"`, `"distinct_families_returned": 0` and a loud
+degradation flag, then reported success.
+
+XOS-207 built that flag. It put the signal in the JSON and left the exit code
+alone, so the only callers it protects are the ones that parse JSON —
+`task-completed-judge-gate.ts` does, and blocks correctly. Anything shaped like
+`judge_panel.ts … && merge` did not. **"I reviewed nothing" and "I reviewed and
+approved" were the same signal to the shell.**
+
+`exitCodeFor()` now returns **3 = NOT REVIEWED** when no family answered or the
+verdict is `error`/`timeout`, with one sentence on stderr because stdout is
+usually piped. A `fail` verdict deliberately stays **0**: that is the gate
+working, the caller reads the verdict, and making a real finding look like a
+crash is how a gate earns a `|| true`.
+
+### Three dead model pins
+
+| lane | pin | what the CLI said |
+| -- | -- | -- |
+| google tiebreaker | `Gemini 3.1 Pro (High)` | `not recognized as a known model` — the lane that decides a split panel |
+| google small | `Gemini 3.5 Flash (Low)` | also gone |
+| openai | `gpt-5.4` | `not supported when using Codex with a ChatGPT account` |
+
+**The openai lane now pins nothing.** codex's own `config.toml` carries a
+`[notice.model_migrations]` table (`gpt-5.3-codex → gpt-5.4 → gpt-5.5`), so
+replacing one literal with another just resets the clock. The lane omits `-m` and
+uses the account's configured model — the CLI's config is the live value,
+maintained by the party that would otherwise break it. `JUDGE_PANEL_OPENAI_OAUTH_MODEL`
+still wins for pinning on purpose, and the model that actually judged is read back
+from codex's preamble so "name the reviewer model" survives an unpinned lane.
+
+agy needs `--model`, so its defaults move to current ones and a rejected pin now
+reads as a fix: agy answers an unknown model with its full available list, which
+was being truncated inside a 500-char stderr dump. `geminiModelRemediation()`
+lifts the names and the file to edit into the error message.
+
+### The panel was discarding its own best reviews
+
+Found while using the repaired panel: three separate lanes in one review came back
+as `json decode: JSON Parse error: Unterminated string`, which reads like a flaky
+CLI. It was not.
+
+`parseVerdict()` extracted the verdict with `/\{[\s\S]*?\}/` — **non-greedy**, so
+it stopped at the first `}` anywhere in the response, including one inside a
+string. A juror that wrote
+
+```
+{"verdict":"fail","flags":["`{ domain: \"\" }` falls back silently"]}
+```
+
+got truncated mid-string and was recorded as a DOWN LANE. Verdict, confidence and
+every finding: discarded.
+
+⭐ **The selection bias is the real damage.** A juror that says "looks fine" has no
+reason to quote code. A juror that found something quotes the line, and code is
+where the braces are. So the panel dropped verdicts *in proportion to how specific
+they were*, and it looked like infrastructure flakiness rather than a filter on
+findings. Every one of the three lost lanes that night was carrying a real defect.
+
+Replaced with a balanced, string- and escape-aware scan. A brace in prose before
+the JSON costs a retry rather than the verdict. "Parses as JSON" turned out not to
+be a sufficient acceptance test — a juror writing "note: `{}` is empty" hands you a
+perfectly valid `{}`, and taking it turns a real verdict into `error` just as
+surely as the truncation did — so a candidate carrying the `verdict` key wins and a
+bare valid object is only the fallback.
+
+**Two more mutants survived the first attempt at these tests:**
+
+- Restoring the non-greedy regex *at the call site* left all tests green, because
+  they called the helper directly. Testing a helper is not testing the thing that
+  ships. `parseVerdict` is exported now and tested through.
+- Deleting escape tracking left them green, because the escape case used `C:\\x`,
+  which parses identically either way. The discriminating input is an escaped
+  quote followed by a brace, still inside the string.
+
+29 tests pass; every mutant now dies.
+
+### One mutant survived, and that is the useful part
+
+Four guards, four mutants. Deleting the `distinct_families_returned === 0` check
+left all 22 tests green — the test written for it was passing through the *verdict*
+branch instead, so the check was decorative. A test aimed at one branch that passes
+via another is how a vacuous guard ships. Added the case that fails without it; 23
+tests pass and all four mutants now die.
+
+### Verified live, not recalled
+
+`Gemini 4 Argon (High)` and the unpinned codex lane both return clean JSON. Re-run
+against a real 25KB diff, the repaired panel returned **two cross-family verdicts
+with three real findings** on the artifact under review — two of them found by both
+families independently.
+
 ## [4.44.1] — 2026-09-14 — codify-scan-on-md-edit survives the ~/cyborg → ~/anand-career-os/cyborg migration
 
 - **The bug.** `codify-scan-on-md-edit.ts` (the PreToolUse hook that scans `.md` edits for prose-only invariants) hardcoded `META_HARNESS` to `~/cyborg/rules/codify-or-mark-uncodified/handler.ts`. `~/cyborg` is being merged into `~/anand-career-os/cyborg/` and the old tree is slated for deletion. Once it's gone, `existsSync(META_HARNESS)` fails and the hook's own `emitSilent()` fallback — correct behavior for a genuinely cyborg-less install — fires instead, so the gate goes dark with zero signal to either the agent or the user.
