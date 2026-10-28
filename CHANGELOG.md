@@ -6,6 +6,43 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.47.0] — 2026-10-27 — the hardcoded-home-path fix, actually shipped
+
+XOS-360 recorded this as *"fixed and merged in PR #44."* **PR #44 was still
+open** — one commit behind main, CI green, untouched. The hardcoded
+`/Users/<name>/.bun/bin/bun` in `hooks/codify-scan-on-md-edit.ts` was live in
+source, in the vendored marketplace copy, and in the installed plugin.
+
+The hook approves on error, so on every machine but one `spawnSync` failed and
+the gate approved everything with no signal it had never worked. A belief that
+something is fixed is worse than knowing it is broken, because nobody looks
+again — that is the finding here, more than the path.
+
+Found while widening `plugin-product-ship-gate` to scan `.ts`/`.py` (XOS-357):
+this line came back as one of 15 hits across every engine. The widening paid for
+itself on its first run.
+
+The branch carried **4.45.0** while main had moved to 4.46.0, so merging as-is
+would have regressed the version and delivered the fix to nobody — the same trap
+that caught `career-intelligence` 1.0.0 the same day. Rebased, bumped across all
+five version sources.
+
+Also removed a provenance comment in `hooks/task-completed-judge-gate.ts` naming
+a private workspace path, in a public repo.
+
+### Verified with both controls
+
+`BUN_BIN` resolves to a real executable; the meta-harness resolver finds the live
+handler through generic `<home>/<workspace>/cyborg` discovery; a plain prose `.md`
+returns a silent `approve`; and a file the harness genuinely BLOCKs makes the hook
+emit `⚠ 1 prose-only invariant` with full context.
+
+The positive control is the point. This repo's own record shows a prior pass
+writing *"still fires its warning"* after watching one `approve` — **which is
+also exactly what a dead gate returns.** Three constructed test inputs failed to
+trip the harness before a real violation (`prose_only: 7` under
+`references/invariants/`) was found by scanning for one rather than guessing.
+
 ## [4.46.0] — 2026-10-26 — XOS-335: the judge panel told its caller SUCCESS after reviewing nothing
 
 Found by running the panel as the unskippable cross-family gate on a real PR. All

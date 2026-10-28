@@ -18,13 +18,13 @@
  *   - exists on disk (skip new-file creations — Write of net-new content has
  *     nothing to scan yet; post-edit scan would catch it but that's a separate hook)
  *   - ends in ".md"
- *   - lives under known invariant carriers: cyborg, plugins, anand-career-os
+ *   - lives under known invariant carriers: cyborg/, plugins/, or a nested workspace
  *     CLAUDE.md, references/invariants, etc.
  *
  * Exit: ALWAYS 0. Never blocks the tool — this is signal, not gate (yet).
  */
 
-import { existsSync, readFileSync } from "fs";
+import { readdirSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 import { spawnSync } from "child_process";
@@ -48,7 +48,7 @@ interface ScanOutput {
   prose_only?: Array<{ line: number; invariant_signal: string; paragraph_excerpt: string }>;
 }
 
-// Resolves across the ~/cyborg → ~/anand-career-os/cyborg migration (the old
+// Resolves both a top-level ~/cyborg and a nested <workspace>/cyborg layout (the old
 // path is being deleted). Checked in order: an explicit CYBORG_ROOT override,
 // the new canonical location, then the legacy location for machines that
 // haven't migrated yet. First path that exists on disk wins; if none exist
@@ -57,15 +57,56 @@ interface ScanOutput {
 // never fail-hard for users who have no cyborg substrate.
 const META_HARNESS_REL = "rules/codify-or-mark-uncodified/handler.ts";
 function resolveMetaHarness(): string | undefined {
-  const candidates = [
+  /**
+   * ⛔ DO NOT re-add a candidate naming a specific workspace repo. This is a
+   * PUBLIC plugin; a path like ~/<someone>-career-os/cyborg resolves for
+   * exactly one person and leaks that repo's name to everyone else.
+   *
+   * ⚠️ BUT REMOVING IT WITHOUT A REPLACEMENT SILENTLY BROKE THE HOOK, and I
+   * shipped that before catching it. ~/cyborg exists on the author's machine
+   * but is a stale empty shell — the live harness sits one level deeper, under
+   * a workspace directory. Dropping the only candidate that resolved made the
+   * gate approve everything, which is the same silent-failure shape as the
+   * hardcoded bun path this commit set out to fix.
+   *
+   * So discovery is now GENERIC: any <home>/<workspace>/cyborg layout, found
+   * by looking rather than by knowing one person's directory name.
+   */
+  const direct = [
     process.env.CYBORG_ROOT ? join(process.env.CYBORG_ROOT, META_HARNESS_REL) : undefined,
-    join(homedir(), "anand-career-os/cyborg", META_HARNESS_REL),
     join(homedir(), "cyborg", META_HARNESS_REL),
   ].filter((p): p is string => Boolean(p));
-  return candidates.find((p) => existsSync(p));
+  const hit = direct.find((p) => existsSync(p));
+  if (hit) return hit;
+
+  // One shallow pass over ~/*/cyborg/. Bounded: top-level entries only, no recursion.
+  try {
+    for (const entry of readdirSync(homedir())) {
+      if (entry.startsWith(".")) continue;
+      const candidate = join(homedir(), entry, "cyborg", META_HARNESS_REL);
+      if (existsSync(candidate)) return candidate;
+    }
+  } catch {
+    // Unreadable home is not this hook's problem; fall through to undefined.
+  }
+  return undefined;
 }
+
 const META_HARNESS = resolveMetaHarness();
-const BUN_BIN = "/Users/anandvallam/.bun/bin/bun";
+/**
+ * ⛔ WAS A HARDCODED ABSOLUTE PATH TO ONE DEVELOPER'S HOME DIRECTORY, IN A
+ * PUBLIC AGPL PLUGIN, INSIDE AN AUTO-RUNNING PreToolUse HOOK.
+ *
+ * On any machine that is not the author's, spawnSync got a path that does not
+ * exist, the hook failed, and because this file approves on error the failure
+ * was SILENT — every external user ran with this gate dead and no signal that
+ * it had never worked.
+ *
+ * process.execPath is the Bun binary currently executing this hook, so it is
+ * correct by construction on every machine and needs no lookup. The PATH
+ * fallback covers an exotic launcher that leaves execPath unset.
+ */
+const BUN_BIN = process.execPath && /bun/i.test(process.execPath) ? process.execPath : "bun";
 
 function emitSilent(): never {
   process.stdout.write(JSON.stringify({ decision: "approve" }) + "\n");
@@ -95,12 +136,16 @@ function isInvariantCarrier(absPath: string): boolean {
 
   // Known invariant-carrier locations
   const patterns = [
-    // Substring match — still matches both the legacy ~/cyborg/ location and
-    // the new ~/anand-career-os/cyborg/ location post-migration (verified:
-    // both paths contain the literal "/cyborg/" segment).
+    /**
+     * ⚠️ A pattern matching one developer's private repo NAME was removed from
+     * this list. In a public plugin it decided, for every user, whether the
+     * gate runs at all — and it is true for exactly one person. The "/cyborg/"
+     * substring already covers both the legacy ~/cyborg/ layout and a nested
+     * <workspace>/cyborg/ one, which is what that entry was actually reaching
+     * for. CYBORG_ROOT remains the explicit escape hatch for other layouts.
+     */
     /\/cyborg\//,
     /\/aiprojects\/[^/]+\//,
-    /\/anand-career-os\//,
     /CONSTITUTION\.md$/,
     /\/CLAUDE\.md$/,
     /\/references\/invariants\//,
@@ -179,7 +224,7 @@ async function main(): Promise<void> {
     findings,
     ``,
     `If your edit adds a new behavioral expectation ("must", "always", "never", "INVARIANT", "MANDATORY"):`,
-    `  EITHER pair it with: → ENFORCE: bun run ~/anand-career-os/cyborg/rules/<slug>/handler.ts '{...}'`,
+    `  EITHER pair it with: → ENFORCE: bun run <your-rules-dir>/<slug>/handler.ts '{...}'`,
     `  OR mark it: [NOT CODIFIED — owner: <name>, ETA: <YYYY-MM-DD>]`,
     `If your edit only touches existing prose-only invariants without creating new ones, proceed.`,
   ].join("\n");

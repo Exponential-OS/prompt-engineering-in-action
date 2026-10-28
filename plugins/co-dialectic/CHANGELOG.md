@@ -1,5 +1,40 @@
 # Changelog — Co-Dialectic
 
+## [4.47.0] — 2026-10-27 — the hardcoded-home-path fix, actually shipped
+
+PR #44 fixed a hook that hardcoded one developer's bun path in a PUBLIC plugin.
+The hook approves on error, so on every other machine `spawnSync` failed and the
+gate approved everything, silently, forever. XOS-360 recorded it as *"fixed and
+merged"*.
+
+**It was never merged.** The branch sat open, one commit behind main, CI green.
+The leak was still present in source, in the vendored marketplace copy, and in
+the installed plugin. A belief that something is fixed is more dangerous than
+knowing it is broken, and that belief is what this release corrects.
+
+Rebased onto main (which had moved to 4.46.0), bumped to 4.47.0 — the branch
+carried 4.45.0, so merging as-is would have regressed the version and shipped
+the fix to nobody, exactly as happened to career-intelligence 1.0.0 the same day.
+
+Also removed a provenance comment in `hooks/task-completed-judge-gate.ts` naming
+a private workspace path, in a public repo.
+
+### Verified with both controls, because this hook has twice looked fixed and wasn't
+
+- `BUN_BIN` resolves to a real executable rather than one machine's home.
+- The meta-harness resolver finds the live handler through generic
+  `<home>/<workspace>/cyborg` discovery.
+- **Negative control:** a plain prose `.md` → silent approve, which is correct.
+- **Positive control:** a file the harness genuinely BLOCKs (`prose_only: 7` in
+  `references/invariants/`) → the hook emits `⚠ 1 prose-only invariant` with full
+  context.
+
+The positive control is the one that matters. XOS-360 records a prior pass
+writing "still fires its warning" into a commit message after watching a single
+`approve` — which proves nothing, because `approve` is also what a dead gate
+returns. Three constructed test inputs failed to trip the harness before a real
+violation was found by scanning for one.
+
 ## [4.46.0] — 2026-10-26 — XOS-335: the judge panel told its caller SUCCESS after reviewing nothing
 
 Found by running the panel as the unskippable cross-family gate on a real PR. All
