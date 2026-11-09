@@ -6,6 +6,51 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.47.1] — 2026-11-09 — the SessionStart hook that never returned
+
+`bash` on PATH is Homebrew 5.3.15, inside the 5.1–5.3.19 heredoc deadlock
+window: bash writes a heredoc body into a pipe *before* forking the reader, and
+a macOS pipe starts at 512 bytes, so any body of 513–65535 B blocks with nothing
+draining it. Three of codi's hook heredocs sit in that window —
+`install-survival-layer.sh` at 3436 B and 1102 B, `statusline.sh` at 804 B — and
+every one was invoked through PATH bash.
+
+Measured before the fix: **39 orphaned `install-survival-layer.sh` processes**,
+oldest alive 10 days 7 hours, 17 of them reparented to PID 1. A stuck child's
+blocking frame is `heredoc_write`. With a sandboxed HOME and a 25s alarm,
+`/bin/bash` 3.2.57 finished in 0s and wrote state; `bash` 5.3.15 was still
+blocked at 25s having written nothing.
+
+- Pin `/bin/bash` in all four hook shell scripts and all three of `hooks.json`'s
+  shell invocations.
+- Pin `/bin/bash` in `install-survival-layer.sh`'s `target_cmd`, which writes
+  `statusLine.command` into the user's real `~/.claude/settings.json`. This was
+  the live status-line hang; pinning the shebang did nothing for it, because the
+  command names its own interpreter.
+- Correct 11 hook timeouts from millisecond values to seconds. `timeout` is
+  seconds, so the shipped 2000–7000 meant 33 to 116 minutes. The judge gate's
+  `120` was the only correct value, which is what showed the rest were a unit
+  error rather than intent.
+
+**`test:all` went from not finishing at all on macOS to 290 pass / 0 fail in
+5.5s.** `hooks/xos-197-liveness.test.ts` and `tests/xos_141_liveness.test.ts`
+had been recorded as "emitting zero tests" (XOS-309); they were not emitting
+zero, they were deadlocked on this, with no `spawnSync` timeout to end it. They
+now contribute 11 and 14 passing tests.
+
+This survived because CI runs `ubuntu-latest`, whose pipe buffer defaults to
+64KB rather than the 512 bytes measured here, so these heredocs never block
+there. CI was green and was right to be — the gate simply runs on an OS where
+the defect does not reproduce.
+
+**Not fixed here:** the DEGRADED banner. An earlier draft of this change claimed
+it was, and a cross-family judge panel caught the overclaim. The banner has a
+separate cause — the Stop hook writes the heartbeat to
+`~/.codialectic/sessions/<id>.json` while the prompt hook reads the brain-kernel
+`co-dialectic/status-state.json` first, and that file has been frozen at
+2026-08-14 / v4.36.0 for 87 days. Tracked as XOS-391.
+
+---
 ## [4.47.0] — 2026-10-27 — the hardcoded-home-path fix, actually shipped
 
 XOS-360 recorded this as *"fixed and merged in PR #44."* **PR #44 was still
