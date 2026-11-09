@@ -66,7 +66,7 @@ function runStatusline(
   input: string,
   workspace = join(home, "workspace"),
 ): { exitCode: number; stdout: string; stderr: string } {
-  const proc = spawnSync("bash", [STATUSLINE], {
+  const proc = spawnSync("/bin/bash", [STATUSLINE], {
     cwd: home,
     env: {
       ...process.env,
@@ -95,8 +95,8 @@ afterEach(() => {
 
 describe("XOS-237 turn-relative per-session liveness", () => {
   test("heartbeat after the current prompt stays LIVE after 3 hours mid-tool-call", () => {
-    const home = temp("codi-xos-237-home-");
-    const workspace = temp("codi-xos-237-workspace-");
+    const home = temp("codi-237-home-");
+    const workspace = temp("codi-237-workspace-");
     const now = Date.now();
     const currentTurn = state({
       last_user_prompt_ts: iso(now - 3 * 60 * 60 * 1000 - 1_000),
@@ -120,7 +120,7 @@ describe("XOS-237 turn-relative per-session liveness", () => {
   });
 
   test("heartbeat before the current prompt and beyond grace is DEGRADED", () => {
-    const home = temp("codi-xos-237-home-");
+    const home = temp("codi-237-home-");
     const now = Date.now();
     const missedTurn = state({
       last_protocol_ts: iso(now - 901_000),
@@ -137,7 +137,7 @@ describe("XOS-237 turn-relative per-session liveness", () => {
   });
 
   test("no session file is UNKNOWN/uninitialized, never degraded", () => {
-    const home = temp("codi-xos-237-home-");
+    const home = temp("codi-237-home-");
     const rendered = runStatusline(home, JSON.stringify({ session_id: "brand-new", cwd: home }));
 
     expect(rendered.exitCode).toBe(0);
@@ -146,7 +146,7 @@ describe("XOS-237 turn-relative per-session liveness", () => {
   });
 
   test("session A heartbeat cannot make session B look live", () => {
-    const home = temp("codi-xos-237-home-");
+    const home = temp("codi-237-home-");
     const liveA = state();
     writeJson(sessionPath(home, "session-a"), liveA);
     writeJson(join(home, ".codialectic", "state.json"), liveA);
@@ -160,7 +160,7 @@ describe("XOS-237 turn-relative per-session liveness", () => {
   });
 
   test("empty and unparseable stdin fall back to legacy state without crashing", () => {
-    const home = temp("codi-xos-237-home-");
+    const home = temp("codi-237-home-");
     writeJson(join(home, ".codialectic", "state.json"), state());
 
     for (const input of ["", "{not-json"]) {
@@ -173,7 +173,7 @@ describe("XOS-237 turn-relative per-session liveness", () => {
   });
 
   test("XOS-197 fresh pre-SessionStart heartbeat and XOS-149 version skew remain LIVE", () => {
-    const home = temp("codi-xos-237-home-");
+    const home = temp("codi-237-home-");
     const now = Date.now();
     writeJson(sessionPath(home, "compat"), state({
       version: "4.1.0",
@@ -190,8 +190,8 @@ describe("XOS-237 turn-relative per-session liveness", () => {
 
 describe("XOS-237 writers and artifact ownership", () => {
   test("workspace canonical active state outranks a stale global active:false fallback", () => {
-    const home = temp("codi-xos-237-home-");
-    const workspace = temp("codi-xos-237-workspace-");
+    const home = temp("codi-237-home-");
+    const workspace = temp("codi-237-workspace-");
     writeJson(join(home, ".codialectic", "state.json"), state({ active: false }));
     writeJson(join(workspace, "co-dialectic", "status-state.json"), state({ active: true }));
 
@@ -217,8 +217,8 @@ describe("XOS-237 writers and artifact ownership", () => {
   });
 
   test("UserPromptSubmit creates only this session's prompt marker and never fakes heartbeat", () => {
-    const home = temp("codi-xos-237-home-");
-    const workspace = temp("codi-xos-237-workspace-");
+    const home = temp("codi-237-home-");
+    const workspace = temp("codi-237-workspace-");
     const canonical = state({ last_protocol_ts: "2026-01-01T00:00:00Z" });
     writeJson(join(workspace, "co-dialectic", "status-state.json"), canonical);
 
@@ -245,8 +245,8 @@ describe("XOS-237 writers and artifact ownership", () => {
   });
 
   test("verified Stop heartbeat writes only the current session file", () => {
-    const home = temp("codi-xos-237-home-");
-    const workspace = temp("codi-xos-237-workspace-");
+    const home = temp("codi-237-home-");
+    const workspace = temp("codi-237-workspace-");
     const canonicalPath = join(workspace, "co-dialectic", "status-state.json");
     const canonical = state({ last_protocol_ts: "2026-01-01T00:00:00Z", growth_total_turns: 41 });
     writeJson(canonicalPath, canonical);
@@ -284,8 +284,8 @@ describe("XOS-237 writers and artifact ownership", () => {
   });
 
   test("new precompact packets and marker land under workspace brain/sessions/<session_id>", () => {
-    const home = temp("codi-xos-237-home-");
-    const workspace = temp("codi-xos-237-workspace-");
+    const home = temp("codi-237-home-");
+    const workspace = temp("codi-237-workspace-");
     const proc = spawnSync(process.execPath, [PRECOMPACT], {
       cwd: workspace,
       env: { ...process.env, HOME: home },

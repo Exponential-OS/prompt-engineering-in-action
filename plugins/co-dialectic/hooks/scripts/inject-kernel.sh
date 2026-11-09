@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # inject-kernel.sh — Co-Dialectic kernel re-injection
 # Fires on every UserPromptSubmit. Approves the prompt and attempts to re-inject
 # the kernel stub into context — structurally immune to compaction since it fires

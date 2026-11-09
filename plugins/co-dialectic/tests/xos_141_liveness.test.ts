@@ -77,7 +77,7 @@ function baseState(overrides: Record<string, unknown> = {}): Record<string, unkn
 }
 
 function runStatusline(home: string): string {
-  const proc = Bun.spawnSync(["bash", STATUSLINE], {
+  const proc = Bun.spawnSync(["/bin/bash", STATUSLINE], {
     cwd: home,
     env: {
       ...process.env,
@@ -94,7 +94,7 @@ function runStatusline(home: string): string {
 }
 
 function makePluginRoot(version: string = "9.9.9"): string {
-  const pluginRoot = makeTempDir("codi-xos-141-plugin-");
+  const pluginRoot = makeTempDir("codi-141-plugin-");
   mkdirSync(join(pluginRoot, ".claude-plugin"), { recursive: true });
   mkdirSync(join(pluginRoot, "hooks"), { recursive: true });
   writeFileSync(
@@ -106,7 +106,7 @@ function makePluginRoot(version: string = "9.9.9"): string {
 }
 
 function runInstallSurvivalLayer(home: string, pluginRoot: string): void {
-  const proc = Bun.spawnSync(["bash", INSTALL_SURVIVAL_LAYER], {
+  const proc = Bun.spawnSync(["/bin/bash", INSTALL_SURVIVAL_LAYER], {
     env: {
       ...process.env,
       HOME: home,
@@ -157,7 +157,7 @@ afterEach(() => {
 
 describe("statusline freshness gate (XOS-141)", () => {
   test("fresh last_protocol_ts renders the healthy score line", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     writeState(home, baseState());
 
     const line = runStatusline(home);
@@ -168,7 +168,7 @@ describe("statusline freshness gate (XOS-141)", () => {
   });
 
   test("missing last_protocol_ts renders uninitialized, not DEGRADED", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const state = baseState();
     delete state.last_protocol_ts;
     writeState(home, state);
@@ -177,7 +177,7 @@ describe("statusline freshness gate (XOS-141)", () => {
   });
 
   test("old last_protocol_ts renders DEGRADED", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const now = Date.now();
     writeState(
       home,
@@ -191,7 +191,7 @@ describe("statusline freshness gate (XOS-141)", () => {
   });
 
   test("fresh last_protocol_ts before last_session_start_ts remains healthy (XOS-197)", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const now = Date.now();
     writeState(
       home,
@@ -205,7 +205,7 @@ describe("statusline freshness gate (XOS-141)", () => {
   });
 
   test("stale last_protocol_ts before last_session_start_ts renders DEGRADED", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const now = Date.now();
     writeState(
       home,
@@ -219,7 +219,7 @@ describe("statusline freshness gate (XOS-141)", () => {
   });
 
   test("version skew is informational only — does NOT render DEGRADED (XOS-149)", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     // version (model-written) != installed_version (hook-written), but otherwise live
     // (fresh protocol, active). The decoupled-version mismatch must NOT degrade — it was
     // the permanent-false-DEGRADED bug (reproduced 2026-06-29).
@@ -233,7 +233,7 @@ describe("statusline freshness gate (XOS-141)", () => {
 
 describe("install-survival-layer state sync (XOS-141)", () => {
   test("updates installed_version and preserves model-owned last_score", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const pluginRoot = makePluginRoot();
     writeState(
       home,
@@ -256,7 +256,7 @@ describe("install-survival-layer state sync (XOS-141)", () => {
   });
 
   test("backs up corrupt state.json before recreating defaults", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const pluginRoot = makePluginRoot();
     const raw = '{"active":true,"last_score":98,"last_cal":97,"persona":"Product",';
     writeRawState(home, raw);
@@ -275,7 +275,7 @@ describe("install-survival-layer state sync (XOS-141)", () => {
   });
 
   test("backs up non-object state.json before recreating defaults", () => {
-    const home = makeTempDir("codi-xos-141-home-");
+    const home = makeTempDir("codi-141-home-");
     const pluginRoot = makePluginRoot();
     const raw = '[{"last_score":98,"last_cal":97,"persona":"Product"}]';
     writeRawState(home, raw);
@@ -372,8 +372,8 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
   });
 
   test("degraded injected context suppresses stale score/cal", () => {
-    const home = makeTempDir("codi-xos-141-home-");
-    const workspace = makeTempDir("codi-xos-141-workspace-");
+    const home = makeTempDir("codi-141-home-");
+    const workspace = makeTempDir("codi-141-workspace-");
     const now = Date.now();
     writeState(
       home,
@@ -396,8 +396,8 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
   });
 
   test("missing state gets an uninitialized self-resurrection context", () => {
-    const home = makeTempDir("codi-xos-141-home-");
-    const workspace = makeTempDir("codi-xos-141-workspace-");
+    const home = makeTempDir("codi-141-home-");
+    const workspace = makeTempDir("codi-141-workspace-");
 
     const payload = runUserPromptSubmit(home, workspace);
     const context = payload.hookSpecificOutput.additionalContext;
@@ -411,8 +411,8 @@ describe("UserPromptSubmit deterministic self-resurrection (XOS-141)", () => {
   });
 
   test("explicit codi off remains silent", () => {
-    const home = makeTempDir("codi-xos-141-home-");
-    const workspace = makeTempDir("codi-xos-141-workspace-");
+    const home = makeTempDir("codi-141-home-");
+    const workspace = makeTempDir("codi-141-workspace-");
     writeState(home, baseState({ active: false }));
 
     const payload = runUserPromptSubmit(home, workspace);

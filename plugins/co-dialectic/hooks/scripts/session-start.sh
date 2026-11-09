@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # session-start.sh — Co-Dialectic session init + userSettings skill sync
 # Fires at SessionStart.
 # 1. Syncs ~/.claude/skills/co-dialectic/SKILL.md from plugin cache when stale.

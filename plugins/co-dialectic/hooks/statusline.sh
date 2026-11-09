@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # statusline.sh — Co-Dialectic persistent status line for Claude Code.
 #
 # Reads Claude Code's statusLine JSON from stdin, then renders the CURRENT

@@ -80,7 +80,7 @@ function classifyStatusline(state: Record<string, unknown>): { cls: Classificati
     const sessionId = "paritysession";
     mkdirSync(join(dir, "sessions"), { recursive: true });
     writeFileSync(join(dir, "sessions", `${sessionId}.json`), JSON.stringify(state));
-    const res = spawnSync("bash", [STATUSLINE], {
+    const res = spawnSync("/bin/bash", [STATUSLINE], {
       input: JSON.stringify({ session_id: sessionId, cwd: dir }),
       encoding: "utf8",
       env: {
