@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # install-survival-layer.sh — Co-Dialectic auto-install on first SessionStart.
 #
 # Idempotent. Runs on every SessionStart. Five responsibilities:
@@ -344,7 +344,7 @@ except Exception as e:
     print(f"[install-survival-layer] cannot parse settings.json: {e}", file=sys.stderr)
     sys.exit(0)  # fail-open — never break SessionStart
 
-target_cmd = f'bash "{resident_path}"'
+target_cmd = f'/bin/bash "{resident_path}"'
 
 # Idempotent: only modify if missing or pointing at the wrong place
 if "statusLine" in settings and isinstance(settings["statusLine"], dict):

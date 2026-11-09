@@ -70,7 +70,7 @@ function writeRawState(home: string, raw: string): void {
 }
 
 function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
-  const proc = Bun.spawnSync(["bash", STATUSLINE], {
+  const proc = Bun.spawnSync(["/bin/bash", STATUSLINE], {
     // XOS-309: same trap as runUserPromptSubmit below. statusline.sh does
     // `IFS= read -r STATUS_INPUT`, which blocks until a newline or EOF. Without an
     // explicit stdin the child inherits the test runner's, which never closes.
@@ -92,7 +92,7 @@ function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
 }
 
 function makePluginRoot(version = "4.34.0"): string {
-  const pluginRoot = makeTempDir("codi-xos-197-plugin-");
+  const pluginRoot = makeTempDir("codi-197-plugin-");
   mkdirSync(join(pluginRoot, ".claude-plugin"), { recursive: true });
   mkdirSync(join(pluginRoot, "hooks"), { recursive: true });
   writeFileSync(
@@ -104,7 +104,7 @@ function makePluginRoot(version = "4.34.0"): string {
 }
 
 function runInstallSurvivalLayer(home: string, pluginRoot: string): void {
-  const proc = Bun.spawnSync(["bash", INSTALL_SURVIVAL_LAYER], {
+  const proc = Bun.spawnSync(["/bin/bash", INSTALL_SURVIVAL_LAYER], {
     // XOS-309: explicit stdin for the same reason as the other two spawns in this file.
     stdin: "ignore",
     cwd: PLUGIN_ROOT,
@@ -228,7 +228,7 @@ describe("XOS-197 grace-window liveness", () => {
   });
 
   test("statusline verdict matches hook verdict for the XOS-197 repro state", () => {
-    const home = makeTempDir("codi-xos-197-home-");
+    const home = makeTempDir("codi-197-home-");
     const now = new Date();
     const state = baseState({
       last_protocol_ts: isoSeconds(new Date(now.getTime() - 382_000)),
@@ -249,7 +249,7 @@ describe("XOS-197 grace-window liveness", () => {
   });
 
   test("install-survival-layer merge preserves model-owned state and session marker", () => {
-    const home = makeTempDir("codi-xos-197-home-");
+    const home = makeTempDir("codi-197-home-");
     const pluginRoot = makePluginRoot("4.34.0");
     const priorProtocol = isoSeconds(new Date(Date.now() - 120_000));
     const priorSession = "2026-07-03T01:02:03Z";
@@ -298,8 +298,8 @@ describe("XOS-197 grace-window liveness", () => {
   });
 
   test("malformed state file fails open with exit 0", () => {
-    const home = makeTempDir("codi-xos-197-home-");
-    const workspace = makeTempDir("codi-xos-197-workspace-");
+    const home = makeTempDir("codi-197-home-");
+    const workspace = makeTempDir("codi-197-workspace-");
     writeRawState(home, '{"active":true,"last_protocol_ts":');
 
     const result = runUserPromptSubmit(home, workspace);

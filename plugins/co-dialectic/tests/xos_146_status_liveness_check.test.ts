@@ -71,7 +71,7 @@ function transcriptWithAssistant(message: string): string {
 }
 
 function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
-  const proc = Bun.spawnSync(["bash", STATUSLINE], {
+  const proc = Bun.spawnSync(["/bin/bash", STATUSLINE], {
     cwd: home,
     env: {
       ...process.env,
@@ -108,7 +108,7 @@ function runHook(home: string, transcriptPath: string): { exitCode: number; stdo
 }
 
 function runHookWithAssistant(home: string, message: string): { exitCode: number; stdout: string } {
-  const transcript = join(makeTempDir("codi-xos-146-transcript-"), "transcript.jsonl");
+  const transcript = join(makeTempDir("codi-146-transcript-"), "transcript.jsonl");
   writeFileSync(transcript, transcriptWithAssistant(message));
   return runHook(home, transcript);
 }
@@ -317,7 +317,7 @@ describe("status-liveness-check hook decisions", () => {
   });
 
   test("corrupt state.json + live header fails open without nudge on real hook path", () => {
-    const home = makeTempDir("codi-xos-146-home-");
+    const home = makeTempDir("codi-146-home-");
     writeRawState(home, '{"active":true,"last_score":88,');
 
     const result = runHookWithAssistant(home, "📦 Product (Doshi) · 88% · Cal: 96% · [12:00]\nDone.");
@@ -327,7 +327,7 @@ describe("status-liveness-check hook decisions", () => {
   });
 
   test("missing state.json + live header fails open without nudge on real hook path", () => {
-    const home = makeTempDir("codi-xos-146-home-");
+    const home = makeTempDir("codi-146-home-");
 
     const result = runHookWithAssistant(home, "📦 Product (Doshi) · 88% · Cal: 96% · [12:00]\nDone.");
 
@@ -340,7 +340,7 @@ describe("status-liveness-check hook decisions", () => {
       (home: string) => writeRawState(home, '{"active":true,"last_score":88,'),
       (_home: string) => {},
     ]) {
-      const home = makeTempDir("codi-xos-146-home-");
+      const home = makeTempDir("codi-146-home-");
       setupState(home);
 
       const result = runHookWithAssistant(home, "⚠ Codi DEGRADED\nDone.");
@@ -355,7 +355,7 @@ describe("status-liveness-check hook decisions", () => {
       (home: string) => writeRawState(home, '{"active":true,"last_score":88,'),
       (_home: string) => {},
     ]) {
-      const home = makeTempDir("codi-xos-146-home-");
+      const home = makeTempDir("codi-146-home-");
       setupState(home);
 
       const result = runHookWithAssistant(home, "Done.");
@@ -366,8 +366,8 @@ describe("status-liveness-check hook decisions", () => {
   });
 
   test("transcript parse failure fails open silently", () => {
-    const home = makeTempDir("codi-xos-146-home-");
-    const transcript = join(makeTempDir("codi-xos-146-transcript-"), "transcript.jsonl");
+    const home = makeTempDir("codi-146-home-");
+    const transcript = join(makeTempDir("codi-146-transcript-"), "transcript.jsonl");
     writeState(home, baseState());
     writeFileSync(transcript, "{not json}\n");
 
@@ -378,8 +378,8 @@ describe("status-liveness-check hook decisions", () => {
   });
 
   test("unextractable final assistant message fails open silently", () => {
-    const home = makeTempDir("codi-xos-146-home-");
-    const transcript = join(makeTempDir("codi-xos-146-transcript-"), "transcript.jsonl");
+    const home = makeTempDir("codi-146-home-");
+    const transcript = join(makeTempDir("codi-146-transcript-"), "transcript.jsonl");
     writeState(home, baseState());
     writeFileSync(transcript, JSON.stringify({ type: "user", message: { role: "user", content: "hi" } }) + "\n");
 
@@ -390,7 +390,7 @@ describe("status-liveness-check hook decisions", () => {
   });
 
   test("missing transcript file fails open silently", () => {
-    const home = makeTempDir("codi-xos-146-home-");
+    const home = makeTempDir("codi-146-home-");
     writeState(home, baseState());
 
     const result = runHook(home, join(home, "missing-transcript.jsonl"));
@@ -492,7 +492,7 @@ describe("freshness predicate parity with statusline.sh", () => {
     ];
 
     for (const state of cases) {
-      const home = makeTempDir("codi-xos-146-home-");
+      const home = makeTempDir("codi-146-home-");
       writeState(home, state);
       const tsVerdict = evaluateStatusFreshness(state, now, 900).live ? "LIVE" : "DEGRADED";
       expect(tsVerdict).toBe(runStatuslineVerdict(home));
