@@ -434,6 +434,140 @@ export function finalAssistantMessageFromTranscript(transcript: string): string 
   return finalMessage;
 }
 
+/**
+ * A REAL user turn, not a tool result.
+ *
+ * ⛔ Claude Code records tool results as role:"user" records whose content is
+ * entirely `tool_result` blocks. Treating those as turn boundaries makes
+ * "first assistant block after the last user message" collapse straight back
+ * to the last block — the bug this exists to fix, wearing the fix as a
+ * costume. Verified against a live 18,418-record transcript whose five most
+ * recent user records were all tool_result.
+ *
+ * Malformed blocks (null, bare strings) do NOT establish a boundary either: a
+ * judge caught the first version accepting them, which reintroduces the same
+ * collapse on exactly the inputs least worth trusting.
+ */
+function isUserTurnRecord(record: unknown): boolean {
+  if (!record || typeof record !== "object") return false;
+  const obj = record as Record<string, unknown>;
+  const message = obj.message && typeof obj.message === "object"
+    ? obj.message as Record<string, unknown>
+    : null;
+  const isUser = (obj.role ?? message?.role) === "user" || obj.type === "user";
+  if (!isUser) return false;
+
+  const content = message?.content ?? obj.content;
+  if (typeof content === "string") return content.trim().length > 0;
+  if (!Array.isArray(content)) return false;
+  return content.some((b) => {
+    if (!b || typeof b !== "object") return false;
+    return (b as Record<string, unknown>).type !== "tool_result";
+  });
+}
+
+export interface TurnMessages {
+  /** First assistant text of the CURRENT turn — where Protocol 1 puts the header. */
+  opening: string | null;
+  /** Last assistant text in the transcript — what this hook checked before XOS-389. */
+  closing: string | null;
+}
+
+/**
+ * Both ends of the current turn, in ONE pass.
+ *
+ * ⛔ XOS-389. Protocol 1 says "begin EVERY response with the status header",
+ * and this hook verified that against the LAST assistant block. Those coincide
+ * only when a turn makes no tool calls. The moment a turn does real work the
+ * final block is mid-turn narration or a closing summary, the header sits a
+ * dozen blocks earlier, and the hook reported CODI STATUS SILENT DROP and
+ * wrote no heartbeat.
+ *
+ * So every substantial turn dropped the stamp and only trivial turns kept codi
+ * alive. Measured 2026-11-06: last_protocol_ts 181 hours stale on a session
+ * that had rendered the header on every turn of a 20-hour run. Worse than a
+ * missed stamp, the instruction became unfollowable — comply, nothing changes,
+ * the reminder becomes noise. XOS-308 fixed the nudge so a degraded session
+ * knew WHAT to render; this is that rendering it still did not help.
+ *
+ * ⚠️ `opening` is null when no genuine user turn is found. It deliberately does
+ * NOT fall back to the transcript's first assistant message: a judge flagged
+ * that the first version did, so in a long session an ancient header from
+ * hours earlier would satisfy the check and report a FALSE LIVE. A liveness
+ * gate that lies permissively defeats its own purpose.
+ *
+ * Single pass because this runs on a Stop hook every turn and transcripts
+ * reach 18k+ records; the first version read and JSON-parsed the file twice.
+ * Stop-hook latency is not academic here — a perf fix once cut eight gates
+ * from this machine's settings in a single edit.
+ */
+export function turnMessagesFromTranscript(transcript: string): TurnMessages {
+  let closing: string | null = null;
+  let opening: string | null = null;
+  let seenUserTurn = false;
+
+  for (const line of transcript.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let record: unknown;
+    try {
+      record = JSON.parse(trimmed);
+    } catch {
+      continue; // a malformed line must not blind the whole check
+    }
+
+    if (isUserTurnRecord(record)) {
+      seenUserTurn = true;
+      opening = null; // a new turn begins; discard the previous turn's opening
+      continue;
+    }
+
+    const text = assistantTextFromRecord(record);
+    if (!text) continue;
+    closing = text;
+    if (seenUserTurn && opening === null) opening = text;
+  }
+
+  return { opening, closing };
+}
+
+/** The opening block of the current turn, or null. */
+export function openingAssistantMessageFromTranscript(transcript: string): string | null {
+  return turnMessagesFromTranscript(transcript).opening;
+}
+
+/**
+ * The message the header contract is verified against.
+ *
+ * Counts if the header OPENS the response (the contract) or CLOSES it (what
+ * was checked before XOS-389). Strictly additive: no turn that satisfied the
+ * old check starts failing, and a turn that actually followed Protocol 1
+ * finally registers.
+ *
+ * ⚠️ Opening is preferred. Checking closing first was a preference inversion a
+ * judge flagged — Protocol 1 names the opening as canonical, so when both ends
+ * carry a header the parsed persona, score and cal must come from the one the
+ * contract is about.
+ */
+export function readMessageForVerification(input: HookInput): string {
+  if (typeof input.transcript_path !== "string" || input.transcript_path.trim().length === 0) {
+    throw new Error("missing transcript path");
+  }
+  const raw = readFileSync(input.transcript_path, "utf8");
+  const { opening, closing } = turnMessagesFromTranscript(raw);
+  if (closing === null && opening === null) {
+    throw new Error("missing final assistant message");
+  }
+  const carriesHeader = (text: string | null): boolean => {
+    if (text === null) return false;
+    const h = parseRenderedHeader(text);
+    return h.liveHeader || h.degradedHeader || h.quietFooter;
+  };
+  if (carriesHeader(opening)) return opening as string;
+  if (carriesHeader(closing)) return closing as string;
+  return (closing ?? opening) as string;
+}
+
 function readFinalAssistantMessage(input: HookInput): string {
   if (typeof input.transcript_path !== "string" || input.transcript_path.trim().length === 0) {
     throw new Error("missing transcript path");
@@ -467,7 +601,7 @@ async function main(): Promise<void> {
 
   let message = "";
   try {
-    message = readFinalAssistantMessage(input);
+    message = readMessageForVerification(input);
   } catch {
     emitSilent();
   }
