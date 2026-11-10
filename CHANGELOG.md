@@ -6,6 +6,34 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.47.3] — 2026-11-10 — the state-source label named the wrong file
+
+Not a behaviour change. The liveness verdict is byte-identical before and after;
+this releases an observability fix that cost a multi-hour misdiagnosis.
+
+The per-turn reminder reported `state source: brain-kernel workspace` while the
+heartbeat it had just evaluated came from the session file. Both were true at
+once: `loadState()` resolved brain → legacy with no session branch, but
+`recordUserPrompt` then merged the session file *over* that result, so
+`last_protocol_ts` from the session file already won — through a path the source
+label knew nothing about. Reading `loadState()` alone gives a confident and wrong
+model of where liveness comes from, which is exactly what happened: XOS-391 was
+filed on that wrong model, and the "fix" for it would have changed nothing.
+
+Measured 2x2 (original vs patched code, stale vs fresh session heartbeat): the
+verdict is identical in all four cells. Only the label changes, and only the
+label was wrong.
+
+- `loadState()` gains an explicit session branch so the precedence is legible
+  where people read it, matching `statusline.sh`, which has resolved
+  session → brain → legacy correctly all along.
+- The source label gains a `session` case.
+
+The underlying DEGRADED had a different cause entirely: `last_protocol_ts` was
+genuinely stale since 2026-10-30 because the Stop hook declined to stamp, which
+is XOS-389, fixed and released in 4.47.1.
+
+---
 ## [4.47.2] — 2026-11-10 — documentation shaped like code gets read as code
 
 `hooks.json` carried a top-level `statusLine` block whose own `_note` said it was
