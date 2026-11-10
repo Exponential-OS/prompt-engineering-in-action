@@ -82,7 +82,7 @@ interface CodiState {
   verbosity?: "concise" | "verbose";
 }
 
-type LoadedStateSource = "brain" | "legacy";
+type LoadedStateSource = "session" | "brain" | "legacy";
 type ReminderStateSource = LoadedStateSource | "missing";
 
 interface UserPromptSubmitInput extends SessionAwareHookInput {}
@@ -129,6 +129,33 @@ function loadBrainState(input: UserPromptSubmitInput = {}): CodiState | null {
 }
 
 /**
+ * loadSessionState — load this session's own state file (XOS-391).
+ *
+ * This is where status-liveness-check actually stamps the heartbeat:
+ * resolveStateWriteTargets() returns sessionStatePath(sessionId) whenever a
+ * session id is present, which Claude Code supplies on every Stop invocation.
+ * Before this existed, the reader's chain was brain -> legacy -> null with no
+ * branch to the session file at all, so the writer and the reader were pointed
+ * at different files and the DEGRADED banner could never clear no matter how
+ * correctly the session behaved.
+ *
+ * Precedence now matches statusline.sh (session -> brain -> legacy), which had
+ * been doing this correctly all along; this hook was the inconsistent sibling.
+ *
+ * The session file is a superset of the brain-kernel schema -- it carries the
+ * same preference fields (mode, verbosity, honesty, persona) plus session_id,
+ * workspace_root and last_user_prompt_ts -- so preferring it loses nothing.
+ * The brain-kernel file remains the fallback, which is what carries durable
+ * preferences into a session before that session has written its own state.
+ */
+function loadSessionState(input: UserPromptSubmitInput = {}): CodiState | null {
+  const sessionId = sessionIdFromHookInput(input);
+  if (!sessionId) return null;
+  const parsed = readJsonObject(sessionStatePath(sessionId));
+  return parsed === null ? null : (parsed as CodiState);
+}
+
+/**
  * loadLegacyState — load from ~/.codialectic/state.json (v4.16 fallback).
  */
 function loadLegacyState(): CodiState | null {
@@ -144,9 +171,13 @@ function loadLegacyState(): CodiState | null {
 /**
  * loadState — load codi state with fallback chain.
  *
- * Returns: [state, source] where source is "brain" | "legacy" | null.
+ * Returns: [state, source] where source is "session" | "brain" | "legacy" | null.
  */
 function loadState(input: UserPromptSubmitInput = {}): [CodiState | null, LoadedStateSource | null] {
+  // Session first (XOS-391): this is the only file the Stop hook writes.
+  const sessionState = loadSessionState(input);
+  if (sessionState !== null) return [sessionState, "session"];
+
   const brainState = loadBrainState(input);
   if (brainState !== null) return [brainState, "brain"];
 
@@ -518,11 +549,13 @@ export function buildReminder(
     "(named person, public-facing, irreversible) → eager DIALECTIC synthesis.";
 
   const protocol3Line = verbosity === "verbose" ? protocol3Verbose : protocol3Concise;
-  const stateSourceLabel = stateSource === "brain"
-    ? "brain-kernel workspace"
-    : stateSource === "legacy"
-      ? "legacy ~/.codialectic/state.json"
-      : "missing state (self-resurrection)";
+  const stateSourceLabel = stateSource === "session"
+    ? "this session's state file"
+    : stateSource === "brain"
+      ? "brain-kernel workspace"
+      : stateSource === "legacy"
+        ? "legacy ~/.codialectic/state.json"
+        : "missing state (self-resurrection)";
 
   const lines = [
     "<codi-survival-reminder>",
