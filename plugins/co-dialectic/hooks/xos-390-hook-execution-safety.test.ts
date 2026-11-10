@@ -217,14 +217,66 @@ describe("XOS-392: hooks.json carries no keys the Claude Code schema rejects", (
     expect(offenders).toEqual([]);
   });
 
-  test("control: the removed statusLine block would have failed both checks", () => {
-    const removed = {
-      _note: "documentation only",
-      type: "command",
-      command: '/bin/bash "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"',
+  // The two checks above, factored out so the control can run the REAL logic
+  // against a fixture instead of re-asserting the predicates in isolation --
+  // a control that only proves `SCHEMA_KEYS.has("statusLine") === false` proves
+  // something about the Set, not about the check.
+  const straySchemaKeys = (o: Record<string, unknown>) =>
+    Object.keys(o).filter((k) => !SCHEMA_KEYS.has(k));
+  const keysSmugglingCommand = (o: Record<string, unknown>) =>
+    Object.entries(o)
+      .filter(([k]) => k !== "hooks")
+      .filter(([, v]) => JSON.stringify(v ?? null).includes('"command"'))
+      .map(([k]) => k);
+
+  test("control: the real checks reject a fixture carrying the removed block", () => {
+    const withBlock = {
+      description: "x",
+      hooks: {},
+      statusLine: {
+        _note: "documentation only",
+        type: "command",
+        command: '/bin/bash "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"',
+      },
     };
-    expect(SCHEMA_KEYS.has("statusLine")).toBe(false);
-    expect(JSON.stringify(removed).includes('"command"')).toBe(true);
+    expect(straySchemaKeys(withBlock)).toEqual(["statusLine"]);
+    expect(keysSmugglingCommand(withBlock)).toEqual(["statusLine"]);
+
+    // ...and accept the file as it actually ships now.
+    const shipped = JSON.parse(readFileSync(HOOKS_JSON, "utf8")) as Record<string, unknown>;
+    expect(straySchemaKeys(shipped)).toEqual([]);
+    expect(keysSmugglingCommand(shipped)).toEqual([]);
+  });
+});
+
+describe("XOS-392: no manifest embeds a version string in its description", () => {
+  // CI's version-consistency check compares the `version` FIELDS only, so a
+  // version written into description prose drifts silently. Caught by a judge:
+  // marketplace.json said "Co-Dialectic v4.38.0" and plugin.json "v4.41.1" while
+  // both version fields read 4.47.2 -- 9 and 6 minors stale. Same defect class as
+  // the statusLine block: one fact in two places, only one of them maintained.
+  const MANIFESTS = [
+    join(HOOKS_DIR, "..", "..", "..", ".claude-plugin", "marketplace.json"),
+    join(HOOKS_DIR, "..", ".claude-plugin", "plugin.json"),
+  ];
+
+  test("descriptions carry no semver", () => {
+    let checked = 0;
+    const offenders: string[] = [];
+    for (const file of MANIFESTS) {
+      if (!existsSync(file)) continue;
+      const parsed = JSON.parse(readFileSync(file, "utf8"));
+      const entries = Array.isArray(parsed.plugins) ? parsed.plugins : [parsed];
+      for (const e of entries) {
+        const desc = typeof e?.description === "string" ? e.description : "";
+        if (!desc) continue;
+        checked++;
+        const hit = desc.match(/v?\d+\.\d+\.\d+/);
+        if (hit) offenders.push(`${file.split("/").pop()}: "${hit[0]}"`);
+      }
+    }
+    expect(checked).toBeGreaterThan(0); // non-vacuity: descriptions were found
+    expect(offenders).toEqual([]);
   });
 });
 

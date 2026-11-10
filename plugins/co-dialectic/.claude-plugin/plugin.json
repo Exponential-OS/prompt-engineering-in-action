@@ -1,6 +1,6 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic v4.41.1 - Pre-compaction state capture, with the handoff reminder delivered on SessionStart(compact) where the model can act on it.",
+  "description": "Co-Dialectic — Pre-compaction state capture, with the handoff reminder delivered on SessionStart(compact) where the model can act on it.",
   "version": "4.47.2",
   "license": "AGPL-3.0",
   "depends_on_kernel": [
@@ -34,5 +34,5 @@
   "author": {
     "name": "Anand Vallamsetla"
   },
-  "_product_vs_solution_marker": "product-vs-solution: example \u2014 Anand authorship attribution is legitimate"
+  "_product_vs_solution_marker": "product-vs-solution: example — Anand authorship attribution is legitimate"
 }
