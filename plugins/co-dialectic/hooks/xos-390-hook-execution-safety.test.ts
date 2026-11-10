@@ -65,9 +65,11 @@ function allHooks(): HookEntry[] {
       }
     }
   }
-  // The top-level statusLine key is NOT under .hooks. Walking only .hooks declared this
-  // file clean while `bash "...statusline.sh"` sat one level up, and the installer
-  // mirrors that same string into the user's real settings.json.
+  // Backstop, deliberately kept after XOS-392 removed the statusLine key. The
+  // XOS-392 suite below forbids that key outright, so this branch should never
+  // fire -- but if the key ever returns (test deleted, merge resurrects it), the
+  // interpreter check still sees it rather than walking past one level up, which
+  // is exactly how `bash "...statusline.sh"` hid here in the first place.
   if (parsed.statusLine?.command) {
     out.push({ event: "statusLine", command: String(parsed.statusLine.command) });
   }
@@ -97,7 +99,10 @@ export function interpreterOf(command: string): string | null {
 describe("XOS-390: shell hooks cannot run under a deadlock-window bash", () => {
   test("every shell hook names a verified-safe interpreter", () => {
     const shellHooks = allHooks().filter((h) => interpreterOf(h.command) !== null);
-    expect(shellHooks.length).toBeGreaterThanOrEqual(3); // non-vacuity, incl. statusLine
+    // Non-vacuity floor. Was 3 while hooks.json also carried a documentation-only
+    // statusLine block; XOS-392 removed that, leaving the two real SessionStart
+    // shell hooks. The installer's own statusLine wiring is covered separately below.
+    expect(shellHooks.length).toBeGreaterThanOrEqual(2);
 
     const unsafe = shellHooks
       .filter((h) => !SAFE_INTERPRETERS.has(interpreterOf(h.command)!))
@@ -181,6 +186,45 @@ describe("XOS-390: shell hooks cannot run under a deadlock-window bash", () => {
       }
     }
     expect(offenders).toEqual([]);
+  });
+});
+
+describe("XOS-392: hooks.json carries no keys the Claude Code schema rejects", () => {
+  // Claude Code validated hooks.json and logged `unknown key "statusLine" ignored`
+  // on every session load. The block was documentation -- its own _note said so --
+  // but it held a field named `command` with an executable string, inside a file
+  // whose every other entry IS executed. Two reviewers in a row read it as a live
+  // call site and pinned an interpreter there that never ran. Surveying every
+  // installed plugin, co-dialectic was the only one with a third top-level key.
+  const SCHEMA_KEYS = new Set(["description", "hooks"]);
+
+  test("top-level keys are limited to the ones the schema accepts", () => {
+    const parsed = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
+    const keys = Object.keys(parsed);
+    expect(keys).toContain("hooks"); // non-vacuity: we parsed a real hooks file
+    expect(keys.filter((k) => !SCHEMA_KEYS.has(k))).toEqual([]);
+  });
+
+  test("no top-level key outside `hooks` smuggles an executable command", () => {
+    // The specific trap: a `command` field somewhere the runtime never reads, so
+    // edits to it look effective and are inert.
+    const parsed = JSON.parse(readFileSync(HOOKS_JSON, "utf8")) as Record<string, unknown>;
+    const offenders: string[] = [];
+    for (const [key, value] of Object.entries(parsed)) {
+      if (key === "hooks") continue;
+      if (JSON.stringify(value ?? null).includes('"command"')) offenders.push(key);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("control: the removed statusLine block would have failed both checks", () => {
+    const removed = {
+      _note: "documentation only",
+      type: "command",
+      command: '/bin/bash "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"',
+    };
+    expect(SCHEMA_KEYS.has("statusLine")).toBe(false);
+    expect(JSON.stringify(removed).includes('"command"')).toBe(true);
   });
 });
 
