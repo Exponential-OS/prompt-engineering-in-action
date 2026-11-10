@@ -327,6 +327,29 @@ if [ -f "${PLUGIN_STATUSLINE}" ]; then
 fi
 
 # ── 3. Add statusLine to ~/.claude/settings.json if missing ─────────────────
+#
+# THIS IS THE ONLY PLACE codi's status line is wired. Claude Code reads
+# statusLine from the user's settings.json; it does NOT read it from a plugin's
+# hooks.json. Until 4.47.2 a mirror of this entry also sat in hooks.json as
+# documentation, which cost more than it explained: Claude Code's schema
+# validator warned `unknown key "statusLine" ignored` on every session load, and
+# because the block carried a field named `command` holding an executable string
+# inside a file full of executable commands, two reviewers in a row read it as a
+# live call site and "fixed" an interpreter there that never ran. Documentation
+# shaped like code gets read as code. The note lives here now, next to the
+# mechanism it describes, where a shell comment cannot be mistaken for a call.
+#
+# Wire the RESIDENT copy (~/.codialectic/statusline.sh), never a versioned
+# plugin-cache path. Version-independence is the point: an upgrade needs no
+# version-sort gymnastics and the status line survives it. A cache path here
+# previously pinned 4.14.0, went 30 minor versions stale, and tripped the
+# vendor-completeness HOST_ABSOLUTE_REFERENCE gate by naming a path outside the
+# package.
+#
+# The interpreter is pinned to /bin/bash (XOS-390): PATH bash is Homebrew 5.3.15
+# here, inside the 5.1-5.3.19 heredoc deadlock window, and statusline.sh carries
+# an 804-byte heredoc in its no-jq branch. Naming the interpreter in the command
+# overrides the script's shebang, so the shebang alone does not protect this.
 if [ -f "${SETTINGS_FILE}" ]; then
   python3 <<'PYEOF' || true
 import json

@@ -65,9 +65,11 @@ function allHooks(): HookEntry[] {
       }
     }
   }
-  // The top-level statusLine key is NOT under .hooks. Walking only .hooks declared this
-  // file clean while `bash "...statusline.sh"` sat one level up, and the installer
-  // mirrors that same string into the user's real settings.json.
+  // Backstop, deliberately kept after XOS-392 removed the statusLine key. The
+  // XOS-392 suite below forbids that key outright, so this branch should never
+  // fire -- but if the key ever returns (test deleted, merge resurrects it), the
+  // interpreter check still sees it rather than walking past one level up, which
+  // is exactly how `bash "...statusline.sh"` hid here in the first place.
   if (parsed.statusLine?.command) {
     out.push({ event: "statusLine", command: String(parsed.statusLine.command) });
   }
@@ -97,7 +99,10 @@ export function interpreterOf(command: string): string | null {
 describe("XOS-390: shell hooks cannot run under a deadlock-window bash", () => {
   test("every shell hook names a verified-safe interpreter", () => {
     const shellHooks = allHooks().filter((h) => interpreterOf(h.command) !== null);
-    expect(shellHooks.length).toBeGreaterThanOrEqual(3); // non-vacuity, incl. statusLine
+    // Non-vacuity floor. Was 3 while hooks.json also carried a documentation-only
+    // statusLine block; XOS-392 removed that, leaving the two real SessionStart
+    // shell hooks. The installer's own statusLine wiring is covered separately below.
+    expect(shellHooks.length).toBeGreaterThanOrEqual(2);
 
     const unsafe = shellHooks
       .filter((h) => !SAFE_INTERPRETERS.has(interpreterOf(h.command)!))
@@ -180,6 +185,97 @@ describe("XOS-390: shell hooks cannot run under a deadlock-window bash", () => {
         }
       }
     }
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("XOS-392: hooks.json carries no keys the Claude Code schema rejects", () => {
+  // Claude Code validated hooks.json and logged `unknown key "statusLine" ignored`
+  // on every session load. The block was documentation -- its own _note said so --
+  // but it held a field named `command` with an executable string, inside a file
+  // whose every other entry IS executed. Two reviewers in a row read it as a live
+  // call site and pinned an interpreter there that never ran. Surveying every
+  // installed plugin, co-dialectic was the only one with a third top-level key.
+  const SCHEMA_KEYS = new Set(["description", "hooks"]);
+
+  test("top-level keys are limited to the ones the schema accepts", () => {
+    const parsed = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
+    const keys = Object.keys(parsed);
+    expect(keys).toContain("hooks"); // non-vacuity: we parsed a real hooks file
+    expect(keys.filter((k) => !SCHEMA_KEYS.has(k))).toEqual([]);
+  });
+
+  test("no top-level key outside `hooks` smuggles an executable command", () => {
+    // The specific trap: a `command` field somewhere the runtime never reads, so
+    // edits to it look effective and are inert.
+    const parsed = JSON.parse(readFileSync(HOOKS_JSON, "utf8")) as Record<string, unknown>;
+    const offenders: string[] = [];
+    for (const [key, value] of Object.entries(parsed)) {
+      if (key === "hooks") continue;
+      if (JSON.stringify(value ?? null).includes('"command"')) offenders.push(key);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // The two checks above, factored out so the control can run the REAL logic
+  // against a fixture instead of re-asserting the predicates in isolation --
+  // a control that only proves `SCHEMA_KEYS.has("statusLine") === false` proves
+  // something about the Set, not about the check.
+  const straySchemaKeys = (o: Record<string, unknown>) =>
+    Object.keys(o).filter((k) => !SCHEMA_KEYS.has(k));
+  const keysSmugglingCommand = (o: Record<string, unknown>) =>
+    Object.entries(o)
+      .filter(([k]) => k !== "hooks")
+      .filter(([, v]) => JSON.stringify(v ?? null).includes('"command"'))
+      .map(([k]) => k);
+
+  test("control: the real checks reject a fixture carrying the removed block", () => {
+    const withBlock = {
+      description: "x",
+      hooks: {},
+      statusLine: {
+        _note: "documentation only",
+        type: "command",
+        command: '/bin/bash "${CLAUDE_PLUGIN_ROOT}/hooks/statusline.sh"',
+      },
+    };
+    expect(straySchemaKeys(withBlock)).toEqual(["statusLine"]);
+    expect(keysSmugglingCommand(withBlock)).toEqual(["statusLine"]);
+
+    // ...and accept the file as it actually ships now.
+    const shipped = JSON.parse(readFileSync(HOOKS_JSON, "utf8")) as Record<string, unknown>;
+    expect(straySchemaKeys(shipped)).toEqual([]);
+    expect(keysSmugglingCommand(shipped)).toEqual([]);
+  });
+});
+
+describe("XOS-392: no manifest embeds a version string in its description", () => {
+  // CI's version-consistency check compares the `version` FIELDS only, so a
+  // version written into description prose drifts silently. Caught by a judge:
+  // marketplace.json said "Co-Dialectic v4.38.0" and plugin.json "v4.41.1" while
+  // both version fields read 4.47.2 -- 9 and 6 minors stale. Same defect class as
+  // the statusLine block: one fact in two places, only one of them maintained.
+  const MANIFESTS = [
+    join(HOOKS_DIR, "..", "..", "..", ".claude-plugin", "marketplace.json"),
+    join(HOOKS_DIR, "..", ".claude-plugin", "plugin.json"),
+  ];
+
+  test("descriptions carry no semver", () => {
+    let checked = 0;
+    const offenders: string[] = [];
+    for (const file of MANIFESTS) {
+      if (!existsSync(file)) continue;
+      const parsed = JSON.parse(readFileSync(file, "utf8"));
+      const entries = Array.isArray(parsed.plugins) ? parsed.plugins : [parsed];
+      for (const e of entries) {
+        const desc = typeof e?.description === "string" ? e.description : "";
+        if (!desc) continue;
+        checked++;
+        const hit = desc.match(/v?\d+\.\d+\.\d+/);
+        if (hit) offenders.push(`${file.split("/").pop()}: "${hit[0]}"`);
+      }
+    }
+    expect(checked).toBeGreaterThan(0); // non-vacuity: descriptions were found
     expect(offenders).toEqual([]);
   });
 });

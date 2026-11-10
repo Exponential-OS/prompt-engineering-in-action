@@ -6,6 +6,35 @@
 All notable changes to this repository are tracked here. This project follows [Semantic Versioning](https://semver.org/).
 
 ---
+## [4.47.2] — 2026-11-10 — documentation shaped like code gets read as code
+
+`hooks.json` carried a top-level `statusLine` block whose own `_note` said it was
+documentation and never executed. Claude Code's schema validator disagreed in the
+only way it can, logging `unknown key "statusLine" ignored` on every session load
+since 4.14.0. Surveying every installed plugin, co-dialectic was the only one with
+a third top-level key; everyone else uses `description` and `hooks`.
+
+The warning was the cheap half of the cost. The expensive half: the block held a
+field named `command` containing an executable string, inside a file whose every
+other entry IS executed. In the 4.47.1 review a cross-family judge flagged it as a
+live call site bypassing the shebang pin, and the author agreed and pinned an
+interpreter there. That pin could never run. Two readers in a row weighted the
+shape over the prose, because shape is what a reader actually parses.
+
+- Remove the `statusLine` block from `hooks.json`.
+- Move its content into `install-survival-layer.sh`, directly above the code that
+  writes `statusLine.command` into the user's real `settings.json` — the only
+  place the status line is ever wired. A shell comment beside the mechanism
+  cannot be mistaken for a call site.
+- Add three tests: top-level keys limited to what the schema accepts; no key
+  outside `hooks` may smuggle a `command` field; and a control proving the
+  removed block would have failed both. Four mutants killed, including re-adding
+  the exact block that was removed.
+
+Nothing about behaviour changes. The status line was always wired by the
+installer, and still is.
+
+---
 ## [4.47.1] — 2026-11-09 — the SessionStart hook that never returned
 
 `bash` on PATH is Homebrew 5.3.15, inside the 5.1–5.3.19 heredoc deadlock
