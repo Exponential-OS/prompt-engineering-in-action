@@ -35,11 +35,20 @@ function trackedFiles(): string[] {
 }
 
 /**
- * Changelogs are the one legitimate home for these strings: they quote the very
- * bug being described. Excluding them is not a loophole -- a changelog is a
- * historical record, and rewriting history to pass a lint is worse than the lint.
+ * The only two exemptions, both deliberate and both narrow:
+ *
+ *  - CHANGELOG.md quotes the very bug being described. A changelog is a
+ *    historical record; rewriting history to pass a lint is worse than the lint.
+ *  - THIS FILE carries the offending strings as control fixtures. It flagged
+ *    itself on first CI run, and did not locally, because the scan reads
+ *    `git ls-files`: before the commit the file was untracked and therefore
+ *    invisible to its own scan. A green local run meant nothing here.
+ *
+ * Kept as an exact-match list, and asserted below to stay at two entries, so it
+ * cannot quietly grow into the loophole that defeats the check.
  */
-const HISTORICAL = /(^|\/)CHANGELOG\.md$/;
+const EXEMPT = [/(^|\/)CHANGELOG\.md$/, /(^|\/)xos-393-no-machine-paths\.test\.ts$/];
+const HISTORICAL = { test: (f: string) => EXEMPT.some((re) => re.test(f)) };
 
 /** Absolute path into a named user's home on macOS or Linux. */
 const HOME_PATH = /\/(?:Users|home)\/[A-Za-z0-9._-]+\//;
@@ -52,6 +61,14 @@ describe("XOS-393: no tracked file hardcodes a developer's home directory", () =
 
   test("the tracked-file list is real", () => {
     expect(files.length).toBeGreaterThan(20); // non-vacuity: git ls-files worked
+  });
+
+  test("the exemption list stays exactly two entries", () => {
+    // An exemption list that can grow silently is how this kind of check dies:
+    // the next offender gets added to the list instead of fixed.
+    expect(EXEMPT.length).toBe(2);
+    // And the scan must still be looking at most of the repo.
+    expect(trackedFiles().length - files.length).toBeLessThanOrEqual(4);
   });
 
   test("no absolute home path ships", () => {
