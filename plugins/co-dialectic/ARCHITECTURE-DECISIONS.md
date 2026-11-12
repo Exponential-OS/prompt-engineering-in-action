@@ -184,7 +184,7 @@ Plus prior context:
 
 > *"We will ship codi as a pure independent open-source product with premium version with our features like Red Hat does. xOS plugs into it like Spring."*
 
-Captured in workspace memory at `~/.claude/projects/-Users-anandvallam-anand-career-os/memory/feedback_decoupling_kernel_workspace_separation.md`. Pairs with `anand-career-os#27` (waky-waky decoupling P1 bug fix) and `anand-career-os#28` (Plugin Decoupling Architecture invariant — Constitution codification).
+Captured in workspace memory at the maintainer's workspace memory. Pairs with `anand-career-os#27` (waky-waky decoupling P1 bug fix) and `anand-career-os#28` (Plugin Decoupling Architecture invariant — Constitution codification).
 
 ---
 

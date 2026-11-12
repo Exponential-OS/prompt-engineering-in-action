@@ -55,3 +55,8 @@ brain/sessions/
 # only thing standing between a routine `bun install` + `git add -A` and a 20MB
 # accidental commit was that nobody had done both in the same checkout yet. I did.
 node_modules/
+
+# Personal Claude Code config — machine-specific hook paths and plugin
+# enablement belong to the developer, not the repo (XOS-393).
+.claude/settings.json
+.claude/settings.local.json
