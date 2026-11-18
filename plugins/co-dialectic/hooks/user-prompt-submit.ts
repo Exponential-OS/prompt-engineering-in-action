@@ -568,7 +568,7 @@ export function buildReminder(
     `${scoresLine}`,
     "Local verification: credentials for local runs are usually already in the project's env/config files (.env / .env.local); local testing is expected before you claim done — run it and paste the output.",
     "",
-    "Protocol 1 (Status Line): begin EVERY response with the persona/score/Cal/[HH:MM] line — the [HH:MM] is the time from the OS-grounded Now line above (never recalled), so the user sees the response is temporally grounded and can scroll back to a moment. LIVE means this session's heartbeat covers the current user turn; elapsed tool time cannot make it stale. DEGRADED means its heartbeat predates the current prompt beyond the grace backstop. UNINITIALIZED means this session has no heartbeat yet. On a day boundary use [MM-DD HH:MM].",
+    "Protocol 1 (Status Line): begin EVERY response with the status line, rendered EXACTLY as `{icon} {Persona} · X% · Cal: Y% · [HH:MM]` — the [HH:MM] is the time from the OS-grounded Now line above (never recalled), so the user sees the response is temporally grounded and can scroll back to a moment. LIVE means this session's heartbeat covers the current user turn; elapsed tool time cannot make it stale. DEGRADED means its heartbeat predates the current prompt beyond the grace backstop. UNINITIALIZED means this session has no heartbeat yet. On a day boundary use [MM-DD HH:MM].",
     "Protocol 1 Verification: render the status header; the Stop hook verifies the transcript and stamps the heartbeat/counter fields.",
     protocol3Line,
     "Protocol 11 (Persona Roster): activate the appropriate persona at 0.001% caliber based on prompt domain. Task-first routing per skills/co-dialectic/task-persona-map.md — users describe tasks, not persona names.",

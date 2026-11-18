@@ -213,3 +213,40 @@ test("SELECTOR: a closing-only header is still accepted (no regression)", () => 
     expect(parseRenderedHeader(readMessageForVerification({ transcript_path: path })).degradedHeader).toBe(true);
   });
 });
+
+/**
+ * LIVE_HEADER_RE required `Cal: NN%` while the Protocol-1 reminder asked for
+ * a "persona/score/Cal/[HH:MM] line" and never showed the literal. Agents
+ * reproduce the format they are handed, so they rendered `Cal 97%` — which
+ * matched neither LIVE nor DEGRADED. No match, no stamp, last_protocol_ts
+ * froze, and past CODI_STALE_SECS the banner latched DEGRADED for days.
+ *
+ * Measured 2026-11-18 across three live sessions: every one had a frozen
+ * last_protocol_ts and a last_user_prompt_ts current to the second. Running
+ * the Stop hook by hand stamped 2026-11-16T21:23Z -> 2026-11-18T17:28Z and
+ * the banner went ACTIVE on the next turn — the writer was never broken.
+ *
+ * The instruction is fixed in the same change. This pins the parser half,
+ * because a liveness gate that depends on a model reproducing one colon
+ * exactly will fail again the next time the phrasing drifts.
+ */
+test("a header WITHOUT the colon stamps", () => {
+  const h = parseRenderedHeader("🎯 career-hoffman · 93% · Cal 97% · [14:22]");
+  expect(h.liveHeader).toBe(true);
+  expect(h.score).toBe(93);
+  expect(h.cal).toBe(97);
+});
+
+test("a header WITH the colon still stamps", () => {
+  const h = parseRenderedHeader("🎯 career-hoffman · 93% · Cal: 97% · [14:22]");
+  expect(h.liveHeader).toBe(true);
+  expect(h.cal).toBe(97);
+});
+
+test("loosening the colon did NOT make the gate accept everything", () => {
+  // The cheap way to kill a false negative is to accept any line. These pin
+  // that it did not happen.
+  expect(parseRenderedHeader("🎯 career-hoffman · Cal: 97% · [14:22]").liveHeader).toBe(false);
+  expect(parseRenderedHeader("Here is what I found about the gate.").liveHeader).toBe(false);
+  expect(parseRenderedHeader("93% · Cal 97%").liveHeader).toBe(false);
+});
