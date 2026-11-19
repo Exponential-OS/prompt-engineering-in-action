@@ -86,7 +86,23 @@ const ICON_PERSONA_LEAD_PATTERN = String.raw`(?=[^\x00-\x7F])(?:\p{Extended_Pict
 const DOMAIN_NAME_PERSONA_LEAD_PATTERN = String.raw`[\p{L}\p{M}][\p{L}\p{M}\p{N}'&/ -]{0,80} \([^)·%\n]{1,80}\)`;
 const PERSONA_LEAD_PATTERN = String.raw`(?:${ICON_PERSONA_LEAD_PATTERN}|${DOMAIN_NAME_PERSONA_LEAD_PATTERN})`;
 const LIVE_HEADER_RE = new RegExp(
-  String.raw`^(${PERSONA_LEAD_PATTERN}) · (\d{1,3})% · Cal: (\d{1,3})%${OPTIONAL_HEADER_TIME_PATTERN}$`,
+  // ⛔ THE COLON WAS MANDATORY AND NOTHING TOLD THE MODEL THAT. XOS-400.
+  //
+  // This required `Cal: NN%` while the Protocol-1 reminder asked for a
+  // "persona/score/Cal/[HH:MM] line" without ever showing the literal. Agents
+  // reproduce the format they are given, so they rendered `Cal 97%`, which
+  // matched neither this nor DEGRADED_HEADER_RE — no match means no stamp,
+  // last_protocol_ts froze, and after CODI_STALE_SECS the banner latched
+  // DEGRADED for days across every session. Measured 2026-11-18: three live
+  // sessions, all frozen, all with a current last_user_prompt_ts.
+  //
+  // The colon is now OPTIONAL. The instruction is being fixed in the same
+  // change, but a liveness gate must not depend on a language model
+  // reproducing one punctuation mark exactly — that dependency is the defect,
+  // not the symptom. Recall over precision here: the cost of accepting a
+  // slightly-off header is nothing; the cost of rejecting a correct one is a
+  // dead liveness signal nobody trusts afterwards.
+  String.raw`^(${PERSONA_LEAD_PATTERN}) · (\d{1,3})% · Cal:? (\d{1,3})%${OPTIONAL_HEADER_TIME_PATTERN}$`,
   "u",
 );
 const DEGRADED_HEADER_RE = new RegExp(

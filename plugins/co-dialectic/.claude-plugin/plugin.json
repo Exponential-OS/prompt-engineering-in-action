@@ -1,10 +1,9 @@
 {
   "name": "co-dialectic",
-  "description": "Co-Dialectic — Pre-compaction state capture, with the handoff reminder delivered on SessionStart(compact) where the model can act on it.",
+  "description": "Co-Dialectic \u2014 Pre-compaction state capture, with the handoff reminder delivered on SessionStart(compact) where the model can act on it.",
   "version": "4.47.3",
   "license": "AGPL-3.0",
   "depends_on_kernel": [
-    "brain-kernel >= 1.0.0",
     "co-dialectic >= 4.16.0"
   ],
   "brain": {
@@ -13,26 +12,24 @@
       "feedback/**",
       "personas/**",
       "calibration-history.md",
-      "status-state.json"
+      "status-state.json",
+      "sessions/**"
     ],
     "writes_to_primitives": [
       "references/tools-registry.md"
     ],
     "reads_from_primitives": [
-      "identity/handles.md",
-      "sessions/ledger/**"
-    ],
-    "reads_from_engines": [
-      "career-intelligence/skills-matrix.md"
+      "identity/handles.md"
     ],
     "linters": [
       "feedback-contradictions",
       "persona-drift",
       "calibration-drift"
-    ]
+    ],
+    "root_resolution": "config:brain_root -> default ~/codi/brain (no env, no cwd)"
   },
   "author": {
     "name": "Anand Vallamsetla"
   },
-  "_product_vs_solution_marker": "product-vs-solution: example — Anand authorship attribution is legitimate"
+  "_product_vs_solution_marker": "product-vs-solution: example \u2014 Anand authorship attribution is legitimate"
 }
