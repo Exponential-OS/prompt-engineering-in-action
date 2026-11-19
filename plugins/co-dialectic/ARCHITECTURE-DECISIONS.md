@@ -213,6 +213,92 @@ Captured in workspace memory at the maintainer's workspace memory. Pairs with `a
 
 ---
 
+### Decision 6 — Codi Owns Its Brain Root, in a Config File, Not an Env Var
+
+**Codified 2026-11-18 (XOS-400).** Triggering directive:
+
+> *"codi shouldn't have dependency on brain as public can't depend on private. codi should store the config for the brain location in a config file so that it can be changed through program rather than having user to change env variable."*
+
+**What changed.** Codi resolved its brain root from `BRAIN_WORKSPACE_ROOT`, falling through to
+cwd, and its `plugin.json` listed `"brain-kernel >= 1.0.0"` under `depends_on_kernel`.
+
+Both of those are gone. Note precisely what that means, because a grep will mislead: the
+`depends_on_kernel` KEY still exists and now reads `"co-dialectic >= 4.16.0"` — a self-version
+floor, not a cross-plugin dependency. What was removed is the **brain-kernel entry**, not the
+key. Codi now reads `brain_root` from its own config at `~/.codialectic/config.json`, with a
+`~/codi/brain` default anchored to `$HOME`.
+
+**Why this is a Decision-2 fix, not a Decision-2 exception.** The declared dependency on
+brain-kernel was the sharper violation: brain-kernel is *paid, private xOS*. Codi is AGPL and
+public. A public plugin cannot depend on a private one — a standalone install could not log at
+all, because the thing it depended on was not something an OSS user could obtain. Decision 2
+says codi ships standalone; a private dependency makes that impossible by construction.
+
+**Why NOT an env var, when Decision 2 explicitly permits env-var indirection.** This is the
+part that looks like a contradiction and is not. Decision 2 allows
+`${CO_DIALECTIC_HOOK_DIR}`-style indirection, and that remains correct **for pointing at
+tooling**. A brain root is not tooling, it is the location of *durable state*, and ambient
+environment is the wrong mechanism for one:
+
+- it dies with the shell, so it is not durable
+- it differs per terminal, so two sessions disagree about where state lives
+- it cannot be inspected after the fact — you cannot ask a running agent where it decided to write
+- **it cannot be set by a program.** This is the directive's actual point. A companion
+  installer must be able to repoint codi without asking a human to edit a dotfile.
+
+And the specific failure: the old fallback was **cwd**, so codi wrote wherever the agent
+happened to be standing. The same `$(pwd)` shape put 686 MB of session ledger into a repo
+nobody chose. There is deliberately **no env tier and no cwd tier** in the new resolution.
+
+**Resolution order, all in one place (`hooks/brain-config.ts`):**
+
+1. `brain_root` in `~/.codialectic/config.json` — a program wrote it (installer, companion, CLI)
+2. `~/codi/brain` — the default, anchored to `$HOME`, never to cwd
+
+Session logs live at `<brain_root>/sessions`.
+
+**The config is untrusted input.** A private installer writes it, so a bad or hostile value
+must not become a `$(pwd)`-class bug with extra steps. Every path is normalised, required to
+be absolute, `~` expanded, and refused if it resolves to a system location. **A refusal falls
+back to the default rather than throwing** — codi keeps logging rather than failing a turn
+over a config typo. `setBrainRoot()` returns its validation result so a caller can distinguish
+*accepted* from *refused and fell back*; silently ignoring a bad value is how a repoint appears
+to work and does not.
+
+**The dependency arrow, which runs one way only:**
+
+```
+private xOS extension  ──reads/writes──▶  ~/.codialectic/config.json  ◀──owns── public codi
+```
+
+Codi picks a default and logs there, knowing nothing about xOS. A private companion may later
+point this at an xOS brain and migrate what is already written. Codi neither knows nor cares
+which happened — it reads a path out of its own config file. This is Decision 2's
+kernel/substrate split expressed as a file instead of a callback.
+
+**Anti-patterns this codifies:**
+
+- ❌ Reintroducing `BRAIN_WORKSPACE_ROOT` or any env tier for the brain root — the directive is
+  explicitly about *not* making a human export a variable.
+- ❌ Any cwd-derived default for durable state. Not for the brain root, not for ledgers, not for
+  anything a future reader is tempted to resolve "relative to where we are."
+- ❌ Declaring a dependency on any private/paid plugin from codi's `plugin.json`. The public
+  plugin must install and run with nothing paid present.
+- ❌ Throwing on a malformed config. Refuse the value, fall back, keep the turn alive.
+
+**Litmus test:** "If a user installed ONLY codi on a clean machine — no xOS, nothing paid — would
+it know where to write, and would it write there without being told? And can a program later
+move that location without a human editing anything?" Both must be yes.
+
+**Open inconsistency, flagged not fixed.** `skills/forage/SKILL.md` still resolves the session
+ledger via `$CO_DIALECTIC_SESSION_LEDGER_DIR`, falling back to `sessions/ledger/` under "the
+WORKSPACE brain root." That predates this decision and now describes a second, different answer
+to "where is the brain." Whether forage should read `brain_root` from this config, keep its own
+adapter-set env var, or stay deliberately separate is a behaviour question for the owner, not
+something to resolve silently in a docs pass.
+
+---
+
 ## Related
 
 - `~/cyborg/CONSTITUTION.md` — universal how-we-build principles applied (Decision 1)
@@ -221,3 +307,5 @@ Captured in workspace memory at the maintainer's workspace memory. Pairs with `a
 - `anand-career-os#28` — Constitution Plugin Decoupling Architecture invariant
 - `anand-career-os#29` — Open-source vs premium tier product strategy
 - `tests/clean-install/` — mechanical test that enforces Decision 3
+- `hooks/brain-config.ts` + `hooks/brain-config.test.ts` — Decision 6 implementation (14 tests; the negatives carry the weight)
+- `XOS-400` — the DEGRADED-liveness ticket this shipped alongside
