@@ -1,5 +1,34 @@
 # Changelog — Co-Dialectic
 
+## [4.47.4] — 2026-11-18 — ships the liveness fix that main had and no session was running
+
+No new code. 4.47.3 already contained the DEGRADED diagnosis; this release is
+what makes the *fix* reachable, and the gap between those two is the whole point.
+
+The parser fix and the Protocol 1 wording fix landed on `main` in PR #52. Every
+live session stayed DEGRADED anyway, because sessions do not run `main` — they
+run `~/.claude/plugins/cache/xos/co-dialectic/<version>/`, and all five cached
+copies on this machine were checked and none contained the fix. Source and
+marketplace both still read `4.47.3`, so a reinstall would have been a silent
+no-op against an identical version number. Merged is not shipped; a version bump
+is the only thing that makes an installer notice.
+
+What is being released (from PR #52, `19db393`):
+
+- `status-liveness-check.ts` — `LIVE_HEADER_RE` required `Cal:` with the colon,
+  while the Protocol 1 instruction said `persona/score/Cal/[HH:MM]` without one.
+  A header rendered exactly as instructed did not match, so the Stop hook never
+  stamped `last_protocol_ts`, so staleness only ever grew. Now `Cal:?`.
+- `user-prompt-submit.ts` — Protocol 1 now states the header literally
+  (`{icon} {Persona} · X% · Cal: Y% · [HH:MM]`) instead of describing it with
+  slashes. The parser and the instruction were two independent descriptions of
+  one format; fixing only the parser leaves the next drift free to happen.
+- `brain-config.ts` (new) — codi resolves its own brain root from
+  `~/.codialectic/config.json`, with a `~/codi/brain` default anchored to HOME.
+  No env tier and no cwd tier, both of which were the bug. Removes codi's
+  declared dependency on the private brain-kernel, so the public plugin runs
+  standalone. 14 tests, the negatives carrying the weight.
+
 ## [4.47.3] — 2026-11-10 — the state-source label named the wrong file
 
 Not a behaviour change. The liveness verdict is byte-identical before and after;
