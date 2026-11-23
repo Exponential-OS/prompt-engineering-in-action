@@ -43,7 +43,28 @@ function isoSeconds(date: Date): string {
   return date.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
+// XOS-443: statusline reads this session's file and nothing else. These tests
+// cover the freshness/version RENDERING rules, which are unchanged -- only the
+// location the state is read from moved, so the helper moved with it.
+const STATUSLINE_SESSION = "statusline-test-session";
+
 function writeState(home: string, state: Record<string, unknown>): void {
+  const sessionsDir = join(home, ".codialectic", "sessions");
+  mkdirSync(sessionsDir, { recursive: true });
+  writeFileSync(
+    join(sessionsDir, `${STATUSLINE_SESSION}.json`),
+    JSON.stringify(state, null, 2),
+  );
+}
+
+/**
+ * The INSTALLER still writes ~/.codialectic/state.json, so its tests keep a
+ * legacy-shaped helper. That file is the installer's own artifact; the runtime
+ * hooks stopped reading it in XOS-443. Whether the installer should still
+ * create a file nothing reads is tracked separately -- it is a change to the
+ * fresh-machine bootstrap path, not to liveness.
+ */
+function writeInstallerState(home: string, state: Record<string, unknown>): void {
   const codiDir = join(home, ".codialectic");
   mkdirSync(codiDir, { recursive: true });
   writeFileSync(join(codiDir, "state.json"), JSON.stringify(state, null, 2));
@@ -79,6 +100,9 @@ function baseState(overrides: Record<string, unknown> = {}): Record<string, unkn
 function runStatusline(home: string): string {
   const proc = Bun.spawnSync(["/bin/bash", STATUSLINE], {
     cwd: home,
+    stdin: new TextEncoder().encode(
+      JSON.stringify({ session_id: STATUSLINE_SESSION, cwd: home }),
+    ),
     env: {
       ...process.env,
       HOME: home,
@@ -128,9 +152,30 @@ function stateBackups(home: string): string[] {
     .map((name) => join(codiDir, name));
 }
 
+/**
+ * These tests assert the exact text of the injected reminder, so they must
+ * declare whether the user is new. XOS-443 made onboarding a user-level marker
+ * rather than a side effect of a global turn counter; without the marker a
+ * fresh temp HOME is -- correctly -- a first-time user, and the 16-line
+ * orientation block is part of the output. Mark onboarded so these tests keep
+ * measuring the reminder rather than the hint.
+ */
+function markOnboarded(home: string): void {
+  const codiDir = join(home, ".codialectic");
+  mkdirSync(codiDir, { recursive: true });
+  writeFileSync(join(codiDir, "onboarded"), new Date().toISOString() + "\n");
+}
+
 function runUserPromptSubmit(home: string, workspaceRoot: string): any {
+  markOnboarded(home);
   const proc = Bun.spawnSync([process.execPath, USER_PROMPT_SUBMIT], {
     cwd: PLUGIN_ROOT,
+    // XOS-443: state is session-scoped, so the payload must carry the id that
+    // writeState() wrote under. Without it the hook correctly reports
+    // "missing state (self-resurrection)" and these assertions measure nothing.
+    stdin: new TextEncoder().encode(
+      JSON.stringify({ session_id: STATUSLINE_SESSION, cwd: workspaceRoot }),
+    ),
     env: {
       ...process.env,
       HOME: home,
@@ -235,7 +280,7 @@ describe("install-survival-layer state sync (XOS-141)", () => {
   test("updates installed_version and preserves model-owned last_score", () => {
     const home = makeTempDir("codi-141-home-");
     const pluginRoot = makePluginRoot();
-    writeState(
+    writeInstallerState(
       home,
       baseState({
         installed_version: "4.25.0",

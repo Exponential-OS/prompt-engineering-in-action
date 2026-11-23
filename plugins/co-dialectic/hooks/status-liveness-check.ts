@@ -8,7 +8,6 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, statSync, openSync, readSync, closeSync } from "fs";
-import { homedir } from "os";
 import { dirname, join } from "path";
 import {
   evaluateSharedLiveness,
@@ -18,7 +17,6 @@ import {
 import {
   sessionIdFromHookInput,
   sessionStatePath,
-  workspaceRootFromInput,
   type SessionAwareHookInput,
 } from "./session-state.ts";
 
@@ -114,43 +112,51 @@ const STATUS_SCORE_TOKEN_RE = new RegExp(
   "u",
 );
 
-function homeDir(): string {
-  return process.env.HOME?.trim() || homedir();
-}
-
-export function authoritativeStatePath(input: HookInput = {}): string {
+/**
+ * THE state rule. Where this session's state lives, or null when there is no
+ * session. Reads and writes both resolve through here, so they cannot diverge.
+ *
+ * ⛔ XOS-443. This used to fall back to a brain-kernel workspace file and
+ * then a machine-local ~/.codialectic/state.json. Both were dead as READ
+ * sources, but in different ways, and the difference matters:
+ *
+ *   - <workspace>/co-dialectic/status-state.json: no writer at all. Last
+ *     written 2026-08-14; still untouched 101 days later.
+ *   - ~/.codialectic/state.json: written on EVERY SessionStart by
+ *     install-survival-layer.sh, and read by nothing since state went
+ *     session-scoped. A fresh mtime on a file no code consumes.
+ *
+ * The second is the more dangerous shape. A stale file at least looks stale;
+ * a file something keeps rewriting looks maintained, which is why the per-turn
+ * reminder calling it "the source of truth across sessions and devices" was
+ * believable right up until a preference silently failed to carry.
+ *
+ * Returning null is deliberate: a missing session is a real condition the
+ * caller must handle, not something to paper over with a path that parses.
+ */
+export function authoritativeStatePath(input: HookInput = {}): string | null {
   const sessionId = sessionIdFromHookInput(input);
-  if (sessionId) return sessionStatePath(sessionId);
-
-  // Backward-compatible no-stdin/no-session path: brain-kernel workspace first,
-  // then legacy machine-local state. There is exactly one write target.
-  const root = workspaceRootFromInput(input);
-  const brainPath = join(root, "co-dialectic", "status-state.json");
-  if (existsSync(brainPath)) return brainPath;
-  return legacyStatePath();
+  return sessionId ? sessionStatePath(sessionId) : null;
 }
 
-export function legacyStatePath(): string {
-  return join(homeDir(), ".codialectic", "state.json");
-}
-
-function brainStatePath(input: HookInput = {}): string {
-  const root = workspaceRootFromInput(input);
-  return join(root, "co-dialectic", "status-state.json");
-}
-
+/**
+ * Where this session's state is written. ONE target, always.
+ *
+ * ⛔ XOS-443. This used to be a three-tier fallback: session -> brain-kernel ->
+ * legacy. Claude Code always supplies `session_id`, so the first branch was taken
+ * on every real invocation and the other two were UNREACHABLE. Measured
+ * 2026-11-23: the brain path and the legacy path were both last written
+ * 2026-08-14 — 101 days — while the session files updated every turn.
+ *
+ * The cost was not the dead code. It was that the per-turn reminder told the
+ * model to persist preferences to the brain path and called it "the source of
+ * truth across sessions and devices", so `codi concise` appeared to work and
+ * silently reverted at the next session boundary. Dead fallbacks that something
+ * still NAMES are worse than dead code; they make a false promise legible.
+ */
 export function resolveStateWriteTargets(input: HookInput = {}): StateWriteTarget[] {
-  const sessionId = sessionIdFromHookInput(input);
-  if (sessionId) {
-    return [{ path: sessionStatePath(sessionId), authoritative: true }];
-  }
-
-  const brainPath = brainStatePath(input);
-  const brainDir = dirname(brainPath);
-  if (existsSync(brainDir)) {
-    return [{ path: brainPath, authoritative: true }];
-  }
-  return [{ path: legacyStatePath(), authoritative: true }];
+  const path = authoritativeStatePath(input);
+  return path ? [{ path, authoritative: true }] : [];
 }
 
 export function evaluateStatusFreshness(
@@ -277,7 +283,7 @@ export function checkStatusLiveness(
   };
 }
 
-function readState(path: string = authoritativeStatePath()): CodiStatusState {
+function readState(path: string): CodiStatusState {
   if (!existsSync(path)) throw new Error("state missing");
   const parsed = JSON.parse(readFileSync(path, "utf8"));
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -306,25 +312,11 @@ function readBaseStateForWrite(
     if (state !== null) return state;
   }
 
-  // First canonical workspace write may bootstrap durable preferences from the
-  // legacy file, but the legacy file is never mirrored afterward.
-  if (targets.some((target) => target.path === brainStatePath(input))) {
-    const legacy = readExistingStateForWrite(legacyStatePath());
-    if (legacy) return legacy;
-  }
-
-  // A new per-session file derives durable preferences from the workspace
-  // canonical state (or legacy bootstrap) without inheriting its heartbeat.
-  if (sessionIdFromHookInput(input)) {
-    const brain = readExistingStateForWrite(brainStatePath(input));
-    const legacy = readExistingStateForWrite(legacyStatePath());
-    const seed = brain ?? legacy;
-    if (seed) {
-      const next = { ...seed };
-      delete next.last_protocol_ts;
-      return next;
-    }
-  }
+  // XOS-443: the brain/legacy seeding that used to live here is gone. It read two
+  // files that have not been written since 2026-08-14, so `seed` was always null
+  // and a new session always started from {} regardless. Removing it makes the
+  // behaviour the code already had legible, instead of implying a cross-session
+  // preference carry that never happened.
   return {};
 }
 
@@ -716,11 +708,17 @@ async function main(): Promise<void> {
     emitSilent();
   }
 
+  // No session id is a known, expected condition -- not an error. Handle it as
+  // a value so the only thing the catch below covers is a genuinely unreadable
+  // or malformed state file.
+  const statePath = authoritativeStatePath(input);
   let state: CodiStatusState | null = null;
-  try {
-    state = readState(authoritativeStatePath(input));
-  } catch {
-    state = null;
+  if (statePath) {
+    try {
+      state = readState(statePath);
+    } catch {
+      state = null;
+    }
   }
 
   const result = checkStatusLiveness(message, state);
