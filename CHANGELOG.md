@@ -581,6 +581,61 @@ Co-dialectic plugin: 83 BLOCK hits to 0. Anand-as-author attribution exempted vi
 
 ---
 
+## [4.47.6] - 2026-11-23
+
+### Fixed — codi state had three read paths; two of them were not real sources (XOS-443)
+
+State resolved through a three-tier fallback, and the two upper tiers failed in
+opposite directions:
+
+- `<workspace>/co-dialectic/status-state.json` had **no writer** — last written
+  2026-08-14, untouched 101 days later.
+- `~/.codialectic/state.json` had **no reader** — `install-survival-layer.sh`
+  rewrites it every SessionStart (mtime verified 2026-11-23 14:01) and nothing
+  has consumed it since state went session-scoped.
+
+Meanwhile the reminder injected into every prompt told the model to persist
+preferences to the brain-kernel path and called it "the source of truth across
+sessions and devices". `codi concise` therefore appeared to work and silently
+reverted at the next session boundary. The actively-rewritten file was the
+worse of the two: staleness is visible, but a file something keeps touching
+looks maintained.
+
+- `authoritativeStatePath` returns `string | null`, session-scoped only;
+  `resolveStateWriteTargets` derives from it so read and write cannot diverge
+- deleted `legacyStatePath`, `brainStatePath`, `homeDir`, and the unreachable
+  `"brain"`/`"legacy"` variants of `LoadedStateSource`
+- `statusline.sh` carried its own copy of the same fallback and would have
+  rendered a stale score as the live session; it now renders `uninitialized`
+- the reminder states that preferences are SESSION-SCOPED
+
+**Behavior change users will notice:** preferences no longer carry across
+sessions. They never actually did; the reminder just claimed they would.
+
+### Fixed — first-run onboarding would have re-fired forever
+
+`growth_total_turns` was doing two jobs: counting a session's turns, and
+standing in for "has this person seen the first-run hint". Session-scoping the
+counter would have re-shown a 16-line orientation block for the first three
+prompts of every session. Onboarding now has its own marker, written atomically
+and self-describing. The migration probe requires three prior sessions, not
+one, so a new user who types one turn and reopens is not wrongly marked
+onboarded.
+
+### Scoped out, filed
+
+- **XOS-445** — retire the installer's unread `state.json` write (~200 lines in
+  the fresh-machine bootstrap; its own reviewable unit)
+- **XOS-446** — `install-survival-layer.sh` hangs in a clean sandbox.
+  Pre-existing (reproduced at HEAD), completes normally in the real
+  environment, root cause not identified.
+
+Review: cross-family judge panel, three rounds — FAIL 93%, FAIL 92%, PASS 95%.
+It caught a factual error and a real threshold bug; both fixes are in the diff.
+Tests: 235 pass, 0 fail across 15 files, mutation-checked.
+
+---
+
 ## [4.11.0] — 2026-05-15 — Complete Python→TypeScript Migration
 
 ### Changed
