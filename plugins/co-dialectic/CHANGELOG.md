@@ -1,5 +1,34 @@
 # Changelog — Co-Dialectic
 
+## [4.47.5] — 2026-11-23 — the Stop hook stops reading a gigabyte every turn
+
+Two live sessions were stuck DEGRADED permanently, and no amount of correctly
+rendering the Protocol 1 header cleared it. The hook that verifies the header
+was being killed before it could stamp.
+
+It did `readFileSync(transcript)` + `JSON.parse` per line, every turn. On a real
+0.96GB / 291,957-line transcript: 2,907ms baseline, 26,368ms under load, against
+a 10,000ms cap. The cost was never I/O — the raw byte read is 591ms. It was
+291,957 JSON.parse calls.
+
+Now 64ms on the same file. 45x, and the 26s tail with it.
+
+The bound is "until the last user record", not a byte or line count.
+`turnMessagesFromTranscript` resets `opening` on each user record, so a slice
+starting mid-turn returns `opening: null` and silently reverts to judging the
+LAST assistant block instead of the FIRST — the bug XOS-389 fixed. A tail
+missing the user record is not a smaller correct answer, it is a wrong one.
+A byte bound cannot guarantee it: measured on a live transcript, 200 lines was
+900KB, 733KB of it attachment records carrying Stop-hook output.
+
+Equivalence verified against four real transcripts (989MB, 66MB, 49MB, 22MB) —
+old full-read and new tail-read agree on both `opening` and `closing` in every
+case. Headroom from EOF to the last user record: 432KB worst observed against a
+32MB ceiling.
+
+Liveness semantics are untouched. A proposal to delete them was failed at 96%
+by the cross-family jury, correctly.
+
 ## [4.47.4] — 2026-11-18 — ships the liveness fix that main had and no session was running
 
 No new code. 4.47.3 already contained the DEGRADED diagnosis; this release is
