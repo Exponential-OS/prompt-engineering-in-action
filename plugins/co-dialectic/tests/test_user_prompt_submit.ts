@@ -50,13 +50,13 @@ describe("modeLine defensive coding (v4.20.0 — honesty:undefined fix)", () => 
   test("missing honesty field — no 'honesty:undefined' literal", () => {
     const stateNoHonesty: any = makeState({ growth_total_turns: 5 });
     delete stateNoHonesty.honesty;
-    const reminder = buildReminder(stateNoHonesty, "brain");
+    const reminder = buildReminder(stateNoHonesty, "session");
     expect(reminder).not.toContain("honesty:undefined");
     expect(reminder).toContain("Mode: drive");
   });
 
   test("honesty='grounded' (default) — suffix is omitted", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 5 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 5 }), "session");
     expect(reminder).toContain("Mode: drive");
     expect(reminder).not.toMatch(/honesty:/);
   });
@@ -64,28 +64,28 @@ describe("modeLine defensive coding (v4.20.0 — honesty:undefined fix)", () => 
   test("honesty='brutal' — suffix is rendered", () => {
     const stateBrutal: any = makeState({ growth_total_turns: 5 });
     stateBrutal.honesty = "brutal";
-    const reminder = buildReminder(stateBrutal, "brain");
+    const reminder = buildReminder(stateBrutal, "session");
     expect(reminder).toContain("Mode: drive · honesty:brutal");
   });
 
   test("missing mode field — falls back to 'drive'", () => {
     const stateNoMode: any = makeState({ growth_total_turns: 5 });
     delete stateNoMode.mode;
-    const reminder = buildReminder(stateNoMode, "brain");
+    const reminder = buildReminder(stateNoMode, "session");
     expect(reminder).toContain("Mode: drive");
   });
 
   test("wildcard=true — 🃏 suffix appears", () => {
     const stateWild: any = makeState({ growth_total_turns: 5 });
     stateWild.wildcard = true;
-    const reminder = buildReminder(stateWild, "brain");
+    const reminder = buildReminder(stateWild, "session");
     expect(reminder).toContain("🃏 Wildcard ON");
   });
 
   test("wildcard missing/undefined — no 🃏 suffix", () => {
     const stateNoWild: any = makeState({ growth_total_turns: 5 });
     delete stateNoWild.wildcard;
-    const reminder = buildReminder(stateNoWild, "brain");
+    const reminder = buildReminder(stateNoWild, "session");
     expect(reminder).not.toContain("🃏");
   });
 });
@@ -140,33 +140,33 @@ describe("buildOnboardingHint (issue #9)", () => {
 
 describe("buildReminder integration (issues #8 + #9)", () => {
   test("new user — reminder includes onboarding hint block", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 0 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 0 }), "session");
     expect(reminder).toContain("<codi-onboarding-hint>");
     expect(reminder).toContain("</codi-onboarding-hint>");
     expect(reminder).toContain("First-time orientation");
   });
 
   test("veteran user — reminder excludes onboarding hint block", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "session");
     expect(reminder).not.toContain("<codi-onboarding-hint>");
     expect(reminder).not.toContain("First-time orientation");
   });
 
   test("reminder references task-persona-map.md (issue #8)", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "session");
     expect(reminder).toContain("task-persona-map.md");
     expect(reminder).toContain("Task-first routing");
   });
 
   test("reminder leaves per-turn liveness and counter fields to the Stop hook", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 0 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 0 }), "session");
     expect(reminder).not.toContain("growth_total_turns");
     expect(reminder).not.toContain("increment by 1");
     expect(reminder).toContain("Stop hook");
   });
 
   test("reminder always includes the core survival block", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 100 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 100 }), "session");
     expect(reminder).toContain("<codi-survival-reminder>");
     expect(reminder).toContain("</codi-survival-reminder>");
     expect(reminder).toContain("Co-Dialectic v");
@@ -176,7 +176,7 @@ describe("buildReminder integration (issues #8 + #9)", () => {
 
 describe("verbosity / concise-by-default (issue #10)", () => {
   test("default verbosity = concise (no field set)", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "session");
     expect(reminder).toContain("Verbosity: concise");
     expect(reminder).toContain("CONCISE MODE");
     expect(reminder).toContain("lead with the ANSWER");
@@ -236,7 +236,7 @@ describe("verbosity / concise-by-default (issue #10)", () => {
   });
 
   test("preference persistence is narrow and command-driven", () => {
-    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "brain");
+    const reminder = buildReminder(makeState({ growth_total_turns: 50 }), "session");
     expect(reminder).toContain("only when the user changes a codi preference via command");
     expect(reminder).toContain("persist ONLY mode, verbosity, and wildcard");
     expect(reminder).toContain("codi verbose");

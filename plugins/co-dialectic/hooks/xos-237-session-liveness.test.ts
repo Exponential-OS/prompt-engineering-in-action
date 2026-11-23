@@ -159,16 +159,22 @@ describe("XOS-237 turn-relative per-session liveness", () => {
     expect(b.stdout).not.toContain("Product");
   });
 
-  test("empty and unparseable stdin fall back to legacy state without crashing", () => {
+  test("empty and unparseable stdin render uninitialized, never a stale global state", () => {
+    // XOS-443: this used to assert the opposite -- that a payload-less
+    // statusline falls back to ~/.codialectic/state.json and renders it. That
+    // fallback is gone, and its removal is the point: nothing had written that
+    // file since state went session-scoped, so "fall back to legacy state"
+    // meant "render a months-old score as though it were this conversation".
+    // No session id is not a reason to show someone else's numbers.
     const home = temp("codi-237-home-");
     writeJson(join(home, ".codialectic", "state.json"), state());
 
-    for (const input of ["", "{not-json"]) {
+    for (const input of ["", "{not-json", "[]", '{"session_id":""}']) {
       const rendered = runStatusline(home, input);
       expect(rendered.exitCode).toBe(0);
       expect(rendered.stderr).toBe("");
-      expect(rendered.stdout).toContain("Product · 88% · Cal: 96%");
-      expect(rendered.stdout).not.toContain("DEGRADED");
+      expect(rendered.stdout).toBe("🧠 Co-Dialectic · uninitialized");
+      expect(rendered.stdout).not.toContain("88%");
     }
   });
 
@@ -278,7 +284,14 @@ describe("XOS-237 writers and artifact ownership", () => {
     expect(Date.parse(session.last_protocol_ts)).toBeGreaterThanOrEqual(before);
     expect(session.last_score).toBe(91);
     expect(session.last_cal).toBe(97);
-    expect(session.growth_total_turns).toBe(42);
+    // XOS-443: a new session starts its own counter at zero. This asserted 42
+    // -- 41 seeded out of the brain-kernel file, plus this turn. That seeding
+    // is removed: a turn counter describes one conversation, and inheriting
+    // another file's total made every new session claim a history it did not
+    // have. The ONBOARDING question that counter used to answer now has its
+    // own user-level marker (see session-state.ts).
+    expect(session.growth_total_turns).toBe(1);
+    // Neither legacy location is touched -- not written, not created.
     expect(JSON.parse(readFileSync(canonicalPath, "utf8"))).toEqual(canonical);
     expect(existsSync(join(home, ".codialectic", "state.json"))).toBe(false);
   });

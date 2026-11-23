@@ -17,72 +17,60 @@
 # Protocol 1/3 executed for the current turn. CODI_STALE_SECS is only a generous
 # backstop while the heartbeat still predates the latest user prompt.
 #
-# Falls back to bare "🧠 Co-Dialectic active" if state.json is unparseable.
+# Falls back to bare "🧠 Co-Dialectic active" if the session state is unparseable.
 
 set -u
 
 # XOS-237: statusLine receives session_id/cwd/workspace on stdin. A valid session
 # id is a hard boundary: never fall back to another session's global heartbeat.
-# Empty/unparseable stdin keeps the pre-XOS-237 brain-first/global fallback.
+#
+# XOS-443: when stdin carries no usable session id there is no state to show.
+# This used to fall back to a brain-kernel file and then ~/.codialectic/state.json.
+# Neither is a real source any more: the brain-kernel file has had no writer
+# since 2026-08-14, and state.json is rewritten on every SessionStart by the
+# installer but read by nothing. So the fallback could render either a
+# months-stale score or a freshly-stamped meaningless one -- both as though they
+# described the live conversation. "uninitialized" is the honest answer; a
+# confident wrong status line is worse than an absent one.
 CODI_DIR="${CODI_STATE_DIR:-${HOME}/.codialectic}"
-LEGACY_STATE_PATH="${CODI_DIR}/state.json"
 STATUS_INPUT=""
 if [ ! -t 0 ]; then
   IFS= read -r STATUS_INPUT || true
 fi
 
+# Only the session id is read from the payload. XOS-443 removed the workspace
+# and cwd fields with the brain-kernel fallback that was their sole consumer.
 SESSION_ID=""
-PAYLOAD_WORKSPACE=""
-PAYLOAD_VALID=false
 if [ -n "$STATUS_INPUT" ]; then
   if command -v jq >/dev/null 2>&1; then
-    PAYLOAD_FIELDS=$(printf '%s' "$STATUS_INPUT" | jq -er '
-      if type != "object" then error("not an object") else [
-        (.session_id // .sessionId // "_"),
-        ((if (.workspace | type) == "object" then
-            (.workspace.project_dir // .workspace.current_dir)
-          elif (.workspace | type) == "string" then .workspace
-          else null end) //
-          .cwd // "_")
-      ] | @tsv end' 2>/dev/null) && PAYLOAD_VALID=true || true
+    SESSION_ID=$(printf '%s' "$STATUS_INPUT" | jq -er '
+      if type != "object" then error("not an object")
+      else (.session_id // .sessionId // "") end' 2>/dev/null) || SESSION_ID=""
   elif command -v python3 >/dev/null 2>&1; then
-    PAYLOAD_FIELDS=$(STATUS_INPUT="$STATUS_INPUT" python3 - <<'PYEOF' 2>/dev/null
+    SESSION_ID=$(STATUS_INPUT="$STATUS_INPUT" python3 - <<'PYEOF' 2>/dev/null
 import json
 import os
 
 d = json.loads(os.environ.get("STATUS_INPUT", ""))
 if not isinstance(d, dict):
     raise SystemExit(1)
-workspace = d.get("workspace")
-workspace_path = None
-if isinstance(workspace, dict):
-    workspace_path = workspace.get("project_dir") or workspace.get("current_dir")
-elif isinstance(workspace, str):
-    workspace_path = workspace
-print("\t".join([str(d.get("session_id") or d.get("sessionId") or "_"), str(workspace_path or d.get("cwd") or "_")]))
+print(d.get("session_id") or d.get("sessionId") or "")
 PYEOF
-    ) && PAYLOAD_VALID=true || true
+    ) || SESSION_ID=""
   fi
 fi
 
-if [ "$PAYLOAD_VALID" = "true" ]; then
-  IFS=$'\t' read -r SESSION_ID PAYLOAD_WORKSPACE <<< "$PAYLOAD_FIELDS"
-  [ "$SESSION_ID" = "_" ] && SESSION_ID=""
-  [ "$PAYLOAD_WORKSPACE" = "_" ] && PAYLOAD_WORKSPACE=""
-  case "$SESSION_ID" in
-    *[!A-Za-z0-9._-]*|""|.|..) SESSION_ID="" ;;
-  esac
-fi
+# Path-traversal boundary: the id becomes a filename, so anything outside the
+# safe charset is rejected outright rather than sanitized into a near-miss.
+case "$SESSION_ID" in
+  *[!A-Za-z0-9._-]*|""|.|..) SESSION_ID="" ;;
+esac
 
-BRAIN_ROOT="${BRAIN_WORKSPACE_ROOT:-${PAYLOAD_WORKSPACE:-${CAREER_HOME:-$PWD}}}"
-BRAIN_STATE_PATH="${BRAIN_ROOT}/co-dialectic/status-state.json"
-if [ -n "$SESSION_ID" ]; then
-  STATE_PATH="${CODI_DIR}/sessions/${SESSION_ID}.json"
-elif [ -f "$BRAIN_STATE_PATH" ]; then
-  STATE_PATH="$BRAIN_STATE_PATH"
-else
-  STATE_PATH="$LEGACY_STATE_PATH"
+if [ -z "$SESSION_ID" ]; then
+  echo "🧠 Co-Dialectic · uninitialized"
+  exit 0
 fi
+STATE_PATH="${CODI_DIR}/sessions/${SESSION_ID}.json"
 STALE_SECS="${CODI_STALE_SECS:-21600}"
 
 if [ ! -f "$STATE_PATH" ]; then

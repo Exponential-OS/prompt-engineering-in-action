@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 import {
   checkStatusLiveness,
   evaluateStatusFreshness,
@@ -48,16 +48,27 @@ function baseState(overrides: Record<string, unknown> = {}): Record<string, unkn
   };
 }
 
+// XOS-443: one state location. The hook and statusline both resolve state from
+// the session id on their stdin payload, so the harness must supply one -- and
+// write where that id points. Before this, several tests below wrote a
+// state.json nothing read, which made "corrupt state" and "no state at all"
+// the same case and let both pass for the wrong reason.
+const SESSION = "liveness-test-session";
+
+function sessionStateFile(home: string): string {
+  return join(home, ".codialectic", "sessions", `${SESSION}.json`);
+}
+
 function writeState(home: string, state: Record<string, unknown>): void {
-  const codiDir = join(home, ".codialectic");
-  mkdirSync(codiDir, { recursive: true });
-  writeFileSync(join(codiDir, "state.json"), JSON.stringify(state, null, 2));
+  const path = sessionStateFile(home);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(state, null, 2));
 }
 
 function writeRawState(home: string, raw: string): void {
-  const codiDir = join(home, ".codialectic");
-  mkdirSync(codiDir, { recursive: true });
-  writeFileSync(join(codiDir, "state.json"), raw);
+  const path = sessionStateFile(home);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, raw);
 }
 
 function transcriptWithAssistant(message: string): string {
@@ -73,10 +84,10 @@ function transcriptWithAssistant(message: string): string {
 function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
   const proc = Bun.spawnSync(["/bin/bash", STATUSLINE], {
     cwd: home,
+    stdin: new TextEncoder().encode(JSON.stringify({ session_id: SESSION, cwd: home })),
     env: {
       ...process.env,
       HOME: home,
-      BRAIN_WORKSPACE_ROOT: join(home, "workspace"),
       CAREER_HOME: "",
       CODI_STALE_SECS: "900",
     },
@@ -85,7 +96,14 @@ function runStatuslineVerdict(home: string): "LIVE" | "DEGRADED" {
   });
   expect(proc.exitCode).toBe(0);
   const stdout = new TextDecoder().decode(proc.stdout);
-  return stdout.includes("DEGRADED") ? "DEGRADED" : "LIVE";
+  if (stdout.includes("DEGRADED")) return "DEGRADED";
+  // Anything that is neither a rendered score line nor DEGRADED (an
+  // "uninitialized" line, an empty string) must NOT be silently scored LIVE:
+  // that is how a parity test keeps passing after the state stops being found.
+  if (!/\d+% · Cal:/.test(stdout)) {
+    throw new Error(`statusline rendered no verdict: ${JSON.stringify(stdout.trim())}`);
+  }
+  return "LIVE";
 }
 
 function runHook(home: string, transcriptPath: string): { exitCode: number; stdout: string } {
@@ -98,7 +116,7 @@ function runHook(home: string, transcriptPath: string): { exitCode: number; stdo
       CAREER_HOME: "",
       CODI_STALE_SECS: "900",
     },
-    input: JSON.stringify({ transcript_path: transcriptPath }),
+    input: JSON.stringify({ session_id: SESSION, transcript_path: transcriptPath }),
     encoding: "utf8",
   });
   return {

@@ -4,26 +4,31 @@
  *
  * Fires on EVERY user message in Claude Code (UserPromptSubmit event).
  *
- * STATE SOURCES (v4.39.0):
- *   1. co-dialectic/status-state.json — canonical durable preferences/config
- *   2. ~/.codialectic/state.json — legacy read/bootstrap fallback only
- *   3. ~/.codialectic/sessions/<session_id>.json — authoritative liveness for
- *      the current session; never shared across profiles/sessions
+ * STATE SOURCE (XOS-443): exactly one.
+ *   ~/.codialectic/sessions/<session_id>.json
  *
- * Codi reads the brain-kernel path first (using BRAIN_WORKSPACE_ROOT env or cwd).
- * If the brain path is absent (first run after install, or workspace not yet
- * bootstrapped), falls back to the legacy machine-local file.
+ * There used to be three, read in a fallback chain: a brain-kernel workspace
+ * file, a machine-global ~/.codialectic/state.json, and the session file.
+ * Neither of the first two was a real source, though not for the same reason.
+ * The brain-kernel file had no writer -- last touched 2026-08-14, still
+ * untouched 101 days later. The machine-global file had the opposite problem:
+ * install-survival-layer.sh rewrites it on every SessionStart, and nothing has
+ * read it since state went session-scoped, so it carried a fresh timestamp and
+ * no meaning. Meanwhile this hook told the model, every single turn, that the
+ * brain-kernel path was "the source of truth across sessions and devices".
  *
- * After each successful read of the brain path, the in-memory state is the
- * authoritative source. Per-turn heartbeat fields are stamped by the Stop hook;
- * the model only persists command-driven preference changes.
+ * A fallback chain whose upper tiers have no reader is not resilience. It is a
+ * way to be confidently wrong, and the actively-rewritten tier is the worse
+ * half: staleness is at least visible, while a maintained-looking file that
+ * feeds nothing is not.
  *
- * SPEC-CLARIFICATION-NEEDED (migration period):
- *   - statusline.sh uses the same brain-first, legacy-fallback state order as
- *     this hook so one heartbeat drives both visible surfaces.
- *   - If BRAIN_WORKSPACE_ROOT is not set and cwd is not a workspace, the
- *     brain read will return null. The fallback to ~/.codialectic/state.json
- *     ensures the hook never silently disables codi.
+ * One file, one writer (the Stop hook), one reader. No session id means no
+ * state -- not a different file. Per-turn heartbeat fields are stamped by the
+ * Stop hook; the model only persists command-driven preference changes, and
+ * those are session-scoped.
+ *
+ * statusline.sh resolves state by the same single rule, so one heartbeat drives
+ * both visible surfaces.
  *
  * Output format (Claude Code spec):
  *   {
@@ -47,6 +52,8 @@ import {
 } from "./cost-routing-nudge.ts";
 import {
   atomicWriteJson,
+  hasOnboarded,
+  markOnboarded,
   readJsonObject,
   sessionIdFromHookInput,
   sessionStatePath,
@@ -82,18 +89,14 @@ interface CodiState {
   verbosity?: "concise" | "verbose";
 }
 
-type LoadedStateSource = "session" | "brain" | "legacy";
+type LoadedStateSource = "session";
 type ReminderStateSource = LoadedStateSource | "missing";
 
 interface UserPromptSubmitInput extends SessionAwareHookInput {}
 
 // ─── State loading ────────────────────────────────────────────────────────────
 
-/** Legacy machine-local state path (v4.16 and earlier). */
-const LEGACY_STATE_PATH = join(homedir(), ".codialectic", "state.json");
 
-/** Brain-kernel state path relative to workspace root. */
-const BRAIN_STATE_RELATIVE = "co-dialectic/status-state.json";
 
 /**
  * resolveWorkspaceRoot — determine the workspace root to use for brain reads.
@@ -109,26 +112,6 @@ function resolveWorkspaceRoot(input: UserPromptSubmitInput = {}): string {
 }
 
 /**
- * loadBrainState — attempt to load state from the brain-kernel workspace path.
- *
- * Returns null if the workspace root doesn't have the brain path, or if the
- * JSON is invalid. Failures here are soft — we fall back to legacy.
- */
-function loadBrainState(input: UserPromptSubmitInput = {}): CodiState | null {
-  const root = resolveWorkspaceRoot(input);
-  const absPath = join(root, BRAIN_STATE_RELATIVE);
-  if (!existsSync(absPath)) return null;
-  try {
-    const raw = readFileSync(absPath, "utf8");
-    return JSON.parse(raw) as CodiState;
-  } catch {
-    // SPEC-CLARIFICATION-NEEDED: brain path JSON is corrupt. Fall back to legacy.
-    // This should not happen in normal operation; brain.write() is atomic via git.
-    return null;
-  }
-}
-
-/**
  * loadSessionState — load this session's own state file (XOS-391).
  *
  * This is where status-liveness-check actually stamps the heartbeat:
@@ -139,14 +122,13 @@ function loadBrainState(input: UserPromptSubmitInput = {}): CodiState | null {
  * at different files and the DEGRADED banner could never clear no matter how
  * correctly the session behaved.
  *
- * Precedence now matches statusline.sh (session -> brain -> legacy), which had
- * been doing this correctly all along; this hook was the inconsistent sibling.
- *
- * The session file is a superset of the brain-kernel schema -- it carries the
- * same preference fields (mode, verbosity, honesty, persona) plus session_id,
- * workspace_root and last_user_prompt_ts -- so preferring it loses nothing.
- * The brain-kernel file remains the fallback, which is what carries durable
- * preferences into a session before that session has written its own state.
+ * XOS-443: the session file is now the only source. It is a superset of the
+ * old brain-kernel schema -- same preference fields (mode, verbosity, honesty,
+ * persona) plus session_id, workspace_root and last_user_prompt_ts -- so
+ * dropping the fallbacks loses no field, only staleness. A new session starts
+ * with default preferences rather than inheriting a file nobody had written
+ * since August; that is the honest behavior, and the reminder now says so
+ * instead of promising cross-device persistence the code never delivered.
  */
 function loadSessionState(input: UserPromptSubmitInput = {}): CodiState | null {
   const sessionId = sessionIdFromHookInput(input);
@@ -156,35 +138,15 @@ function loadSessionState(input: UserPromptSubmitInput = {}): CodiState | null {
 }
 
 /**
- * loadLegacyState — load from ~/.codialectic/state.json (v4.16 fallback).
- */
-function loadLegacyState(): CodiState | null {
-  if (!existsSync(LEGACY_STATE_PATH)) return null;
-  try {
-    const raw = readFileSync(LEGACY_STATE_PATH, "utf8");
-    return JSON.parse(raw) as CodiState;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * loadState — load codi state with fallback chain.
+ * loadState — load this session's state.
  *
- * Returns: [state, source] where source is "session" | "brain" | "legacy" | null.
+ * Returns [state, "session"], or [null, null] when this session has no state
+ * yet (first turn, or no session id on the payload). The caller self-resurrects
+ * from defaults in that case.
  */
 function loadState(input: UserPromptSubmitInput = {}): [CodiState | null, LoadedStateSource | null] {
-  // Session first (XOS-391): this is the only file the Stop hook writes.
   const sessionState = loadSessionState(input);
-  if (sessionState !== null) return [sessionState, "session"];
-
-  const brainState = loadBrainState(input);
-  if (brainState !== null) return [brainState, "brain"];
-
-  const legacyState = loadLegacyState();
-  if (legacyState !== null) return [legacyState, "legacy"];
-
-  return [null, null];
+  return sessionState !== null ? [sessionState, "session"] : [null, null];
 }
 
 // ─── Structural liveness (XOS-141) ───────────────────────────────────────────
@@ -443,7 +405,11 @@ export const ONBOARDING_TURN_WINDOW = 3;
  * Returns empty string (not null) so the caller can unconditionally concatenate
  * without conditional join logic.
  */
-export function buildOnboardingHint(state: CodiState): string {
+export function buildOnboardingHint(state: CodiState, onboarded = false): string {
+  // `onboarded` is the user-level fact (XOS-443); growth_total_turns is this
+  // session's counter. Both must be clear before the hint shows, because a
+  // returning user always has a fresh session counter.
+  if (onboarded) return "";
   if (state.growth_total_turns >= ONBOARDING_TURN_WINDOW) return "";
   const remaining = ONBOARDING_TURN_WINDOW - state.growth_total_turns;
   return [
@@ -466,6 +432,9 @@ export function buildOnboardingHint(state: CodiState): string {
 interface BuildReminderOptions {
   liveness?: CodiLiveness;
   workspaceRoot?: string;
+  /** User-level onboarding fact (XOS-443). Resolved by the caller, which has
+   *  the hook input; buildReminder stays free of filesystem reads. */
+  onboarded?: boolean;
 }
 
 export function buildReminder(
@@ -517,15 +486,27 @@ export function buildReminder(
 
   // The Stop hook owns per-turn heartbeat/counter writes. The model only persists
   // command-driven preference changes so routine turns have a single writer.
-  const workspaceRoot = options.workspaceRoot ?? resolveWorkspaceRoot();
-  const brainStatePath = join(workspaceRoot, "co-dialectic/status-state.json");
+  // ⛔ XOS-443. This instruction used to name the brain-kernel path
+  // (<workspace>/co-dialectic/status-state.json) and call it "the source of truth
+  // across sessions and devices". Nothing had written that file in 101 DAYS.
+  //
+  // Both loadState() and resolveStateWriteTargets() take the session branch first,
+  // and Claude Code always supplies session_id, so the brain and legacy branches
+  // were unreachable. A preference written to the brain path was shadowed by the
+  // session file on the very next turn and never read back — so `codi concise`
+  // appeared to work for the rest of the session and silently reverted after.
+  //
+  // Naming a path the code never touches is the dead-ENFORCE-pointer shape
+  // (XOS-407), except injected into every turn and promising a user-facing
+  // guarantee. The honest instruction names the file that is actually written.
   const preferencePersistInstruction =
     `Preference persistence: only when the user changes a codi preference via command ` +
     `(\`codi cruise\` / \`codi drive\` / \`codi quiet\` / \`codi verbose\` / ` +
     `\`codi concise\` / \`codi wildcard\`), persist ONLY mode, verbosity, and wildcard ` +
-    `to the brain-kernel state path: ${brainStatePath}.`;
+    `to this session's state file. Preferences are SESSION-SCOPED — they do not ` +
+    `carry to a new session or another device.`;
 
-  const onboardingHint = buildOnboardingHint(state);
+  const onboardingHint = buildOnboardingHint(state, options.onboarded ?? false);
   const verbosity = state.verbosity ?? "concise";
   const verbosityLine = `Verbosity: ${verbosity} (toggle: 'codi verbose' / 'codi concise')`;
 
@@ -551,11 +532,7 @@ export function buildReminder(
   const protocol3Line = verbosity === "verbose" ? protocol3Verbose : protocol3Concise;
   const stateSourceLabel = stateSource === "session"
     ? "this session's state file"
-    : stateSource === "brain"
-      ? "brain-kernel workspace"
-      : stateSource === "legacy"
-        ? "legacy ~/.codialectic/state.json"
-        : "missing state (self-resurrection)";
+    : "missing state (self-resurrection)";
 
   const lines = [
     "<codi-survival-reminder>",
@@ -575,7 +552,6 @@ export function buildReminder(
     "Protocol 17 (Temporal Grounding): every time-referential phrase ('tonight', 'tomorrow', 'recently', 'yesterday') in your response MUST anchor to the OS-grounded Now line above. Convert relative → absolute datetime before writing.",
     "",
     preferencePersistInstruction,
-    "The brain-kernel path is the source of truth across sessions and devices.",
     "</codi-survival-reminder>",
   ];
   if (onboardingHint) {
@@ -602,9 +578,15 @@ async function main(): Promise<void> {
   const source: ReminderStateSource = loadedSource ?? "missing";
   const livenessState = sessionIdFromHookInput(hookInput) ? state : loadedState;
   const liveness = evaluateCodiLiveness(livenessState, installedVersion);
+  // XOS-443: onboarding is a user-level fact; this session's turn counter
+  // restarts at zero and cannot answer "has this person seen the hint before".
+  const sessionId = sessionIdFromHookInput(hookInput);
+  const onboarded = hasOnboarded(sessionId);
+  if (!onboarded && state.growth_total_turns >= ONBOARDING_TURN_WINDOW) markOnboarded();
   const baseContext = buildReminder(state, source, {
     liveness,
     workspaceRoot: resolveWorkspaceRoot(hookInput),
+    onboarded,
   });
   const degradationNudge = buildDegradationNudge(liveness);
   const survivalContext = liveness.degraded
