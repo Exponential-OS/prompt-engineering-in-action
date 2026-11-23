@@ -7,7 +7,7 @@
  * via Stop-hook systemMessage, but never blocks or crashes the session.
  */
 
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, statSync, openSync, readSync, closeSync } from "fs";
 import { homedir } from "os";
 import { dirname, join } from "path";
 import {
@@ -517,6 +517,100 @@ export interface TurnMessages {
  * Stop-hook latency is not academic here — a perf fix once cut eight gates
  * from this machine's settings in a single edit.
  */
+/**
+ * Read only the tail of a transcript — enough to contain the CURRENT turn.
+ *
+ * ⛔ WHY THIS EXISTS. XOS-436 / XOS-435.
+ *
+ * This hook used `readFileSync(transcript)` and then `JSON.parse` on every line.
+ * Measured 2026-11-23 against a real 0.96GB / 291,957-line transcript:
+ *   raw byte read      591ms
+ *   full hook          2.9s baseline, 26.4s under load
+ *   hook timeout cap   10s
+ * The cost is not I/O — it is 291,957 JSON.parse calls. Two live sessions sat
+ * permanently DEGRADED because the Stop hook was killed at the cap before it
+ * could stamp, every turn.
+ *
+ * ⭐ THE BOUND IS "UNTIL THE LAST USER RECORD", NOT A BYTE OR LINE COUNT.
+ *
+ * `turnMessagesFromTranscript` resets `opening` on each user record, so a slice
+ * that starts MID-TURN never sets `seenUserTurn`, returns `opening: null`, and
+ * silently reverts to the pre-XOS-389 behaviour of judging the LAST assistant
+ * block instead of the first. That is the exact bug XOS-389 fixed. A tail that
+ * omits the user record is therefore not a smaller correct answer — it is a
+ * wrong one.
+ *
+ * A byte/line bound cannot guarantee this. Measured on a live transcript, 200
+ * lines was 900KB, 733KB of it `attachment` records carrying Stop-hook output;
+ * one noisy turn can push the user record arbitrarily far back. So: grow the
+ * window until a user record is in range, with a hard ceiling so a pathological
+ * transcript degrades instead of hanging.
+ *
+ * ⚠ THE CLIFF, STATED RATHER THAN HIDDEN. If a single turn emits more than
+ * TAIL_MAX_BYTES of records with no user record in range, this returns a slice
+ * without a turn boundary, `opening` comes back null, and the caller falls back
+ * to `closing` — i.e. the PRE-XOS-389 behaviour. That is a real correctness
+ * cliff, not a smaller correct answer.
+ *
+ * Measured headroom on live transcripts 2026-11-23 (distance from EOF to the
+ * last user record):
+ *     989MB transcript -> 432.3 KB
+ *      66MB transcript ->   3.7 KB
+ *      49MB transcript ->  16.5 KB
+ * Worst observed is 432 KB against a 32 MB ceiling — 76x headroom, and the
+ * 256 KB first window already covers two of the three without growing. The
+ * cliff is reachable in principle and was not reached by any real session.
+ */
+const TAIL_START_BYTES = 256 * 1024;
+const TAIL_MAX_BYTES = 32 * 1024 * 1024;
+
+export function tailContainingCurrentTurn(
+  path: string,
+  startBytes = TAIL_START_BYTES,
+  maxBytes = TAIL_MAX_BYTES,
+): string {
+  const size = statSync(path).size;
+  if (size <= startBytes) return readFileSync(path, "utf8");
+
+  let window = startBytes;
+  const fd = openSync(path, "r");
+  try {
+    for (;;) {
+      const span = Math.min(window, size);
+      const buf = Buffer.allocUnsafe(span);
+      readSync(fd, buf, 0, span, size - span);
+      let text = buf.toString("utf8");
+
+      // The first line is almost certainly truncated mid-record. Drop it unless
+      // we are reading from byte 0, where it is genuinely the file's first line.
+      if (span < size) {
+        const nl = text.indexOf("\n");
+        text = nl === -1 ? "" : text.slice(nl + 1);
+      }
+
+      if (span >= size || containsUserRecord(text)) return text;
+      if (window >= maxBytes) return text; // ceiling: degrade, never hang
+      window = Math.min(window * 4, maxBytes);
+    }
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/** Does this slice contain a turn boundary? Decides whether the window is big enough. */
+function containsUserRecord(text: string): boolean {
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      if (isUserTurnRecord(JSON.parse(trimmed))) return true;
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
 export function turnMessagesFromTranscript(transcript: string): TurnMessages {
   let closing: string | null = null;
   let opening: string | null = null;
@@ -569,7 +663,7 @@ export function readMessageForVerification(input: HookInput): string {
   if (typeof input.transcript_path !== "string" || input.transcript_path.trim().length === 0) {
     throw new Error("missing transcript path");
   }
-  const raw = readFileSync(input.transcript_path, "utf8");
+  const raw = tailContainingCurrentTurn(input.transcript_path);
   const { opening, closing } = turnMessagesFromTranscript(raw);
   if (closing === null && opening === null) {
     throw new Error("missing final assistant message");
@@ -588,7 +682,7 @@ function readFinalAssistantMessage(input: HookInput): string {
   if (typeof input.transcript_path !== "string" || input.transcript_path.trim().length === 0) {
     throw new Error("missing transcript path");
   }
-  const raw = readFileSync(input.transcript_path, "utf8");
+  const raw = tailContainingCurrentTurn(input.transcript_path);
   const message = finalAssistantMessageFromTranscript(raw);
   if (message === null) throw new Error("missing final assistant message");
   return message;
